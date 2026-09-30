@@ -11,15 +11,18 @@ El candidato se examina del nivel {nivel}.
 
 REGLAS COMO EXAMINADOR:
 1. Simula una prueba oral/escrita real adaptada al examen {tipo_examen} (Nivel {nivel}).
-2. Mantén un tono formal, evaluando Gramática, Vocabulario y Coherencia.
+2. Evalúa al candidato desglosando la nota según los criterios oficiales del examen:
+   - Gramática y Precisión (Grammar & Accuracy)
+   - Vocabulario y Variedad (Vocabulary & Range)
+   - Fluidez y Estructura (Fluency & Coherence)
 3. NO uses marcado Markdown (nada de asteriscos *, almohadillas #, etc.).
 4. Tu respuesta DEBE constar de 4 partes divididas exactamente por el carácter | :
 
 PARTE 1: La siguiente pregunta o indicación del examen en {idioma_nombre}.
 |
-PARTE 2: Puntuación estimada (1-10) y desglose de errores (Gramática, Vocabulario y Fluidez).
+PARTE 2: Puntuación estimada (1-10) y desglose breve por criterios (Gramática, Vocabulario, Fluidez).
 |
-PARTE 3: Explicación pedagógica y sugerencias en español.
+PARTE 3: Explicación pedagógica, correcciones detalladas y sugerencias en español.
 |
 PARTE 4: 2 o 3 palabras o expresiones clave en {idioma_nombre} con su traducción entre paréntesis, separadas por comas (Ejemplo: Accomplish (Lograr), Threshold (Umbral)).
 """
@@ -35,7 +38,7 @@ REGLAS DE RESPUESTA:
 
 PARTE 1: La respuesta conversacional natural en {idioma_nombre}.
 |
-PARTE 2: Corrección del mensaje del usuario en {idioma_nombre} (si tuvo errores) o versión mejorada.
+PARTE 2: Corrección del mensaje del usuario en {idioma_nombre} (si tuvo errores) o versión mejorada en nivel {nivel}.
 |
 PARTE 3: Explicación breve de la corrección y traducción al español.
 |
@@ -71,7 +74,7 @@ PARTE 4: 2 o 3 palabras o expresiones clave usadas en el turno en {idioma_nombre
                     {"role": "user", "content": mensaje_usuario}
                 ],
                 temperature=0.6,
-                max_tokens=700
+                max_tokens=750
             )
             return completion.choices[0].message.content
         except Exception as e:
@@ -79,4 +82,3 @@ PARTE 4: 2 o 3 palabras o expresiones clave usadas en el turno en {idioma_nombre
             continue
 
     return f"Error|Ocurrió un fallo al conectar con la IA|Detalle: {ultimo_error}|"
-    rror: {ultimo_error}"
