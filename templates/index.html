@@ -25,14 +25,17 @@
         .btn-audio { background: #f1f5f9; border: none; border-radius: 50%; width: 32px; height: 32px; margin-top: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
         .btn-mic { background: #f1f5f9; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1.2rem; }
         .feedback { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 8px 12px; margin-top: 8px; font-size: 0.85rem; color: #78350f; border-radius: 4px; }
+        .vocab-tag { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin: 2px; }
 
-        /* Panel lateral de Biblioteca */
-        .sidebar { width: 320px; background: #ffffff; border-left: 1px solid #e2e8f0; display: none; flex-direction: column; padding: 15px; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar { width: 340px; background: #ffffff; border-left: 1px solid #e2e8f0; display: none; flex-direction: column; padding: 15px; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
         .sidebar.active { display: flex; }
-        .sidebar h2 { font-size: 1.1rem; color: #1e293b; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .history-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; }
-        .history-item .date { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
-        .history-item .user-txt { font-weight: bold; color: #1e293b; }
+        .sidebar-tabs { display: flex; gap: 5px; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        .tab-btn { background: none; border: none; padding: 6px 10px; font-weight: bold; color: #64748b; cursor: pointer; font-size: 0.85rem; }
+        .tab-btn.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
+        
+        .session-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; cursor: pointer; }
+        .session-card:hover { border-color: #2563eb; }
+        .vocab-item { background: #f1f5f9; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85rem; display: flex; justify-content: space-between; }
         .btn-clear { background: #ef4444; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-top: auto; }
     </style>
 </head>
@@ -40,38 +43,50 @@
     <header>
         <h1>🗣️ LingoMind</h1>
         <div class="controls">
-            <select id="idiomaSelect">
+            <select id="idiomaSelect" onchange="cambiarConfiguracion()">
                 <option value="en">🇬🇧 Inglés</option>
                 <option value="de">🇩🇪 Alemán</option>
             </select>
-            <select id="nivelSelect">
+            <select id="nivelSelect" onchange="cambiarConfiguracion()">
                 <option value="A1">A1 - Principiante</option>
                 <option value="A2">A2 - Elemental</option>
                 <option value="B1" selected>B1 - Intermedio</option>
                 <option value="B2">B2 - Intermedio Alto</option>
                 <option value="C1">C1 - Avanzado</option>
             </select>
-            <select id="modoSelect">
+            <select id="modoSelect" onchange="actualizarModoExamen()">
                 <option value="conversacion">💬 Conversación Libre</option>
                 <option value="examen">🎓 Preparación Examen Oficial</option>
             </select>
-            <button class="btn-top" onclick="toggleBiblioteca()">📚 Biblioteca</button>
+            <select id="examenSelect" style="display:none;" onchange="cambiarConfiguracion()">
+                <option value="Cambridge">Cambridge (PET/FCE/CAE)</option>
+                <option value="IELTS">IELTS Academic/General</option>
+                <option value="TOEFL">TOEFL iBT</option>
+                <option value="Goethe">Goethe-Zertifikat</option>
+            </select>
+            <button class="btn-top" onclick="toggleSidebar()">📚 Biblioteca & Vocabulario</button>
         </div>
     </header>
 
     <div class="main-container">
-        <div class="chat" id="chat">
-            <div class="msg bot">
-                Hello! I am LingoMind. Choose your preferred practice mode and let's start!
-                <br>
-                <button class="btn-audio" onclick="hablar('Hello! I am LingoMind. Choose your preferred practice mode and let us start!')">🔊</button>
-            </div>
-        </div>
+        <div class="chat" id="chat"></div>
 
         <div class="sidebar" id="sidebar">
-            <h2>📚 Tu Progreso <button onclick="toggleBiblioteca()" style="background:none; border:none; cursor:pointer;">❌</button></h2>
-            <div id="historyList"></div>
-            <button class="btn-clear" onclick="borrarHistorial()">Borrar Historial</button>
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" id="tabSesionesBtn" onclick="switchTab('sesiones')">📂 Sesiones</button>
+                <button class="tab-btn" id="tabVocabBtn" onclick="switchTab('vocabulario')">📖 Vocabulario</button>
+                <button onclick="toggleSidebar()" style="margin-left:auto; background:none; border:none; cursor:pointer;">❌</button>
+            </div>
+            
+            <div id="tabSesiones">
+                <div id="sessionList"></div>
+            </div>
+
+            <div id="tabVocabulario" style="display:none;">
+                <div id="vocabList"></div>
+            </div>
+
+            <button class="btn-clear" onclick="borrarTodo()">Borrar Todo el Historial</button>
         </div>
     </div>
 
@@ -82,7 +97,13 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', cargarHistorial);
+        let sessionData = [];
+        let vocabData = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarDatosGuardados();
+            cambiarConfiguracion();
+        });
 
         function hablar(texto) {
             if ('speechSynthesis' in window) {
@@ -105,46 +126,52 @@
             rec.start();
         }
 
-        function toggleBiblioteca() {
-            document.getElementById('sidebar').classList.toggle('active');
+        function actualizarModoExamen() {
+            const modo = document.getElementById('modoSelect').value;
+            document.getElementById('examenSelect').style.display = modo === 'examen' ? 'inline-block' : 'none';
+            cambiarConfiguracion();
         }
 
-        function guardarEnHistorial(mensajeUser, correccion, explicacion) {
-            const historial = JSON.parse(localStorage.getItem('lingomind_historial') || '[]');
-            const nuevoRegistro = {
-                fecha: new Date().toLocaleString(),
-                idioma: document.getElementById('idiomaSelect').value.toUpperCase(),
-                modo: document.getElementById('modoSelect').value,
-                usuario: mensajeUser,
-                correccion: correccion,
-                explicacion: explicacion
-            };
-            historial.unshift(nuevoRegistro);
-            localStorage.setItem('lingomind_historial', JSON.stringify(historial));
-            cargarHistorial();
+        function getSessionKey() {
+            const id = document.getElementById('idiomaSelect').value.toUpperCase();
+            const niv = document.getElementById('nivelSelect').value;
+            const modo = document.getElementById('modoSelect').value;
+            const ex = modo === 'examen' ? `_${document.getElementById('examenSelect').value}` : '';
+            return `${id}_${niv}_${modo}${ex}`;
         }
 
-        function cargarHistorial() {
-            const list = document.getElementById('historyList');
-            const historial = JSON.parse(localStorage.getItem('lingomind_historial') || '[]');
-            if (historial.length === 0) {
-                list.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Aún no tienes registros guardados.</p>';
-                return;
+        function cambiarConfiguracion() {
+            const key = getSessionKey();
+            const session = sessionData.find(s => s.key === key);
+            const chat = document.getElementById('chat');
+
+            if (session && session.messages.length > 0) {
+                renderMessages(session.messages);
+            } else {
+                const welcomeMsg = `Hello! I am LingoMind. Ready to practice (${key.replace(/_/g, ' ')})?`;
+                chat.innerHTML = `
+                    <div class="msg bot">
+                        ${welcomeMsg}
+                        <br><button class="btn-audio" onclick="hablar('${welcomeMsg}')">🔊</button>
+                    </div>`;
             }
-            list.innerHTML = historial.map(item => `
-                <div class="history-item">
-                    <div class="date">${item.fecha} | [${item.idioma}] (${item.modo})</div>
-                    <div class="user-txt">👤: "${item.usuario}"</div>
-                    ${item.correccion ? `<div style="color:#d97706; margin-top:4px;">💡 ${item.correccion}</div>` : ''}
-                </div>
-            `).join('');
         }
 
-        function borrarHistorial() {
-            if (confirm('¿Quieres borrar todo tu historial de práctica?')) {
-                localStorage.removeItem('lingomind_historial');
-                cargarHistorial();
-            }
+        function renderMessages(messages) {
+            const chat = document.getElementById('chat');
+            chat.innerHTML = messages.map(m => {
+                if (m.type === 'user') return `<div class="msg user">${m.text}</div>`;
+                let html = `<div class="msg bot">${m.text}<br><button class="btn-audio" onclick="hablar('${m.text.replace(/'/g, "\\'")}')">🔊</button>`;
+                if (m.correccion || m.explicacion) {
+                    html += `<div class="feedback"><strong>Feedback & Evaluación:</strong><br>${m.correccion}<br><br>${m.explicacion}</div>`;
+                }
+                if (m.vocabulario) {
+                    const tags = m.vocabulario.split(',').map(v => `<span class="vocab-tag">📌 ${v.trim()}</span>`).join(' ');
+                    html += `<div style="margin-top:6px;">${tags}</div>`;
+                }
+                return html + `</div>`;
+            }).join('');
+            chat.scrollTop = chat.scrollHeight;
         }
 
         async function enviar() {
@@ -157,6 +184,14 @@
             txt.value = '';
             chat.scrollTop = chat.scrollHeight;
 
+            const key = getSessionKey();
+            let session = sessionData.find(s => s.key === key);
+            if (!session) {
+                session = { key: key, fecha: new Date().toLocaleDateString(), messages: [] };
+                sessionData.unshift(session);
+            }
+            session.messages.push({ type: 'user', text: mensaje });
+
             try {
                 const res = await fetch('/chat', {
                     method: 'POST',
@@ -165,26 +200,107 @@
                         mensaje,
                         idioma: document.getElementById('idiomaSelect').value,
                         nivel: document.getElementById('nivelSelect').value,
-                        modo: document.getElementById('modoSelect').value
+                        modo: document.getElementById('modoSelect').value,
+                        tipo_examen: document.getElementById('examenSelect').value
                     })
                 });
                 const data = await res.json();
-                
-                let htmlBot = `<div class="msg bot">${data.respuesta}<br><button class="btn-audio" onclick="hablar('${data.respuesta.replace(/'/g, "\\'")}')">🔊</button>`;
-                if (data.correccion || data.explicacion) {
-                    htmlBot += `<div class="feedback"><strong>Feedback & Evaluación:</strong><br>${data.correccion}<br><br>${data.explicacion}</div>`;
+
+                session.messages.push({
+                    type: 'bot',
+                    text: data.respuesta,
+                    correccion: data.correccion,
+                    explicacion: data.explicacion,
+                    vocabulario: data.vocabulario
+                });
+
+                if (data.vocabulario) {
+                    const items = data.vocabulario.split(',');
+                    items.forEach(item => {
+                        if (item.trim() && !vocabData.some(v => v.term === item.trim())) {
+                            vocabData.unshift({ term: item.trim(), lang: document.getElementById('idiomaSelect').value.toUpperCase() });
+                        }
+                    });
                 }
-                htmlBot += `</div>`;
 
-                chat.innerHTML += htmlBot;
-                chat.scrollTop = chat.scrollHeight;
+                guardarDatos();
+                renderMessages(session.messages);
                 hablar(data.respuesta);
-
-                // Guardar en la biblioteca
-                guardarEnHistorial(mensaje, data.correccion, data.explicacion);
 
             } catch (err) {
                 console.error(err);
+            }
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        
+        function switchTab(tab) {
+            document.getElementById('tabSesiones').style.display = tab === 'sesiones' ? 'block' : 'none';
+            document.getElementById('tabVocabulario').style.display = tab === 'vocabulario' ? 'block' : 'none';
+            document.getElementById('tabSesionesBtn').classList.toggle('active', tab === 'sesiones');
+            document.getElementById('tabVocabBtn').classList.toggle('active', tab === 'vocabulario');
+        }
+
+        function cargarDatosGuardados() {
+            sessionData = JSON.parse(localStorage.getItem('lingomind_sessions') || '[]');
+            vocabData = JSON.parse(localStorage.getItem('lingomind_vocab') || '[]');
+            renderSidebar();
+        }
+
+        function guardarDatos() {
+            localStorage.setItem('lingomind_sessions', JSON.stringify(sessionData));
+            localStorage.setItem('lingomind_vocab', JSON.stringify(vocabData));
+            renderSidebar();
+        }
+
+        function renderSidebar() {
+            const sessionList = document.getElementById('sessionList');
+            if (sessionData.length === 0) {
+                sessionList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">No hay sesiones guardadas.</p>';
+            } else {
+                sessionList.innerHTML = sessionData.map(s => `
+                    <div class="session-card" onclick="cargarSesion('${s.key}')">
+                        <strong>📌 ${s.key.replace(/_/g, ' ')}</strong>
+                        <div style="font-size:0.75rem; color:#64748b;">${s.fecha} | ${s.messages.length} mensajes</div>
+                    </div>
+                `).join('');
+            }
+
+            const vocabList = document.getElementById('vocabList');
+            if (vocabData.length === 0) {
+                vocabList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin vocabulario registrado aún.</p>';
+            } else {
+                vocabList.innerHTML = vocabData.map(v => `
+                    <div class="vocab-item">
+                        <span>💡 ${v.term}</span>
+                        <span style="font-size:0.7rem; color:#64748b;">[${v.lang}]</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function cargarSesion(key) {
+            const parts = key.split('_');
+            document.getElementById('idiomaSelect').value = parts[0].toLowerCase();
+            document.getElementById('nivelSelect').value = parts[1];
+            document.getElementById('modoSelect').value = parts[2];
+            if (parts[3]) {
+                document.getElementById('examenSelect').value = parts[3];
+                document.getElementById('examenSelect').style.display = 'inline-block';
+            } else {
+                document.getElementById('examenSelect').style.display = 'none';
+            }
+            cambiarConfiguracion();
+        }
+
+        function borrarTodo() {
+            if (confirm('¿Quieres borrar todas las sesiones y el banco de vocabulario?')) {
+                localStorage.removeItem('lingomind_sessions');
+                localStorage.removeItem('lingomind_vocab');
+                sessionData = [];
+                vocabData = [];
+                renderSidebar();
+                cambiarConfiguracion();
             }
         }
     </script>
