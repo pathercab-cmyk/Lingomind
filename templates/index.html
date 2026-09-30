@@ -116,7 +116,7 @@
     </div>
 
     <div class="input-box">
-        <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎙️</button>
+        <button class="btn-mic" id="micBtn" onclick="toggleMic()" title="Hacer clic para hablar">🎙️</button>
         <input type="text" id="txtMsg" placeholder="Escribe o habla en tu idioma..." onkeypress="if(event.key==='Enter') enviar()">
         <button class="btn-send" onclick="enviar()">Enviar</button>
     </div>
@@ -128,6 +128,7 @@
         let audioPlayer = new Audio();
         let recognition = null;
         let isRecording = false;
+        let userStoppedIntentional = false;
 
         const examenesPorIdioma = {
             en: [
@@ -198,53 +199,80 @@
             const lang = document.getElementById('idiomaSelect').value;
             const exSelect = document.getElementById('examenSelect');
             const lista = examenesPorIdioma[lang] || [];
-            
             exSelect.innerHTML = lista.map(e => `<option value="${e.val}">${e.text}</option>`).join('');
         }
 
         function initSpeechRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SR();
-                recognition.continuous = true;
-                recognition.interimResults = true;
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
 
-                recognition.onstart = () => {
-                    isRecording = true;
-                    document.getElementById('micBtn').classList.add('recording');
-                };
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
 
-                recognition.onresult = (event) => {
-                    let transcript = '';
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        transcript += event.results[i][0].transcript;
-                    }
-                    document.getElementById('txtMsg').value = transcript;
-                };
+            recognition.onstart = () => {
+                isRecording = true;
+                const micBtn = document.getElementById('micBtn');
+                micBtn.classList.add('recording');
+                micBtn.title = 'Escuchando... Haz clic para detener';
+            };
 
-                recognition.onerror = () => { stopMic(); };
-                recognition.onend = () => { stopMic(); };
-            }
+            recognition.onresult = (event) => {
+                let textResult = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    textResult += event.results[i][0].transcript;
+                }
+                document.getElementById('txtMsg').value = textResult;
+            };
+
+            recognition.onerror = (event) => {
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    console.error('Error de micrófono:', event.error);
+                }
+                stopMic();
+            };
+
+            recognition.onend = () => {
+                if (isRecording && !userStoppedIntentional) {
+                    try { recognition.start(); } catch(e) { stopMic(); }
+                } else {
+                    stopMic();
+                }
+            };
         }
 
         function toggleMic() {
             if (!recognition) {
-                alert('Tu navegador no soporta entrada por voz.');
+                alert('Tu navegador no permite la entrada por micrófono. Se recomienda usar Google Chrome o Microsoft Edge.');
                 return;
             }
 
             if (isRecording) {
+                userStoppedIntentional = true;
                 recognition.stop();
+                stopMic();
             } else {
+                userStoppedIntentional = false;
                 const lang = document.getElementById('idiomaSelect').value;
                 recognition.lang = langCodeToSpeech[lang] || 'es-ES';
-                try { recognition.start(); } catch(e) { recognition.stop(); }
+                
+                try {
+                    recognition.start();
+                } catch(e) {
+                    recognition.stop();
+                    setTimeout(() => { recognition.start(); }, 200);
+                }
             }
         }
 
         function stopMic() {
             isRecording = false;
-            document.getElementById('micBtn').classList.remove('recording');
+            userStoppedIntentional = true;
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) {
+                micBtn.classList.remove('recording');
+                micBtn.title = 'Hacer clic para hablar';
+            }
         }
 
         async function hablar(texto, btnElement = null) {
@@ -339,7 +367,11 @@
         }
 
         async function enviar() {
-            if (isRecording) recognition.stop();
+            if (isRecording) {
+                userStoppedIntentional = true;
+                if (recognition) recognition.stop();
+                stopMic();
+            }
 
             const txt = document.getElementById('txtMsg');
             const mensaje = txt.value.trim();
