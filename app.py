@@ -7,12 +7,12 @@ from gtts import gTTS
 
 app = Flask(__name__)
 
-# Inicializar cliente de Groq con la clave de entorno
+# Inicializar el cliente de Groq con la clave de entorno
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY")
 )
 
-# Mapeo de códigos de idioma para TTS (gTTS)
+# Mapeo de códigos de idioma para gTTS
 TTS_LANG_MAP = {
     'en': 'en',
     'de': 'de',
@@ -27,7 +27,7 @@ TTS_LANG_MAP = {
 
 @app.route('/')
 def index():
-    # Carga la interfaz gráfica completa (index.html)
+    # Carga la interfaz web (templates/index.html)
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
@@ -56,12 +56,17 @@ def chat():
     """
 
     try:
+        # Detectar automáticamente el modelo disponible en tu cuenta
+        modelos = client.models.list()
+        modelos_texto = [m.id for m in modelos.data if "whisper" not in m.id.lower()]
+        modelo_activo = modelos_texto[0] if modelos_texto else "llama-3.1-8b-instant"
+
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Mensaje del estudiante: {mensaje_usuario}"}
             ],
-            model="llama-3.3-70b-versatile",
+            model=modelo_activo,
             response_format={"type": "json_object"}
         )
 
@@ -72,7 +77,7 @@ def chat():
     except Exception as e:
         print("Error al procesar con Groq:", e)
         return jsonify({
-            "respuesta": f"I received your message! Let's continue practicing.",
+            "respuesta": "I received your message! Let's continue practicing.",
             "correccion": "Ocurrió un detalle al procesar la evaluación.",
             "explicacion": str(e),
             "vocabulario": "General: practice, conversation",
