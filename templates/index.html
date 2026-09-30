@@ -46,7 +46,6 @@
         .session-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; cursor: pointer; }
         .session-card:hover { border-color: #2563eb; }
         
-        /* Estilos de carpetas desplegables (<details>/<summary>) */
         details.group-container { margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #ffffff; overflow: hidden; }
         summary.group-title { font-size: 0.85rem; font-weight: bold; color: #1e293b; background: #f1f5f9; padding: 8px 12px; cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
         summary.group-title:hover { background: #e2e8f0; }
@@ -77,7 +76,6 @@
                 <option value="examen">🎓 Preparación Examen Oficial</option>
             </select>
             <select id="examenSelect" style="display:none;" onchange="cambiarConfiguracion()">
-                <!-- Se llena dinámicamente con JS -->
             </select>
             <button class="btn-top" onclick="toggleSidebar()">📚 Centro de Repaso</button>
         </div>
@@ -331,7 +329,6 @@
                     gramatica: data.gramatica
                 });
 
-                // Guardado de Vocabulario
                 if (data.vocabulario && !data.vocabulario.includes('Error')) {
                     const parts = data.vocabulario.split(':');
                     const contextName = parts.length > 1 ? parts[0].trim() : 'General';
@@ -349,7 +346,6 @@
                     });
                 }
 
-                // Guardado de Gramática
                 if (data.gramatica && !data.gramatica.includes('Error')) {
                     const parts = data.gramatica.split(':');
                     const topicName = parts.length > 1 ? parts[0].trim() : 'Estrategia/Regla';
@@ -400,7 +396,6 @@
         }
 
         function renderSidebar() {
-            // Render Sesiones
             const sessionList = document.getElementById('sessionList');
             if (sessionData.length === 0) {
                 sessionList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">No hay sesiones guardadas.</p>';
@@ -413,7 +408,6 @@
                 `).join('');
             }
 
-            // Render Vocabulario con Desplegables <details>
             const vocabList = document.getElementById('vocabList');
             if (vocabData.length === 0) {
                 vocabList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin vocabulario registrado aún.</p>';
@@ -441,7 +435,6 @@
                 vocabList.innerHTML = htmlV;
             }
 
-            // Render Gramática con Desplegables <details>
             const grammarList = document.getElementById('grammarList');
             if (grammarData.length === 0) {
                 grammarList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin gramática registrada aún.</p>';
