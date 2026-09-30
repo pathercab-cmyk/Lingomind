@@ -7,7 +7,6 @@ from tutor import obtener_respuesta_tutor
 
 app = Flask(__name__)
 
-# Mapeo de voces neurales ultra-naturales
 VOICES = {
     'en': 'en-US-JennyNeural',
     'de': 'de-DE-KatjaNeural'
@@ -33,12 +32,14 @@ def chat():
     correccion = partes[1].strip() if len(partes) > 1 else ""
     explicacion = partes[2].strip() if len(partes) > 2 else ""
     vocabulario = partes[3].strip() if len(partes) > 3 else ""
+    gramatica = partes[4].strip() if len(partes) > 4 else ""
 
     return jsonify({
         'respuesta': respuesta,
         'correccion': correccion,
         'explicacion': explicacion,
-        'vocabulario': vocabulario
+        'vocabulario': vocabulario,
+        'gramatica': gramatica
     })
 
 @app.route('/tts', methods=['POST'])
