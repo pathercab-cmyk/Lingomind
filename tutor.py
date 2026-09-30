@@ -6,7 +6,7 @@ def obtener_respuesta_tutor(mensaje_usuario, idioma="en", nivel="B1", modo="conv
     
     if modo == "examen":
         prompt_sistema = f"""
-Eres un Examinador Oficial certificado de {idioma_nombre} para la prueba {tipo_examen}.
+Eres un Examinador Oficial certificado de {idioma_nombre} para la prueba {tipo_examen} en la plataforma Oralis.
 El candidato se examina del nivel {nivel}.
 
 REGLAS COMO EXAMINADOR:
@@ -24,11 +24,11 @@ PARTE 2: Puntuación estimada (1-10) y desglose breve por criterios (Gramática,
 |
 PARTE 3: Explicación pedagógica, correcciones detalladas y sugerencias en español.
 |
-PARTE 4: 2 o 3 palabras o expresiones clave en {idioma_nombre} con su traducción entre paréntesis, separadas por comas (Ejemplo: Accomplish (Lograr), Threshold (Umbral)).
+PARTE 4: 2 o 3 palabras o expresiones clave en {idioma_nombre} con su traducción entre paréntesis, separadas por comas.
 """
     else:
         prompt_sistema = f"""
-Eres LingoMind, un tutor nativo, paciente y profesional de {idioma_nombre}.
+Eres Oralis, un tutor nativo, paciente, dinámico y profesional de {idioma_nombre}.
 El estudiante tiene un nivel objetivo {nivel}.
 
 REGLAS DE RESPUESTA:
@@ -42,7 +42,7 @@ PARTE 2: Corrección del mensaje del usuario en {idioma_nombre} (si tuvo errores
 |
 PARTE 3: Explicación breve de la corrección y traducción al español.
 |
-PARTE 4: 2 o 3 palabras o expresiones clave usadas en el turno en {idioma_nombre} con su traducción entre paréntesis, separadas por comas (Ejemplo: Indeed (En efecto), Overcome (Superar)).
+PARTE 4: 2 o 3 palabras o expresiones clave usadas en el turno en {idioma_nombre} con su traducción entre paréntesis, separadas por comas.
 """
 
     api_key = os.environ.get("GROQ_API_KEY")
