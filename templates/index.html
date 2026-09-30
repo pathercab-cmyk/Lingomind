@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oralis - Tutor & Exámenes Orales</title>
+    <title>Oralis - Tutor & Exámenes Oficiales</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
@@ -46,7 +46,7 @@
         .session-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; cursor: pointer; }
         .session-card:hover { border-color: #2563eb; }
         
-        /* Estilos de carpetas desplegables */
+        /* Estilos de carpetas desplegables (<details>/<summary>) */
         details.group-container { margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #ffffff; overflow: hidden; }
         summary.group-title { font-size: 0.85rem; font-weight: bold; color: #1e293b; background: #f1f5f9; padding: 8px 12px; cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
         summary.group-title:hover { background: #e2e8f0; }
@@ -60,7 +60,7 @@
     <header>
         <h1>🎙️ Oralis</h1>
         <div class="controls">
-            <select id="idiomaSelect" onchange="cambiarConfiguracion()">
+            <select id="idiomaSelect" onchange="actualizarListaExamenes(); cambiarConfiguracion();">
                 <option value="en">🇬🇧 Inglés</option>
                 <option value="de">🇩🇪 Alemán</option>
             </select>
@@ -70,16 +70,14 @@
                 <option value="B1" selected>B1 - Intermedio</option>
                 <option value="B2">B2 - Intermedio Alto</option>
                 <option value="C1">C1 - Avanzado</option>
+                <option value="C2">C2 - Maestría</option>
             </select>
             <select id="modoSelect" onchange="actualizarModoExamen()">
                 <option value="conversacion">💬 Conversación Libre</option>
                 <option value="examen">🎓 Preparación Examen Oficial</option>
             </select>
             <select id="examenSelect" style="display:none;" onchange="cambiarConfiguracion()">
-                <option value="Cambridge">Cambridge (PET/FCE/CAE)</option>
-                <option value="IELTS">IELTS Academic/General</option>
-                <option value="TOEFL">TOEFL iBT</option>
-                <option value="Goethe">Goethe-Zertifikat</option>
+                <!-- Se llena dinámicamente con JS -->
             </select>
             <button class="btn-top" onclick="toggleSidebar()">📚 Centro de Repaso</button>
         </div>
@@ -126,11 +124,37 @@
         let recognition = null;
         let isRecording = false;
 
+        const examenesPorIdioma = {
+            en: [
+                { val: 'Cambridge Main Suite', text: 'Cambridge (KET/PET/FCE/CAE/CPE)' },
+                { val: 'IELTS Academic/General', text: 'IELTS (Academic & General)' },
+                { val: 'TOEFL iBT', text: 'TOEFL iBT' },
+                { val: 'Linguaskill', text: 'Linguaskill (Cambridge)' },
+                { val: 'Trinity ISE/GESE', text: 'Trinity College (ISE & GESE)' },
+                { val: 'EOI Ingles', text: 'EOI (Escuela Oficial de Idiomas)' }
+            ],
+            de: [
+                { val: 'Goethe-Zertifikat', text: 'Goethe-Zertifikat (A1-C2)' },
+                { val: 'TestDaF', text: 'TestDaF (Acceso Universidad)' },
+                { val: 'TELC Deutsch', text: 'TELC (General / Beruf / Pflege)' },
+                { val: 'EOI Aleman', text: 'EOI Alemán' }
+            ]
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
+            actualizarListaExamenes();
             cargarDatosGuardados();
             cambiarConfiguracion();
             initSpeechRecognition();
         });
+
+        function actualizarListaExamenes() {
+            const lang = document.getElementById('idiomaSelect').value;
+            const exSelect = document.getElementById('examenSelect');
+            const lista = examenesPorIdioma[lang] || [];
+            
+            exSelect.innerHTML = lista.map(e => `<option value="${e.val}">${e.text}</option>`).join('');
+        }
 
         function initSpeechRecognition() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -143,7 +167,6 @@
                     isRecording = true;
                     const btn = document.getElementById('micBtn');
                     btn.classList.add('recording');
-                    btn.title = "Escuchando...";
                 };
 
                 recognition.onresult = (event) => {
@@ -161,7 +184,7 @@
 
         function toggleMic() {
             if (!recognition) {
-                alert('Tu navegador no soporta entrada de micrófono. Usa Google Chrome o Microsoft Edge.');
+                alert('Tu navegador no soporta entrada de micrófono.');
                 return;
             }
 
@@ -170,18 +193,13 @@
             } else {
                 const lang = document.getElementById('idiomaSelect').value;
                 recognition.lang = lang === 'en' ? 'en-US' : 'de-DE';
-                try {
-                    recognition.start();
-                } catch(e) {
-                    recognition.stop();
-                }
+                try { recognition.start(); } catch(e) { recognition.stop(); }
             }
         }
 
         function stopMic() {
             isRecording = false;
-            const btn = document.getElementById('micBtn');
-            btn.classList.remove('recording');
+            document.getElementById('micBtn').classList.remove('recording');
         }
 
         async function hablar(texto, btnElement = null) {
@@ -198,14 +216,13 @@
                     })
                 });
 
-                if (!res.ok) throw new Error('Error al generar voz');
+                if (!res.ok) throw new Error('Error TTS');
 
                 const blob = await res.blob();
-                const audioUrl = URL.createObjectURL(blob);
-                audioPlayer.src = audioUrl;
+                audioPlayer.src = URL.createObjectURL(blob);
                 audioPlayer.play();
             } catch (err) {
-                console.error('TTS Error:', err);
+                console.error(err);
             } finally {
                 if (btnElement) btnElement.disabled = false;
             }
@@ -233,7 +250,12 @@
             if (session && session.messages.length > 0) {
                 renderMessages(session.messages);
             } else {
-                const welcomeMsg = `Hello! I am Oralis. Ready to practice (${key.replace(/_/g, ' ')})? You can speak or write in Spanish anytime if you need help!`;
+                const modo = document.getElementById('modoSelect').value;
+                const exName = document.getElementById('examenSelect').value;
+                const welcomeMsg = modo === 'examen' 
+                    ? `Bienvenido a la simulación del examen oficial ${exName} (${key.split('_')[0]} Nivel ${document.getElementById('nivelSelect').value}). ¡Comencemos la prueba!`
+                    : `Hello! I am Oralis. Ready to practice (${key.replace(/_/g, ' ')})? You can speak or write in Spanish anytime if you need help!`;
+
                 chat.innerHTML = `
                     <div class="msg bot">
                         ${welcomeMsg}
@@ -248,7 +270,7 @@
                 if (m.type === 'user') return `<div class="msg user">${m.text}</div>`;
                 let html = `<div class="msg bot">${m.text}<br><button class="btn-audio" onclick="hablar('${m.text.replace(/'/g, "\\'")}', this)">🔊</button>`;
                 if (m.correccion || m.explicacion) {
-                    html += `<div class="feedback"><strong>Feedback & Evaluación:</strong><br>${m.correccion}<br><br>${m.explicacion}</div>`;
+                    html += `<div class="feedback"><strong>Evaluación & Feedback:</strong><br>${m.correccion}<br><br>${m.explicacion}</div>`;
                 }
                 if (m.vocabulario) {
                     const parts = m.vocabulario.split(':');
@@ -259,7 +281,7 @@
                     html += `<div style="margin-top:6px;">${tags}</div>`;
                 }
                 if (m.gramatica) {
-                    html += `<div class="grammar-tag">📐 <strong>Gramática:</strong> ${m.gramatica}</div>`;
+                    html += `<div class="grammar-tag">📐 <strong>Gramática/Estrategia:</strong> ${m.gramatica}</div>`;
                 }
                 return html + `</div>`;
             }).join('');
@@ -309,13 +331,12 @@
                     gramatica: data.gramatica
                 });
 
-                // Extraer y procesar Vocabulario
+                // Guardado de Vocabulario
                 if (data.vocabulario && !data.vocabulario.includes('Error')) {
                     const parts = data.vocabulario.split(':');
                     const contextName = parts.length > 1 ? parts[0].trim() : 'General';
                     const termsRaw = parts.length > 1 ? parts[1] : parts[0];
                     
-                    // Separar por comas o saltos de línea
                     const items = termsRaw.split(/,|\n/).map(i => i.trim()).filter(i => i.length > 0);
                     items.forEach(cleanTerm => {
                         if (!vocabData.some(v => v.term === cleanTerm && v.context === contextName)) {
@@ -328,10 +349,10 @@
                     });
                 }
 
-                // Extraer y procesar Gramática
+                // Guardado de Gramática
                 if (data.gramatica && !data.gramatica.includes('Error')) {
                     const parts = data.gramatica.split(':');
-                    const topicName = parts.length > 1 ? parts[0].trim() : 'Reglas Generales';
+                    const topicName = parts.length > 1 ? parts[0].trim() : 'Estrategia/Regla';
                     const ruleDetail = parts.length > 1 ? parts[1].trim() : parts[0].trim();
 
                     if (ruleDetail && !grammarData.some(g => g.rule === ruleDetail && g.topic === topicName)) {
@@ -379,7 +400,7 @@
         }
 
         function renderSidebar() {
-            // Sesiones
+            // Render Sesiones
             const sessionList = document.getElementById('sessionList');
             if (sessionData.length === 0) {
                 sessionList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">No hay sesiones guardadas.</p>';
@@ -392,7 +413,7 @@
                 `).join('');
             }
 
-            // Vocabulario con desplegables (<details>)
+            // Render Vocabulario con Desplegables <details>
             const vocabList = document.getElementById('vocabList');
             if (vocabData.length === 0) {
                 vocabList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin vocabulario registrado aún.</p>';
@@ -420,14 +441,14 @@
                 vocabList.innerHTML = htmlV;
             }
 
-            // Gramática con desplegables (<details>)
+            // Render Gramática con Desplegables <details>
             const grammarList = document.getElementById('grammarList');
             if (grammarData.length === 0) {
                 grammarList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin gramática registrada aún.</p>';
             } else {
                 const groupedGrammar = {};
                 grammarData.forEach(item => {
-                    const top = item.topic || 'Reglas Generales';
+                    const top = item.topic || 'Estrategia/Regla';
                     if (!groupedGrammar[top]) groupedGrammar[top] = [];
                     groupedGrammar[top].push(item);
                 });
@@ -452,6 +473,7 @@
         function cargarSesion(key) {
             const parts = key.split('_');
             document.getElementById('idiomaSelect').value = parts[0].toLowerCase();
+            actualizarListaExamenes();
             document.getElementById('nivelSelect').value = parts[1];
             document.getElementById('modoSelect').value = parts[2];
             if (parts[3]) {
@@ -464,7 +486,7 @@
         }
 
         function borrarTodo() {
-            if (confirm('¿Quieres borrar todas las sesiones, el banco de vocabulario y el banco de gramática?')) {
+            if (confirm('¿Quieres borrar todo el historial (sesiones, vocabulario y gramática)?')) {
                 localStorage.removeItem('oralis_sessions');
                 localStorage.removeItem('oralis_vocab');
                 localStorage.removeItem('oralis_grammar');
