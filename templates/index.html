@@ -296,7 +296,7 @@
             const session = sessionData.find(s => s.key === key);
             const chat = document.getElementById('chat');
 
-            if (session && session.messages.length > 0) {
+           if (session && session.messages.length > 0) {
                 renderMessages(session.messages);
             } else {
                 const modo = document.getElementById('modoSelect').value;
