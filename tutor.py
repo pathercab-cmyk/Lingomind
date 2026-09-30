@@ -11,25 +11,21 @@ El candidato se examina del nivel {nivel}.
 
 REGLAS COMO EXAMINADOR:
 1. Simula una prueba oral/escrita real adaptada al examen {tipo_examen} (Nivel {nivel}).
-2. Si el usuario te habla en español para pedir aclaraciones o porque no sabe cómo expresarse, respóndele brevemente en español para ayudarle y retoma el examen en {idioma_nombre}.
-3. Evalúa al candidato desglosando la nota según los criterios oficiales del examen:
-   - Gramática y Precisión (Grammar & Accuracy)
-   - Vocabulario y Variedad (Vocabulary & Range)
-   - Fluidez y Estructura (Fluency & Coherence)
+2. Si el usuario te habla en español para pedir aclaraciones o pedir vocabulario, respóndele en español para ayudarle y retoma el examen en {idioma_nombre}.
+3. Evalúa al candidato desglosando la nota según los criterios oficiales del examen.
 4. NO uses marcado Markdown (nada de asteriscos *, almohadillas #, etc.).
 5. Tu respuesta DEBE constar de 5 partes divididas exactamente por el carácter | :
 
-PARTE 1: La siguiente pregunta o indicación del examen en {idioma_nombre}.
+PARTE 1: La respuesta conversacional o indicación del examen en {idioma_nombre}.
 |
-PARTE 2: Puntuación estimada (1-10) y desglose breve por criterios (Gramática, Vocabulario, Fluidez).
+PARTE 2: Puntuación estimada (1-10) y desglose breve por criterios.
 |
-PARTE 3: Explicación pedagógica, correcciones detalladas y sugerencias en español.
+PARTE 3: Explicación pedagógica y correcciones en español.
 |
-PARTE 4: Contexto temático seguido de : y luego 2-3 palabras clave con traducción entre paréntesis.
-Ejemplo: Examen: Budget (Presupuesto), Assessment (Evaluación)
+PARTE 4: Nombre_Del_Tema: Término1 (Traducción1), Término2 (Traducción2), Término3 (Traducción3)
+(IMPORTANTE: Incluye TODAS las palabras clave o vocabulario pedido separadas por comas. No agregues texto explicativo en esta parte).
 |
-PARTE 5: Tema Gramatical seguido de : y luego una regla/estrucutra resumida en español.
-Ejemplo: Tiempos Pasados: Uso de Past Perfect para acciones anteriores a otra en el pasado.
+PARTE 5: Tema_Gramatical: Regla o consejo resumido en español.
 """
     else:
         prompt_sistema = f"""
@@ -38,9 +34,9 @@ El estudiante tiene un nivel objetivo {nivel}.
 
 REGLAS DE RESPUESTA:
 1. Responde de forma conversacional adaptando la complejidad al nivel {nivel}.
-2. SI EL USUARIO ESCRIBE EN SU IDIOMA NATIVO (ESPAÑOL) pidiendo traducción, explicación gramatical o expresando dudas:
-   - Entiende la duda en español.
-   - Responde explicándole la duda pedagógicamente y dale la respuesta e interacciones en {idioma_nombre} para que siga practicando.
+2. SI EL USUARIO ESCRIBE EN ESPAÑOL O PIDE VOCABULARIO DE UN TEMA:
+   - Proporciona la explicación en español si es necesario.
+   - Si pide vocabulario, dale la respuesta en {idioma_nombre} e incluye TODAS las palabras solicitadas en la PARTE 4.
 3. NO uses marcado Markdown (nada de asteriscos *, almohadillas #, etc.).
 4. Tu respuesta DEBE constar de 5 partes divididas exactamente por el carácter | :
 
@@ -48,13 +44,12 @@ PARTE 1: La respuesta conversacional principal en {idioma_nombre}.
 |
 PARTE 2: Corrección del mensaje del usuario en {idioma_nombre} (si tuvo errores) o versión mejorada adaptada a nivel {nivel}.
 |
-PARTE 3: Explicación breve de la corrección y traducción/aclaración en español.
+PARTE 3: Explicación breve de la corrección y aclaraciones en español.
 |
-PARTE 4: Tema/Contexto de la conversación seguido de : y 2-3 expresiones clave con traducción entre paréntesis.
-Ejemplo: Viajes: Boarding pass (Tarjeta de embarque), Delay (Retraso)
+PARTE 4: Nombre_Del_Tema: Término1 (Traducción1), Término2 (Traducción2), Término3 (Traducción3), Término4 (Traducción4)
+(IMPORTANTE: Si el usuario pide todo el vocabulario de un tema, extrae AQUÍ TODAS las palabras clave en formato separado por comas).
 |
-PARTE 5: Tema Gramatical evaluado o consultado seguido de : y el resumen de la regla o consejo práctico en español.
-Ejemplo: Modales de Probabilidad: Must + infinitivo sin 'to' expresa certeza alta en el presente.
+PARTE 5: Tema_Gramatical: Regla o estructura resumida en español.
 """
 
     api_key = os.environ.get("GROQ_API_KEY")
@@ -63,18 +58,7 @@ Ejemplo: Modales de Probabilidad: Must + infinitivo sin 'to' expresa certeza alt
 
     client = Groq(api_key=api_key)
 
-    modelos_candidatos = []
-    try:
-        modelos_data = client.models.list().data
-        for m in modelos_data:
-            m_id = str(m.id).lower() if hasattr(m, 'id') else str(m).lower()
-            if not any(x in m_id for x in ["whisper", "guard", "vision"]):
-                modelos_candidatos.append(m.id if hasattr(m, 'id') else str(m))
-    except Exception:
-        pass
-
-    if not modelos_candidatos:
-        modelos_candidatos = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+    modelos_candidatos = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
 
     ultimo_error = ""
     for modelo in modelos_candidatos:
@@ -85,8 +69,8 @@ Ejemplo: Modales de Probabilidad: Must + infinitivo sin 'to' expresa certeza alt
                     {"role": "system", "content": prompt_sistema},
                     {"role": "user", "content": mensaje_usuario}
                 ],
-                temperature=0.6,
-                max_tokens=850
+                temperature=0.5,
+                max_tokens=1000
             )
             return completion.choices[0].message.content
         except Exception as e:
