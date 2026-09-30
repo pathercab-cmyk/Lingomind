@@ -24,20 +24,33 @@
         button.btn-send { padding: 10px 20px; border-radius: 20px; border: none; background: #2563eb; color: white; font-weight: bold; cursor: pointer; }
         .btn-audio { background: #f1f5f9; border: none; border-radius: 50%; width: 34px; height: 34px; margin-top: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; }
         .btn-audio:disabled { opacity: 0.5; cursor: wait; }
-        .btn-mic { background: #f1f5f9; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1.2rem; }
-        .feedback { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 8px 12px; margin-top: 8px; font-size: 0.85rem; color: #78350f; border-radius: 4px; }
-        .vocab-tag { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin: 2px; }
+        .btn-mic { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; font-size: 1.2rem; transition: all 0.2s; }
+        .btn-mic.recording { background: #ef4444; color: white; animation: pulse 1.5s infinite; border-color: #dc2626; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
 
-        .sidebar { width: 340px; background: #ffffff; border-left: 1px solid #e2e8f0; display: none; flex-direction: column; padding: 15px; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
+        .feedback { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 8px 12px; margin-top: 8px; font-size: 0.85rem; color: #78350f; border-radius: 4px; }
+        .vocab-tag { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; margin: 2px; }
+        .grammar-tag { display: block; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem; margin-top: 6px; }
+
+        .sidebar { width: 360px; background: #ffffff; border-left: 1px solid #e2e8f0; display: none; flex-direction: column; padding: 15px; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
         .sidebar.active { display: flex; }
-        .sidebar-tabs { display: flex; gap: 5px; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
-        .tab-btn { background: none; border: none; padding: 6px 10px; font-weight: bold; color: #64748b; cursor: pointer; font-size: 0.85rem; }
+        .sidebar-tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        .tab-btn { background: none; border: none; padding: 6px 8px; font-weight: bold; color: #64748b; cursor: pointer; font-size: 0.8rem; }
         .tab-btn.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
         
         .session-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; cursor: pointer; }
         .session-card:hover { border-color: #2563eb; }
-        .vocab-item { background: #f1f5f9; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85rem; display: flex; justify-content: space-between; }
-        .btn-clear { background: #ef4444; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-top: auto; }
+        
+        .group-container { margin-bottom: 15px; }
+        .group-title { font-size: 0.85rem; font-weight: bold; color: #1e293b; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; margin-bottom: 6px; }
+        .item-card { background: #f1f5f9; padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 0.82rem; line-height: 1.3; }
+        
+        .btn-clear { background: #ef4444; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; margin-top: auto; }
     </style>
 </head>
 <body>
@@ -65,7 +78,7 @@
                 <option value="TOEFL">TOEFL iBT</option>
                 <option value="Goethe">Goethe-Zertifikat</option>
             </select>
-            <button class="btn-top" onclick="toggleSidebar()">📚 Biblioteca & Vocabulario</button>
+            <button class="btn-top" onclick="toggleSidebar()">📚 Centro de Repaso</button>
         </div>
     </header>
 
@@ -76,6 +89,7 @@
             <div class="sidebar-tabs">
                 <button class="tab-btn active" id="tabSesionesBtn" onclick="switchTab('sesiones')">📂 Sesiones</button>
                 <button class="tab-btn" id="tabVocabBtn" onclick="switchTab('vocabulario')">📖 Vocabulario</button>
+                <button class="tab-btn" id="tabGrammarBtn" onclick="switchTab('gramatica')">📐 Gramática</button>
                 <button onclick="toggleSidebar()" style="margin-left:auto; background:none; border:none; cursor:pointer;">❌</button>
             </div>
             
@@ -87,25 +101,85 @@
                 <div id="vocabList"></div>
             </div>
 
+            <div id="tabGramatica" style="display:none;">
+                <div id="grammarList"></div>
+            </div>
+
             <button class="btn-clear" onclick="borrarTodo()">Borrar Todo el Historial</button>
         </div>
     </div>
 
     <div class="input-box">
-        <button class="btn-mic" id="micBtn" onclick="usarMic()">🎙️</button>
-        <input type="text" id="txtMsg" placeholder="Escribe o habla en tu idioma objetivo..." onkeypress="if(event.key==='Enter') enviar()">
+        <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎙️</button>
+        <input type="text" id="txtMsg" placeholder="Escribe o habla en tu idioma nativo u objetivo..." onkeypress="if(event.key==='Enter') enviar()">
         <button class="btn-send" onclick="enviar()">Enviar</button>
     </div>
 
     <script>
         let sessionData = [];
         let vocabData = [];
+        let grammarData = [];
         let audioPlayer = new Audio();
+        let recognition = null;
+        let isRecording = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             cargarDatosGuardados();
             cambiarConfiguracion();
+            initSpeechRecognition();
         });
+
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SR();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    const btn = document.getElementById('micBtn');
+                    btn.classList.add('recording');
+                    btn.title = "Escuchando...";
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    document.getElementById('txtMsg').value = transcript;
+                };
+
+                recognition.onerror = () => { stopMic(); };
+                recognition.onend = () => { stopMic(); };
+            }
+        }
+
+        function toggleMic() {
+            if (!recognition) {
+                alert('Tu navegador no soporta entrada de micrófono. Usa Google Chrome o Microsoft Edge.');
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                const lang = document.getElementById('idiomaSelect').value;
+                recognition.lang = lang === 'en' ? 'en-US' : 'de-DE';
+                try {
+                    recognition.start();
+                } catch(e) {
+                    recognition.stop();
+                }
+            }
+        }
+
+        function stopMic() {
+            isRecording = false;
+            const btn = document.getElementById('micBtn');
+            btn.classList.remove('recording');
+        }
 
         async function hablar(texto, btnElement = null) {
             if (!texto) return;
@@ -134,18 +208,6 @@
             }
         }
 
-        function usarMic() {
-            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-                alert('Tu navegador no soporta micrófono. Usa Chrome o Edge.');
-                return;
-            }
-            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const rec = new SR();
-            rec.lang = document.getElementById('idiomaSelect').value === 'en' ? 'en-US' : 'de-DE';
-            rec.onresult = (e) => { document.getElementById('txtMsg').value = e.results[0][0].transcript; };
-            rec.start();
-        }
-
         function actualizarModoExamen() {
             const modo = document.getElementById('modoSelect').value;
             document.getElementById('examenSelect').style.display = modo === 'examen' ? 'inline-block' : 'none';
@@ -168,7 +230,7 @@
             if (session && session.messages.length > 0) {
                 renderMessages(session.messages);
             } else {
-                const welcomeMsg = `Hello! I am Oralis. Ready to practice (${key.replace(/_/g, ' ')})?`;
+                const welcomeMsg = `Hello! I am Oralis. Ready to practice (${key.replace(/_/g, ' ')})? You can speak or write in Spanish anytime if you need help!`;
                 chat.innerHTML = `
                     <div class="msg bot">
                         ${welcomeMsg}
@@ -186,8 +248,14 @@
                     html += `<div class="feedback"><strong>Feedback & Evaluación:</strong><br>${m.correccion}<br><br>${m.explicacion}</div>`;
                 }
                 if (m.vocabulario) {
-                    const tags = m.vocabulario.split(',').map(v => `<span class="vocab-tag">📌 ${v.trim()}</span>`).join(' ');
+                    const parts = m.vocabulario.split(':');
+                    const context = parts.length > 1 ? parts[0].trim() : 'General';
+                    const terms = parts.length > 1 ? parts[1] : parts[0];
+                    const tags = terms.split(',').map(v => `<span class="vocab-tag">📌 [${context}] ${v.trim()}</span>`).join(' ');
                     html += `<div style="margin-top:6px;">${tags}</div>`;
+                }
+                if (m.gramatica) {
+                    html += `<div class="grammar-tag">📐 <strong>Gramática:</strong> ${m.gramatica}</div>`;
                 }
                 return html + `</div>`;
             }).join('');
@@ -195,6 +263,8 @@
         }
 
         async function enviar() {
+            if (isRecording) recognition.stop();
+
             const txt = document.getElementById('txtMsg');
             const mensaje = txt.value.trim();
             if (!mensaje) return;
@@ -231,16 +301,41 @@
                     text: data.respuesta,
                     correccion: data.correccion,
                     explicacion: data.explicacion,
-                    vocabulario: data.vocabulario
+                    vocabulario: data.vocabulario,
+                    gramatica: data.gramatica
                 });
 
+                // Guardar Vocabulario
                 if (data.vocabulario) {
-                    const items = data.vocabulario.split(',');
-                    items.forEach(item => {
-                        if (item.trim() && !vocabData.some(v => v.term === item.trim())) {
-                            vocabData.unshift({ term: item.trim(), lang: document.getElementById('idiomaSelect').value.toUpperCase() });
+                    const parts = data.vocabulario.split(':');
+                    const contextName = parts.length > 1 ? parts[0].trim() : 'General';
+                    const terms = parts.length > 1 ? parts[1] : parts[0];
+                    
+                    terms.split(',').forEach(item => {
+                        const cleanTerm = item.trim();
+                        if (cleanTerm && !vocabData.some(v => v.term === cleanTerm && v.context === contextName)) {
+                            vocabData.unshift({
+                                term: cleanTerm,
+                                context: contextName,
+                                lang: document.getElementById('idiomaSelect').value.toUpperCase()
+                            });
                         }
                     });
+                }
+
+                // Guardar Gramática
+                if (data.gramatica) {
+                    const parts = data.gramatica.split(':');
+                    const topicName = parts.length > 1 ? parts[0].trim() : 'Reglas Generales';
+                    const ruleDetail = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+
+                    if (ruleDetail && !grammarData.some(g => g.rule === ruleDetail && g.topic === topicName)) {
+                        grammarData.unshift({
+                            topic: topicName,
+                            rule: ruleDetail,
+                            lang: document.getElementById('idiomaSelect').value.toUpperCase()
+                        });
+                    }
                 }
 
                 guardarDatos();
@@ -257,23 +352,29 @@
         function switchTab(tab) {
             document.getElementById('tabSesiones').style.display = tab === 'sesiones' ? 'block' : 'none';
             document.getElementById('tabVocabulario').style.display = tab === 'vocabulario' ? 'block' : 'none';
+            document.getElementById('tabGramatica').style.display = tab === 'gramatica' ? 'block' : 'none';
+
             document.getElementById('tabSesionesBtn').classList.toggle('active', tab === 'sesiones');
             document.getElementById('tabVocabBtn').classList.toggle('active', tab === 'vocabulario');
+            document.getElementById('tabGrammarBtn').classList.toggle('active', tab === 'gramatica');
         }
 
         function cargarDatosGuardados() {
             sessionData = JSON.parse(localStorage.getItem('oralis_sessions') || '[]');
             vocabData = JSON.parse(localStorage.getItem('oralis_vocab') || '[]');
+            grammarData = JSON.parse(localStorage.getItem('oralis_grammar') || '[]');
             renderSidebar();
         }
 
         function guardarDatos() {
             localStorage.setItem('oralis_sessions', JSON.stringify(sessionData));
             localStorage.setItem('oralis_vocab', JSON.stringify(vocabData));
+            localStorage.setItem('oralis_grammar', JSON.stringify(grammarData));
             renderSidebar();
         }
 
         function renderSidebar() {
+            // Sesiones
             const sessionList = document.getElementById('sessionList');
             if (sessionData.length === 0) {
                 sessionList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">No hay sesiones guardadas.</p>';
@@ -286,16 +387,52 @@
                 `).join('');
             }
 
+            // Vocabulario
             const vocabList = document.getElementById('vocabList');
             if (vocabData.length === 0) {
                 vocabList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin vocabulario registrado aún.</p>';
             } else {
-                vocabList.innerHTML = vocabData.map(v => `
-                    <div class="vocab-item">
-                        <span>💡 ${v.term}</span>
-                        <span style="font-size:0.7rem; color:#64748b;">[${v.lang}]</span>
-                    </div>
-                `).join('');
+                const groupedVocab = {};
+                vocabData.forEach(item => {
+                    const ctx = item.context || 'General';
+                    if (!groupedVocab[ctx]) groupedVocab[ctx] = [];
+                    groupedVocab[ctx].push(item);
+                });
+
+                let htmlV = '';
+                for (const [ctx, items] of Object.entries(groupedVocab)) {
+                    htmlV += `<div class="group-container">
+                        <div class="group-title">📁 Contexto: ${ctx}</div>`;
+                    items.forEach(v => {
+                        htmlV += `<div class="item-card">💡 ${v.term} <span style="font-size:0.7rem; color:#64748b;">[${v.lang}]</span></div>`;
+                    });
+                    htmlV += `</div>`;
+                }
+                vocabList.innerHTML = htmlV;
+            }
+
+            // Gramática
+            const grammarList = document.getElementById('grammarList');
+            if (grammarData.length === 0) {
+                grammarList.innerHTML = '<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin gramática registrada aún.</p>';
+            } else {
+                const groupedGrammar = {};
+                grammarData.forEach(item => {
+                    const top = item.topic || 'Reglas Generales';
+                    if (!groupedGrammar[top]) groupedGrammar[top] = [];
+                    groupedGrammar[top].push(item);
+                });
+
+                let htmlG = '';
+                for (const [top, items] of Object.entries(groupedGrammar)) {
+                    htmlG += `<div class="group-container">
+                        <div class="group-title">📐 Tema: ${top}</div>`;
+                    items.forEach(g => {
+                        htmlG += `<div class="item-card">🔹 ${g.rule} <span style="font-size:0.7rem; color:#64748b;">[${g.lang}]</span></div>`;
+                    });
+                    htmlG += `</div>`;
+                }
+                grammarList.innerHTML = htmlG;
             }
         }
 
@@ -314,11 +451,13 @@
         }
 
         function borrarTodo() {
-            if (confirm('¿Quieres borrar todas las sesiones y el banco de vocabulario?')) {
+            if (confirm('¿Quieres borrar todas las sesiones, el banco de vocabulario y el banco de gramática?')) {
                 localStorage.removeItem('oralis_sessions');
                 localStorage.removeItem('oralis_vocab');
+                localStorage.removeItem('oralis_grammar');
                 sessionData = [];
                 vocabData = [];
+                grammarData = [];
                 renderSidebar();
                 cambiarConfiguracion();
             }
