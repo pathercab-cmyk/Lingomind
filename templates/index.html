@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oralis - Tutor & Exámenes Oficiales</title>
+    <title>Oralis - Tutor & Exámenes Oficiales (Universidad de Sevilla)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
@@ -57,11 +57,18 @@
 </head>
 <body>
     <header>
-        <h1>🎙️ Oralis</h1>
+        <h1>🎙️ Oralis (Universidad de Sevilla)</h1>
         <div class="controls">
             <select id="idiomaSelect" onchange="actualizarListaExamenes(); cambiarConfiguracion();">
                 <option value="en">🇬🇧 Inglés</option>
                 <option value="de">🇩🇪 Alemán</option>
+                <option value="fr">🇫🇷 Francés</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="pt">🇵🇹 Portugués</option>
+                <option value="zh">🇨🇳 Chino</option>
+                <option value="ja">🇯🇵 Japonés</option>
+                <option value="ru">🇷🇺 Ruso</option>
+                <option value="es">🇪🇸 Español (ELE)</option>
             </select>
             <select id="nivelSelect" onchange="cambiarConfiguracion()">
                 <option value="A1">A1 - Principiante</option>
@@ -110,7 +117,7 @@
 
     <div class="input-box">
         <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎙️</button>
-        <input type="text" id="txtMsg" placeholder="Escribe o habla en tu idioma nativo u objetivo..." onkeypress="if(event.key==='Enter') enviar()">
+        <input type="text" id="txtMsg" placeholder="Escribe o habla en tu idioma..." onkeypress="if(event.key==='Enter') enviar()">
         <button class="btn-send" onclick="enviar()">Enviar</button>
     </div>
 
@@ -122,21 +129,64 @@
         let recognition = null;
         let isRecording = false;
 
+        // Catálogo de exámenes oficiales por idioma (Instituto de Idiomas US & Certificaciones Internacionales)
         const examenesPorIdioma = {
             en: [
+                { val: 'Acreditacion US / CertAcles', text: 'Acreditación US / CertAcles (B1/B2/C1)' },
                 { val: 'Cambridge Main Suite', text: 'Cambridge (KET/PET/FCE/CAE/CPE)' },
-                { val: 'IELTS Academic/General', text: 'IELTS (Academic & General)' },
+                { val: 'IELTS Academic/General', text: 'IELTS Academic / General' },
                 { val: 'TOEFL iBT', text: 'TOEFL iBT' },
                 { val: 'Linguaskill', text: 'Linguaskill (Cambridge)' },
-                { val: 'Trinity ISE/GESE', text: 'Trinity College (ISE & GESE)' },
+                { val: 'Trinity ISE/GESE', text: 'Trinity College (ISE/GESE)' },
                 { val: 'EOI Ingles', text: 'EOI (Escuela Oficial de Idiomas)' }
             ],
             de: [
+                { val: 'Acreditacion US / CertAcles', text: 'Acreditación US / CertAcles (B1/B2)' },
                 { val: 'Goethe-Zertifikat', text: 'Goethe-Zertifikat (A1-C2)' },
                 { val: 'TestDaF', text: 'TestDaF (Acceso Universidad)' },
-                { val: 'TELC Deutsch', text: 'TELC (General / Beruf / Pflege)' },
+                { val: 'TELC Deutsch', text: 'TELC (General / Beruf)' },
                 { val: 'EOI Aleman', text: 'EOI Alemán' }
+            ],
+            fr: [
+                { val: 'Acreditacion US / CertAcles', text: 'Acreditación US / CertAcles (B1/B2)' },
+                { val: 'DELF/DALF', text: 'DELF / DALF (CIEP / Instituto Francés)' },
+                { val: 'TCF', text: 'TCF (Test de Connaissance du Français)' },
+                { val: 'EOI Frances', text: 'EOI Francés' }
+            ],
+            it: [
+                { val: 'Acreditacion US / CertAcles', text: 'Acreditación US / CertAcles (B1/B2)' },
+                { val: 'CELI (Perugia)', text: 'CELI (Universitá per Stranieri di Perugia)' },
+                { val: 'CILS (Siena)', text: 'CILS (Universitá per Stranieri di Siena)' },
+                { val: 'PLIDA', text: 'PLIDA (Società Dante Alighieri)' },
+                { val: 'EOI Italiano', text: 'EOI Italiano' }
+            ],
+            pt: [
+                { val: 'Acreditacion US / CertAcles', text: 'Acreditación US / CertAcles' },
+                { val: 'CAPLE (PLE)', text: 'CAPLE (DIPLE / DAPLE / DUPLE)' },
+                { val: 'EOI Portugues', text: 'EOI Portugués' }
+            ],
+            zh: [
+                { val: 'HSK 1-6', text: 'HSK (Chinese Proficiency Test)' },
+                { val: 'HSKK Oral', text: 'HSKK (Examen Oral de Chino)' },
+                { val: 'YCT', text: 'YCT (Youth Chinese Test)' }
+            ],
+            ja: [
+                { val: 'JLPT / Noken N5-N1', text: 'JLPT / Noken (Nivel N5 a N1)' }
+            ],
+            ru: [
+                { val: 'TRKI / TORFL', text: 'TRKI / TORFL (Certificación Oficial Rusa)' },
+                { val: 'EOI Ruso', text: 'EOI Ruso' }
+            ],
+            es: [
+                { val: 'DELE Instituto Cervantes', text: 'DELE (Instituto Cervantes A1-C2)' },
+                { val: 'SIELE Global', text: 'SIELE Global (Examen Digital)' }
             ]
+        };
+
+        // Mapeo para reconocimiento de voz en cada idioma
+        const langCodeToSpeech = {
+            en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT',
+            pt: 'pt-PT', zh: 'zh-CN', ja: 'ja-JP', ru: 'ru-RU', es: 'es-ES'
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -163,8 +213,7 @@
 
                 recognition.onstart = () => {
                     isRecording = true;
-                    const btn = document.getElementById('micBtn');
-                    btn.classList.add('recording');
+                    document.getElementById('micBtn').classList.add('recording');
                 };
 
                 recognition.onresult = (event) => {
@@ -182,7 +231,7 @@
 
         function toggleMic() {
             if (!recognition) {
-                alert('Tu navegador no soporta entrada de micrófono.');
+                alert('Tu navegador no soporta entrada por voz.');
                 return;
             }
 
@@ -190,7 +239,7 @@
                 recognition.stop();
             } else {
                 const lang = document.getElementById('idiomaSelect').value;
-                recognition.lang = lang === 'en' ? 'en-US' : 'de-DE';
+                recognition.lang = langCodeToSpeech[lang] || 'es-ES';
                 try { recognition.start(); } catch(e) { recognition.stop(); }
             }
         }
@@ -241,7 +290,7 @@
         }
 
         function cambiarConfiguracion() {
-            renderSidebar(); // Actualiza el Centro de Repaso filtrando por el idioma activo
+            renderSidebar();
             
             const key = getSessionKey();
             const session = sessionData.find(s => s.key === key);
@@ -253,8 +302,8 @@
                 const modo = document.getElementById('modoSelect').value;
                 const exName = document.getElementById('examenSelect').value;
                 const welcomeMsg = modo === 'examen' 
-                    ? `Bienvenido a la simulación del examen oficial ${exName} (${key.split('_')[0]} Nivel ${document.getElementById('nivelSelect').value}). ¡Comencemos la prueba!`
-                    : `Hello! I am Oralis. Ready to practice (${key.replace(/_/g, ' ')})? You can speak or write in Spanish anytime if you need help!`;
+                    ? `Bienvenido/a a la simulación del examen oficial ${exName} (${key.split('_')[0]} Nivel ${document.getElementById('nivelSelect').value}). ¡Comencemos la prueba!`
+                    : `¡Hola! Soy tu tutor Oralis. Preparado para practicar (${key.replace(/_/g, ' ')}). Puedes escribirme o hablarme en español cuando lo necesites.`;
 
                 chat.innerHTML = `
                     <div class="msg bot">
@@ -418,7 +467,7 @@
             const filteredVocab = vocabData.filter(item => item.lang === currentLang);
 
             if (filteredVocab.length === 0) {
-                vocabList.innerHTML = `<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin vocabulario registrado para ${currentLang === 'EN' ? 'Inglés' : 'Alemán'}.</p>`;
+                vocabList.innerHTML = `<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin vocabulario registrado para ${currentLang}.</p>`;
             } else {
                 const groupedVocab = {};
                 filteredVocab.forEach(item => {
@@ -448,7 +497,7 @@
             const filteredGrammar = grammarData.filter(item => item.lang === currentLang);
 
             if (filteredGrammar.length === 0) {
-                grammarList.innerHTML = `<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin gramática registrada para ${currentLang === 'EN' ? 'Inglés' : 'Alemán'}.</p>`;
+                grammarList.innerHTML = `<p style="font-size:0.85rem; color:#64748b; margin-top:10px;">Sin gramática registrada para ${currentLang}.</p>`;
             } else {
                 const groupedGrammar = {};
                 filteredGrammar.forEach(item => {
