@@ -58,7 +58,13 @@ PARTE 5: Tema_Gramatical: Regla o estructura resumida en español.
 
     client = Groq(api_key=api_key)
 
-    modelos_candidatos = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+    # Lista actualizada de modelos vigentes en Groq
+    modelos_candidatos = [
+        "llama-3.3-70b-versatile",
+        "llama3-8b-8192",
+        "llama3-70b-8192",
+        "mixtral-8x7b-32768"
+    ]
 
     ultimo_error = ""
     for modelo in modelos_candidatos:
