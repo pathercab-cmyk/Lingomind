@@ -7,7 +7,7 @@ from gtts import gTTS
 
 app = Flask(__name__)
 
-# Inicializar el cliente de Groq con la clave de entorno
+# Inicializar cliente de Groq con la variable de entorno
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY")
 )
@@ -27,7 +27,7 @@ TTS_LANG_MAP = {
 
 @app.route('/')
 def index():
-    # Carga la interfaz web (templates/index.html)
+    # Carga la interfaz principal en templates/index.html
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
@@ -56,17 +56,13 @@ def chat():
     """
 
     try:
-        # Detectar automáticamente el modelo disponible en tu cuenta
-        modelos = client.models.list()
-        modelos_texto = [m.id for m in modelos.data if "whisper" not in m.id.lower()]
-        modelo_activo = modelos_texto[0] if modelos_texto else "llama-3.1-8b-instant"
-
+        # Usa el modelo visible en tu consola de Groq
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Mensaje del estudiante: {mensaje_usuario}"}
             ],
-            model=modelo_activo,
+            model="qwen/qwen3.8-27b",
             response_format={"type": "json_object"}
         )
 
