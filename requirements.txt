@@ -1,4 +1,4 @@
 flask
-groq
+gTTS
+google-generativeai
 gunicorn
-edge-tts
