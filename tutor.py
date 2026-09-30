@@ -2,11 +2,23 @@ import os
 from groq import Groq
 
 def obtener_respuesta_tutor(mensaje_usuario, idioma="en", nivel="B1", modo="conversacion", tipo_examen="Cambridge"):
-    idioma_nombre = "Inglés" if idioma == "en" else "Alemán"
+    mAP_IDIOMAS = {
+        "en": "Inglés",
+        "de": "Alemán",
+        "fr": "Francés",
+        "it": "Italiano",
+        "pt": "Portugués",
+        "zh": "Chino Mandarín",
+        "ja": "Japonés",
+        "ru": "Ruso",
+        "es": "Español para Extranjeros (ELE)"
+    }
+    
+    idioma_nombre = mAP_IDIOMAS.get(idioma, "Inglés")
     
     if modo == "examen":
         prompt_sistema = f"""
-Eres un Examinador Oficial certificado de {idioma_nombre} para la prueba "{tipo_examen}" en Oralis. Nivel objetivo: {nivel}.
+Eres un Examinador Oficial certificado de {idioma_nombre} para la prueba "{tipo_examen}" en el ámbito universitario (Instituto de Idiomas / US). Nivel objetivo: {nivel}.
 NO uses marcado Markdown (sin *, #).
 Tu respuesta DEBE constar de 5 partes divididas exactamente por el carácter | :
 PARTE 1: Intervención en {idioma_nombre}.
@@ -41,7 +53,7 @@ PARTE 5: Tema_Gramatical: Regla o estructura en español.
 
     client = Groq(api_key=api_key)
 
-    # Usamos el modelo activo que aparece en tu Playground de Groq
+    # Modelo activo validado en tu panel de Groq
     modelo_activo = "qwen/qwen3.8-27b"
 
     try:
