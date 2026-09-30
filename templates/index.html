@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oralis - Tutor & Exámenes</title>
+    <title>Oralis - Tutor & Exámenes Orales</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #1e293b; color: white; padding: 1rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        header h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        header { background: #0f172a; color: white; padding: 1rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header h1 { font-size: 1.6rem; margin-bottom: 8px; letter-spacing: 0.5px; }
         .controls { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; align-items: center; }
-        select, button.btn-top { padding: 6px 12px; border-radius: 6px; border: 1px solid #475569; background: #334155; color: white; font-size: 0.85rem; outline: none; cursor: pointer; }
-        button.btn-top:hover { background: #475569; }
+        select, button.btn-top { padding: 6px 12px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.85rem; outline: none; cursor: pointer; }
+        button.btn-top:hover { background: #334155; }
         
         .main-container { flex: 1; display: flex; overflow: hidden; position: relative; }
         .chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -22,7 +22,8 @@
         .input-box { padding: 15px; background: white; display: flex; gap: 10px; border-top: 1px solid #e2e8f0; align-items: center; }
         input { flex: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 0.95rem; }
         button.btn-send { padding: 10px 20px; border-radius: 20px; border: none; background: #2563eb; color: white; font-weight: bold; cursor: pointer; }
-        .btn-audio { background: #f1f5f9; border: none; border-radius: 50%; width: 32px; height: 32px; margin-top: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-audio { background: #f1f5f9; border: none; border-radius: 50%; width: 34px; height: 34px; margin-top: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .btn-audio:disabled { opacity: 0.5; cursor: wait; }
         .btn-mic { background: #f1f5f9; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1.2rem; }
         .feedback { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 8px 12px; margin-top: 8px; font-size: 0.85rem; color: #78350f; border-radius: 4px; }
         .vocab-tag { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin: 2px; }
@@ -41,7 +42,7 @@
 </head>
 <body>
     <header>
-        <h1>🗣️ LingoMind</h1>
+        <h1>🎙️ Oralis</h1>
         <div class="controls">
             <select id="idiomaSelect" onchange="cambiarConfiguracion()">
                 <option value="en">🇬🇧 Inglés</option>
@@ -99,18 +100,37 @@
     <script>
         let sessionData = [];
         let vocabData = [];
+        let audioPlayer = new Audio();
 
         document.addEventListener('DOMContentLoaded', () => {
             cargarDatosGuardados();
             cambiarConfiguracion();
         });
 
-        function hablar(texto) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(texto);
-                u.lang = document.getElementById('idiomaSelect').value === 'en' ? 'en-US' : 'de-DE';
-                window.speechSynthesis.speak(u);
+        async function hablar(texto, btnElement = null) {
+            if (!texto) return;
+            if (btnElement) btnElement.disabled = true;
+
+            try {
+                const res = await fetch('/tts', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        texto: texto,
+                        idioma: document.getElementById('idiomaSelect').value
+                    })
+                });
+
+                if (!res.ok) throw new Error('Error al generar voz');
+
+                const blob = await res.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                audioPlayer.src = audioUrl;
+                audioPlayer.play();
+            } catch (err) {
+                console.error('TTS Error:', err);
+            } finally {
+                if (btnElement) btnElement.disabled = false;
             }
         }
 
@@ -148,11 +168,11 @@
             if (session && session.messages.length > 0) {
                 renderMessages(session.messages);
             } else {
-                const welcomeMsg = `Hello! I am LingoMind. Ready to practice (${key.replace(/_/g, ' ')})?`;
+                const welcomeMsg = `Hello! I am Oralis. Ready to practice (${key.replace(/_/g, ' ')})?`;
                 chat.innerHTML = `
                     <div class="msg bot">
                         ${welcomeMsg}
-                        <br><button class="btn-audio" onclick="hablar('${welcomeMsg}')">🔊</button>
+                        <br><button class="btn-audio" onclick="hablar('${welcomeMsg}', this)">🔊</button>
                     </div>`;
             }
         }
@@ -161,7 +181,7 @@
             const chat = document.getElementById('chat');
             chat.innerHTML = messages.map(m => {
                 if (m.type === 'user') return `<div class="msg user">${m.text}</div>`;
-                let html = `<div class="msg bot">${m.text}<br><button class="btn-audio" onclick="hablar('${m.text.replace(/'/g, "\\'")}')">🔊</button>`;
+                let html = `<div class="msg bot">${m.text}<br><button class="btn-audio" onclick="hablar('${m.text.replace(/'/g, "\\'")}', this)">🔊</button>`;
                 if (m.correccion || m.explicacion) {
                     html += `<div class="feedback"><strong>Feedback & Evaluación:</strong><br>${m.correccion}<br><br>${m.explicacion}</div>`;
                 }
@@ -242,14 +262,14 @@
         }
 
         function cargarDatosGuardados() {
-            sessionData = JSON.parse(localStorage.getItem('lingomind_sessions') || '[]');
-            vocabData = JSON.parse(localStorage.getItem('lingomind_vocab') || '[]');
+            sessionData = JSON.parse(localStorage.getItem('oralis_sessions') || '[]');
+            vocabData = JSON.parse(localStorage.getItem('oralis_vocab') || '[]');
             renderSidebar();
         }
 
         function guardarDatos() {
-            localStorage.setItem('lingomind_sessions', JSON.stringify(sessionData));
-            localStorage.setItem('lingomind_vocab', JSON.stringify(vocabData));
+            localStorage.setItem('oralis_sessions', JSON.stringify(sessionData));
+            localStorage.setItem('oralis_vocab', JSON.stringify(vocabData));
             renderSidebar();
         }
 
@@ -295,8 +315,8 @@
 
         function borrarTodo() {
             if (confirm('¿Quieres borrar todas las sesiones y el banco de vocabulario?')) {
-                localStorage.removeItem('lingomind_sessions');
-                localStorage.removeItem('lingomind_vocab');
+                localStorage.removeItem('oralis_sessions');
+                localStorage.removeItem('oralis_vocab');
                 sessionData = [];
                 vocabData = [];
                 renderSidebar();
