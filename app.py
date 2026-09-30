@@ -3,38 +3,34 @@ from tutor import obtener_respuesta_tutor
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template('index.html')
 
-@app.route("/chat", methods=["POST"])
+@app.route('/chat', methods=['POST'])
 def chat():
-    datos = request.get_json()
-    mensaje = datos.get("mensaje", "")
-    idioma = datos.get("idioma", "en")
-    nivel = datos.get("nivel", "B1")
-    modo = datos.get("modo", "conversacion")
+    data = request.get_json()
+    mensaje = data.get('mensaje', '')
+    idioma = data.get('idioma', 'en')
+    nivel = data.get('nivel', 'B1')
+    modo = data.get('modo', 'conversacion')
+    tipo_examen = data.get('tipo_examen', 'Cambridge')
 
-    if not mensaje:
-        return jsonify({"error": "Mensaje vacío"}), 400
+    respuesta_raw = obtener_respuesta_tutor(mensaje, idioma, nivel, modo, tipo_examen)
+    partes = respuesta_raw.split('|')
 
-    respuesta_raw = obtener_respuesta_tutor(mensaje, idioma, nivel, modo)
-    partes = respuesta_raw.split("|")
-
-    if len(partes) >= 3:
-        respuesta_texto = partes[0].strip()
-        correccion = partes[1].strip()
-        explicacion = partes[2].strip()
-    else:
-        respuesta_texto = respuesta_raw
-        correccion = ""
-        explicacion = ""
+    respuesta = partes[0].strip() if len(partes) > 0 else "Error al procesar la respuesta."
+    correccion = partes[1].strip() if len(partes) > 1 else ""
+    explicacion = partes[2].strip() if len(partes) > 2 else ""
+    vocabulario = partes[3].strip() if len(partes) > 3 else ""
 
     return jsonify({
-        "respuesta": respuesta_texto,
-        "correccion": correccion,
-        "explicacion": explicacion
+        'respuesta': respuesta,
+        'correccion': correccion,
+        'explicacion': explicacion,
+        'vocabulario': vocabulario
     })
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    app.run(debug=True)
     app.run(debug=True)
