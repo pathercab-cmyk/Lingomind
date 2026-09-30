@@ -11,7 +11,7 @@ El candidato se prepara para certificar el nivel {nivel}.
 
 INSTRUCCIONES DE SIMULACIÓN DE EXAMEN ({tipo_examen} - Nivel {nivel}):
 1. Simula el formato real de las pruebas orales/escritas del examen {tipo_examen}:
-   - Si es Cambridge (PET/FCE/CAE): Plantea partes como Speaking Part 2 (describir/comparar) o Part 3 (debate y toma de decisiones).
+   - Si es Cambridge (KET/PET/FCE/CAE): Plantea partes como Speaking Part 2 (describir/comparar) o Part 3 (debate y toma de decisiones).
    - Si es IELTS: Plantea preguntas tipo Part 1 (personales), Part 2 (Cue Card / tema a desarrollar) o Part 3 (debate abstracto).
    - Si es TOEFL iBT: Formularios tipo Independent o Integrated Speaking/Writing Task.
    - Si es Goethe/TELC/TestDaF: Plantea situaciones de presentación (Vortrag), negociación o argumentación formal.
@@ -62,10 +62,9 @@ PARTE 5: Tema_Gramatical: Regla o estructura resumida en español.
 
     client = Groq(api_key=api_key)
 
-    # Modelos 100% activos y soportados en Groq (Evitan errores 404/400)
+    # Utiliza únicamente el modelo principal activo de producción en Groq
     modelos_candidatos = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant"
+        "llama-3.3-70b-versatile"
     ]
 
     ultimo_error = ""
