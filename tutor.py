@@ -2,33 +2,58 @@ import os
 from groq import Groq
 
 def obtener_respuesta_tutor(mensaje_usuario, idioma="en", nivel="B1", modo="conversacion", tipo_examen="Cambridge"):
+    idioma_nombre = "Inglés" if idioma == "en" else "Alemán"
+    
+    if modo == "examen":
+        prompt_sistema = f"""
+Eres un Examinador Oficial certificado de {idioma_nombre} para la prueba "{tipo_examen}" en Oralis. Nivel objetivo: {nivel}.
+NO uses marcado Markdown (sin *, #).
+Tu respuesta DEBE constar de 5 partes divididas exactamente por el carácter | :
+PARTE 1: Intervención en {idioma_nombre}.
+|
+PARTE 2: Evaluación (1-10) según rúbricas oficiales.
+|
+PARTE 3: Feedback pedagógico en español.
+|
+PARTE 4: {tipo_examen}_Vocabulario: Término1 (Traducción1), Término2 (Traducción2)
+|
+PARTE 5: Estructura_Examen: Consejo estratégico en español.
+"""
+    else:
+        prompt_sistema = f"""
+Eres Oralis, tutor nativo de {idioma_nombre} nivel {nivel}.
+NO uses marcado Markdown (sin *, #).
+Tu respuesta DEBE constar de 5 partes divididas exactamente por el carácter | :
+PARTE 1: Respuesta conversacional en {idioma_nombre}.
+|
+PARTE 2: Corrección/mejora de la frase del usuario en {idioma_nombre}.
+|
+PARTE 3: Explicación breve en español.
+|
+PARTE 4: Tema_Vocabulario: Término1 (Traducción1), Término2 (Traducción2)
+|
+PARTE 5: Tema_Gramatical: Regla o estructura en español.
+"""
+
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        return "Error|Falta API Key|Configura GROQ_API_KEY en Render.|General: Error|Sistema: Error API"
+        return "Error|Falta API Key|Configura GROQ_API_KEY en Render.|General: Error|Sistema: Sin API Key"
 
     client = Groq(api_key=api_key)
 
-    # Nombres oficiales de producción en la API de Groq
-    modelos_disponibles = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "mixtral-8x7b-32768"
-    ]
+    # Usamos el modelo activo que aparece en tu Playground de Groq
+    modelo_activo = "qwen/qwen3.8-27b"
 
-    for modelo in modelos_disponibles:
-        try:
-            completion = client.chat.completions.create(
-                model=modelo,
-                messages=[
-                    {"role": "system", "content": f"Eres un tutor de idioma {idioma} nivel {nivel}."},
-                    {"role": "user", "content": mensaje_usuario}
-                ],
-                temperature=0.5,
-                max_tokens=1000
-            )
-            return completion.choices[0].message.content
-        except Exception:
-            # Si el modelo falla o cambia de nombre, prueba con el siguiente automáticamente
-            continue
-
-    return "Error|Fallo de conexión|No se pudo obtener respuesta de ningún modelo de Groq.|General: Error|Sistema: Sin servicio"
+    try:
+        completion = client.chat.completions.create(
+            model=modelo_activo,
+            messages=[
+                {"role": "system", "content": prompt_sistema},
+                {"role": "user", "content": mensaje_usuario}
+            ],
+            temperature=0.5,
+            max_tokens=1000
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"Error|Fallo de Groq|{str(e)}|General: Error|Sistema: Error de API"
