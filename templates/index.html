@@ -6,44 +6,49 @@
     <title>Oralis - Tutor & Profesor de Idiomas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card-custom { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; }
-        .chat-box { height: 380px; overflow-y: auto; background-color: #0f172a; border-radius: 8px; padding: 15px; }
-        .nav-tabs .nav-link { color: #94a3b8; }
-        .nav-tabs .nav-link.active { background-color: #1e293b; color: #38bdf8; border-color: #334155 #334155 #1e293b; font-weight: bold; }
-        .msg-user { text-align: right; color: #38bdf8; margin-bottom: 10px; }
-        .msg-oralis { text-align: left; color: #f1f5f9; margin-bottom: 15px; background-color: #334155; padding: 10px; border-radius: 8px; }
+        body { background-color: #f1f5f9; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .chat-box { height: 420px; overflow-y: auto; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; }
+        .msg-user { text-align: right; color: #0284c7; margin-bottom: 12px; font-weight: 500; }
+        .msg-oralis { text-align: left; color: #0f172a; margin-bottom: 15px; background-color: #e2e8f0; padding: 12px; border-radius: 10px; }
+        .nav-pills .nav-link { color: #475569; font-weight: 600; margin-right: 5px; }
+        .nav-pills .nav-link.active { background-color: #0284c7; color: white; }
+        .historial-box { height: 420px; overflow-y: auto; font-size: 0.88rem; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; }
     </style>
 </head>
-<body class="container py-4">
+<body class="container-fluid py-4 px-md-5">
 
-    <div class="text-center mb-4">
-        <h1 class="fw-bold text-info">Oralis</h1>
-        <p class="text-secondary">Plataforma Inteligente para el Aprendizaje de Idiomas</p>
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold text-primary mb-0">Oralis</h2>
+            <small class="text-muted">Tutor, Profesor y Asistente Interactivo de Idiomas — Universidad de Sevilla</small>
+        </div>
+        <a href="/animind" class="btn btn-outline-secondary btn-sm">🎬 Ir a AniMind Anime</a>
     </div>
 
     <!-- Navegación por Pestañas -->
-    <ul class="nav nav-tabs mb-4" id="oralisTabs">
+    <ul class="nav nav-pills mb-4" id="oralisTabs">
         <li class="nav-item">
-            <button class="nav-link active" onclick="cambiarModo('profesor')">🎓 Modo Profesor</button>
+            <button class="nav-link active" onclick="cambiarModo('conversacion')">💬 Conversación Libre</button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" onclick="cambiarModo('tutor')">💼 Tutor / Profesiones</button>
+            <button class="nav-link" onclick="cambiarModo('profesor')">🎓 Modo Profesor (Clases)</button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" onclick="cambiarModo('practica')">💬 Práctica Conversacional</button>
+            <button class="nav-link" onclick="cambiarModo('tutor')">💼 Simulación de Profesiones</button>
         </li>
         <li class="nav-item">
             <button class="nav-link" onclick="cambiarModo('writing')">📝 Corrección de Writing</button>
         </li>
     </ul>
 
-    <!-- Configuración Global -->
+    <!-- Panel de Configuración Global -->
     <div class="card card-custom p-3 mb-4">
         <div class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">Idioma Objetivo:</label>
-                <select id="selIdioma" class="form-select bg-dark text-light border-secondary">
+                <label class="form-label fw-bold">Idioma de Práctica:</label>
+                <select id="selIdioma" class="form-select">
                     <option value="en">Inglés</option>
                     <option value="fr">Francés</option>
                     <option value="de">Alemán</option>
@@ -52,8 +57,8 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Nivel MCERL:</label>
-                <select id="selNivel" class="form-select bg-dark text-light border-secondary">
+                <label class="form-label fw-bold">Nivel MCERL:</label>
+                <select id="selNivel" class="form-select">
                     <option value="A1">A1 - Principiante</option>
                     <option value="A2">A2 - Elemental</option>
                     <option value="B1" selected>B1 - Intermedio</option>
@@ -61,76 +66,103 @@
                     <option value="C1">C1 - Avanzado</option>
                 </select>
             </div>
-            
-            <!-- Opción dinámica para Profesiones -->
+
+            <!-- Banco de Profesiones -->
             <div class="col-md-3 d-none" id="divProfesion">
-                <label class="form-label">Profesión / Rol:</label>
-                <input type="text" id="inputProfesion" class="form-control bg-dark text-light border-secondary" placeholder="Ej. Camarero, Médico, Entrevistador">
+                <label class="form-label fw-bold">Banco de Profesiones / Rol:</label>
+                <select id="selProfesion" class="form-select" onchange="actualizarProfesionPersonalizada(this.value)">
+                    <option value="Camarero / Barista">Camarero / Barista</option>
+                    <option value="Médico / Doctor">Médico / Doctor</option>
+                    <option value="Entrevistador de Trabajo">Entrevistador de Trabajo</option>
+                    <option value="Recepcionista de Hotel">Recepcionista de Hotel</option>
+                    <option value="Guía Turístico">Guía Turístico</option>
+                    <option value="OTRO">Personalizado...</option>
+                </select>
+                <input type="text" id="inputProfesionCustom" class="form-control mt-2 d-none" placeholder="Escribe la profesión deseada">
             </div>
 
-            <!-- Tema / Lección -->
+            <!-- Tema o Situación -->
             <div class="col-md-3" id="divTema">
-                <label class="form-label">Tema o Situación:</label>
-                <input type="text" id="inputTema" class="form-control bg-dark text-light border-secondary" value="Presentaciones y conversación general">
+                <label class="form-label fw-bold">Tema / Situación:</label>
+                <input type="text" id="inputTema" class="form-control" value="Conversación cotidiana y presentaciones">
             </div>
         </div>
     </div>
 
-    <!-- SECCIÓN CHAT (Profesor / Tutor / Práctica) -->
-    <div id="seccionChat" class="card card-custom p-4">
-        <div id="chatBox" class="chat-box mb-3"></div>
-        <div class="input-group mb-3">
-            <input type="text" id="userMsg" class="form-control bg-dark text-light border-secondary" placeholder="Escribe tu mensaje o respuesta aquí...">
-            <button class="btn btn-primary" onclick="enviarMensaje()">Enviar</button>
+    <!-- SECCIÓN INTERACTIVA PRINCIPAL (CHAT + HISTORIAL) -->
+    <div id="seccionChat" class="row g-3">
+        <div class="col-md-8">
+            <div class="card card-custom p-3">
+                <div id="chatBox" class="chat-box mb-3"></div>
+                <div class="input-group">
+                    <input type="text" id="userMsg" class="form-control" placeholder="Escribe tu mensaje en el idioma objetivo..." onkeypress="if(event.key==='Enter') enviarMensaje()">
+                    <button class="btn btn-primary px-4" onclick="enviarMensaje()">Enviar</button>
+                </div>
+            </div>
         </div>
-        <div class="d-flex justify-content-between">
-            <button id="btnEvaluar" class="btn btn-warning d-none" onclick="finalizarYEvaluar()">📊 Finalizar y Ver Informe de Práctica</button>
+
+        <!-- Panel Lateral: Historial y Feedback -->
+        <div class="col-md-4">
+            <div class="card card-custom p-3">
+                <h6 class="fw-bold text-secondary mb-2">📋 Historial & Evaluación de la Sesión</h6>
+                <div id="historialBox" class="historial-box mb-3">
+                    <em class="text-muted">Aquí se irá guardando el registro completo de tu conversación...</em>
+                </div>
+                <button class="btn btn-warning w-100 fw-bold" onclick="evaluarPractica()">📊 Finalizar y Evaluar Sesión</button>
+            </div>
         </div>
     </div>
 
-    <!-- SECCIÓN WRITING -->
+    <!-- SECCIÓN CORRECCIÓN DE WRITING -->
     <div id="seccionWriting" class="card card-custom p-4 d-none">
-        <h4 class="text-info mb-3">Corrección y Análisis de Redacción</h4>
+        <h4 class="text-primary fw-bold mb-3">Corrector y Analizador de Redacción (Writing)</h4>
         <div class="mb-3">
-            <label class="form-label">Escribe o pega tu texto aquí:</label>
-            <textarea id="writingTexto" class="form-control bg-dark text-light border-secondary" rows="5"></textarea>
+            <label class="form-label fw-bold">Pega tu redacción aquí:</label>
+            <textarea id="writingTexto" class="form-control" rows="6" placeholder="Escribe o pega aquí tu texto largo..."></textarea>
         </div>
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label">O sube un archivo (PDF, Word, TXT):</label>
-                <input type="file" id="writingFile" class="form-control bg-dark text-light border-secondary">
+                <label class="form-label fw-bold">O adjunta un archivo (PDF, DOCX, TXT):</label>
+                <input type="file" id="writingFile" class="form-control">
             </div>
             <div class="col-md-6">
-                <label class="form-label">Modo de Corrección:</label>
-                <select id="writingModo" class="form-select bg-dark text-light border-secondary">
-                    <option value="explicativa">Detallada palabra por palabra</option>
+                <label class="form-label fw-bold">Modo de Corrección:</label>
+                <select id="writingModo" class="form-select">
+                    <option value="explicativa">Explicativa (Palabra por palabra y estructuras)</option>
                     <option value="senalar">Señalar tipo de error</option>
                     <option value="descubrimiento">Modo Autodescubrimiento (con pistas)</option>
                 </select>
             </div>
         </div>
-        <button class="btn btn-success" onclick="procesarWriting()">Enviar para Corrección</button>
+        <button class="btn btn-success px-4" onclick="procesarWriting()">Corregir Redacción</button>
 
-        <div id="writingResultado" class="mt-4 p-3 bg-dark rounded border border-secondary d-none"></div>
+        <div id="writingResultado" class="mt-4 p-3 bg-light border rounded d-none"></div>
     </div>
 
-    <!-- MODAL DE INFORME FINAL -->
+    <!-- INFORME DE EVALUACIÓN FINAL -->
     <div id="informeBox" class="card card-custom p-4 mt-4 d-none">
-        <h3 class="text-warning">Resultados del Informe de Práctica</h3>
-        <hr class="border-secondary">
+        <h4 class="text-success fw-bold">Informe de Evaluación Final</h4>
+        <hr>
         <div id="informeContenido"></div>
     </div>
 
     <script>
-        let modoActual = 'profesor';
+        let modoActual = 'conversacion';
         let historialConversacion = [];
 
         function cambiarModo(modo) {
             modoActual = modo;
+            document.querySelectorAll('#oralisTabs .nav-link').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
             document.getElementById('divProfesion').classList.toggle('d-none', modo !== 'tutor');
             document.getElementById('seccionChat').classList.toggle('d-none', modo === 'writing');
             document.getElementById('seccionWriting').classList.toggle('d-none', modo !== 'writing');
-            document.getElementById('btnEvaluar').classList.toggle('d-none', modo !== 'practica');
+        }
+
+        function actualizarProfesionPersonalizada(val) {
+            const customInput = document.getElementById('inputProfesionCustom');
+            customInput.classList.toggle('d-none', val !== 'OTRO');
         }
 
         async function enviarMensaje() {
@@ -140,15 +172,19 @@
 
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML += `<div class="msg-user"><strong>Tú:</strong> ${mensaje}</div>`;
-            historialConversacion.push({ usuario: mensaje });
             input.value = "";
+
+            let profesionSel = document.getElementById('selProfesion').value;
+            if (profesionSel === 'OTRO') {
+                profesionSel = document.getElementById('inputProfesionCustom').value || "Profesional";
+            }
 
             const payload = {
                 mensaje: mensaje,
                 idioma: document.getElementById('selIdioma').value,
                 nivel: document.getElementById('selNivel').value,
                 modo: modoActual,
-                profesion: document.getElementById('inputProfesion').value || "Profesor de Idiomas",
+                profesion: profesionSel,
                 tema: document.getElementById('inputTema').value
             };
 
@@ -159,42 +195,65 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                
-                let respuestaHTML = `<div class="msg-oralis"><strong>Oralis:</strong> ${data.respuesta || ''}<br>`;
-                
-                if (data.explicacion) respuestaHTML += `<small class="text-info">📌 ${data.explicacion}</small><br>`;
-                if (data.ejercicio) respuestaHTML += `<small class="text-warning">✏️ Ejercicio: ${data.ejercicio}</small><br>`;
-                if (data.consejo_situacional) respuestaHTML += `<small class="text-info">💡 ${data.consejo_situacional}</small><br>`;
-                
-                respuestaHTML += `<button class="btn btn-sm btn-outline-light mt-2" onclick="reproducirAudio('${data.respuesta}')">🔊 Escuchar</button></div>`;
-                
-                chatBox.innerHTML += respuestaHTML;
+
+                let htmlRespuesta = `<div class="msg-oralis"><strong>Oralis:</strong> ${data.respuesta || ''}<br>`;
+                if (data.correccion && data.correccion !== "Todo correcto") {
+                    htmlRespuesta += `<small class="text-danger">✏️ <strong>Corrección:</strong> ${data.correccion}</small><br>`;
+                }
+                if (data.explicacion) {
+                    htmlRespuesta += `<small class="text-secondary">💡 <strong>Explicación:</strong> ${data.explicacion}</small><br>`;
+                }
+                if (data.vocabulario) {
+                    htmlRespuesta += `<small class="text-primary">📖 <strong>Vocabulario:</strong> ${data.vocabulario}</small><br>`;
+                }
+                htmlRespuesta += `<button class="btn btn-sm btn-outline-primary mt-2" onclick="reproducirAudio('${data.respuesta}')">🔊 Escuchar</button></div>`;
+
+                chatBox.innerHTML += htmlRespuesta;
                 chatBox.scrollTop = chatBox.scrollHeight;
+
+                // Guardar en el Historial Lateral
+                historialConversacion.push({ usuario: mensaje, oralis: data.respuesta });
+                actualizarHistorialVisual();
+
             } catch (err) {
-                alert("Error al conectar con Oralis.");
+                alert("Error de conexión con el servidor.");
             }
         }
 
-        async function finalizarYEvaluar() {
-            const payload = {
-                historial: historialConversacion,
-                idioma: document.getElementById('selIdioma').value,
-                nivel: document.getElementById('selNivel').value
-            };
+        function actualizarHistorialVisual() {
+            const box = document.getElementById('historialBox');
+            box.innerHTML = historialConversacion.map((item, idx) => `
+                <div class="mb-2 pb-1 border-bottom">
+                    <strong>#${idx+1} Tú:</strong> ${item.usuario}<br>
+                    <span class="text-muted">Oralis:</span> ${item.oralis}
+                </div>
+            `).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function evaluarPractica() {
+            if (historialConversacion.length === 0) {
+                alert("Primero debes mantener una conversación con Oralis para poder evaluar la sesión.");
+                return;
+            }
 
             const res = await fetch('/evaluar_practica', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    historial: historialConversacion,
+                    idioma: document.getElementById('selIdioma').value,
+                    nivel: document.getElementById('selNivel').value
+                })
             });
             const data = await res.json();
 
             const informeDiv = document.getElementById('informeContenido');
             informeDiv.innerHTML = `
-                <h4>Puntuación: <span class="badge bg-success">${data.puntuacion}</span> (Nivel Demostrado: ${data.nivel_demostrado})</h4>
-                <p><strong>Puntos Fuertes:</strong> ${data.puntos_fuertes ? data.puntos_fuertes.join(', ') : 'Ninguno registrado'}</p>
-                <p><strong>Errores Principales:</strong> ${data.errores_principales ? data.errores_principales.join(' | ') : 'Sin errores graves'}</p>
-                <p><strong>Consejo Pedagógico:</strong> ${data.consejos_mejora}</p>
+                <h5>Nota Final: <span class="badge bg-primary fs-6">${data.puntuacion} / 10</span> (Nivel Demostrado: <strong>${data.nivel_demostrado}</strong>)</h5>
+                <p><strong>Puntos Fuertes:</strong> ${data.puntos_fuertes}</p>
+                <p><strong>Errores Principales:</strong> ${data.errores_principales}</p>
+                <p><strong>Recomendación Pedagógica:</strong> ${data.consejos_mejora}</p>
             `;
             document.getElementById('informeBox').classList.remove('d-none');
         }
@@ -210,21 +269,18 @@
                 formData.append('archivo', fileInput.files[0]);
             }
 
-            const res = await fetch('/corregir_writing', {
-                method: 'POST',
-                body: formData
-            });
+            const res = await fetch('/corregir_writing', { method: 'POST', body: formData });
             const data = await res.json();
 
             const resDiv = document.getElementById('writingResultado');
             resDiv.classList.remove('d-none');
 
-            let html = `<h5>Nota de Redacción: <span class="badge bg-info">${data.puntuacion_writing || 'N/A'}</span></h5>`;
+            let html = `<h5>Puntuación de Redacción: <span class="badge bg-success">${data.puntuacion_writing || 'N/A'}</span></h5>`;
             if (data.texto_corregido_sugerido) {
-                html += `<p><strong>Sugerencia de corrección:</strong> ${data.texto_corregido_sugerido}</p>`;
+                html += `<p class="mt-2"><strong>Versión Sugerida:</strong> ${data.texto_corregido_sugerido}</p>`;
             }
             if (data.desglose_errores && data.desglose_errores.length > 0) {
-                html += "<h6>Desglose de Errores / Pistas:</h6><ul>";
+                html += "<h6>Análisis de Errores:</h6><ul>";
                 data.desglose_errores.forEach(e => {
                     html += `<li><strong>${e.error}:</strong> ${e.explicacion} ${e.pista ? `<br><small class="text-warning">💡 Pista: ${e.pista}</small>` : ''}</li>`;
                 });
