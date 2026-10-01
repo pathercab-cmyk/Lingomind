@@ -214,6 +214,7 @@
                     <option value="en" selected>🇬🇧 Inglés (English)</option>
                     <option value="fr">🇫🇷 Francés (Français)</option>
                     <option value="de">🇩🇪 Alemán (Deutsch)</option>
+                    <option value="ro">🇷🇴 Rumano (Română)</option>
                     <option value="it">🇮🇹 Italiano (Italiano)</option>
                     <option value="pt">🇵🇹 Portugués (Português)</option>
                     <option value="nl">🇳🇱 Neerlandés (Nederlands)</option>
@@ -237,7 +238,7 @@
                 </select>
             </div>
 
-            <!-- SELECTOR DE ROL / PROFESIÓN CON OPCIÓN PERSONALIZADA -->
+            <!-- SELECTOR DE ROL / PROFESIÓN -->
             <div class="col-md-3 d-none" id="containerProfesion">
                 <label class="control-label">Rol / Profesión Simular:</label>
                 <select id="selProfesion" class="form-select fw-semibold" onchange="comprobarProfesionCustom()">
@@ -279,12 +280,12 @@
                 </div>
 
                 <div id="chatBox" class="chat-container mb-3">
-                    <div class="msg-bubble msg-oralis">
+                    <div class="msg-bubble msg-oralis" id="msgBienvenida">
                         <strong>Oralis:</strong> Bienvenido. He abierto un nuevo chat para ti. ¿De qué te gustaría hablar hoy?
                     </div>
                 </div>
 
-                <!-- CONTROLES MODO ESTÁNDAR (CON MICRÓFONO/DICTADO) -->
+                <!-- CONTROLES MODO ESTÁNDAR (CON MICRÓFONO) -->
                 <div id="controlEstandard" class="input-group">
                     <button class="btn btn-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
                         <i class="fa-solid fa-microphone me-1"></i> <span id="txtBtnMicChat">Dictar</span>
@@ -430,9 +431,9 @@
     let chatsGuardadosLocal = [];
 
     const SPEECH_LANG_MAP = {
-        'en': 'en-US', 'fr': 'fr-FR', 'de': 'de-DE', 'it': 'it-IT',
-        'pt': 'pt-PT', 'nl': 'nl-NL', 'zh': 'zh-CN', 'ja': 'ja-JP',
-        'ru': 'ru-RU', 'es': 'es-ES', 'ar': 'ar-SA'
+        'en': 'en-US', 'fr': 'fr-FR', 'de': 'de-DE', 'ro': 'ro-RO',
+        'it': 'it-IT', 'pt': 'pt-PT', 'nl': 'nl-NL', 'zh': 'zh-CN',
+        'ja': 'ja-JP', 'ru': 'ru-RU', 'es': 'es-ES', 'ar': 'ar-SA'
     };
 
     let recognizer = null;
@@ -463,9 +464,10 @@
 
     function nuevoChatLimpio() {
         historialConversacion = [];
+        const idiomaSel = document.getElementById('selIdioma').value.toUpperCase();
         document.getElementById('chatBox').innerHTML = `
             <div class="msg-bubble msg-oralis">
-                <strong>Oralis:</strong> Nuevo chat iniciado. ¿De qué te gustaría hablar o redactar hoy?
+                <strong>Oralis:</strong> Conversación iniciada en ${idiomaSel}. ¿En qué tema deseas enfocar la sesión?
             </div>
         `;
         actualizarHistorialVisual();
@@ -817,7 +819,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. En Prácticas Orales puedes simular roles/profesiones predefinidas o escribir un rol personalizado.\n3. En Writing puedes redactar o adjuntar archivos (.pdf, .docx, .txt).\n4. Consulta el Banco de Recursos para ver la teoría organizada por niveles.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma (incluido Rumano) y nivel.\n2. Las respuestas se generan en el idioma de aprendizaje objetivo.\n3. En Prácticas Orales puedes simular roles/profesiones predefinidas o escribir un rol personalizado.");
     }
 </script>
 
