@@ -7,6 +7,8 @@ from flask_bcrypt import Bcrypt
 from groq import Groq
 import PyPDF2
 import docx
+import time
+from sqlalchemy.exc import OperationalError
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_oralis_2026')
