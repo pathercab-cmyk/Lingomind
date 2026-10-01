@@ -1,4 +1,6 @@
 flask
-groq
-gTTS
+openai
 gunicorn
+werkzeug
+pypdf
+python-docx
