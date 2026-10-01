@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oralis — Plataforma de Idiomas — Universidad de Sevilla</title>
+    <title>Oralis — Plataforma Inteligente de Idiomas</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -17,7 +17,7 @@
             --texto-principal: #0f172a;
             --texto-secundario: #475569;
             --primary-color: #0284c7;
-            --accent-us: #991b1b;
+            --accent-color: #0369a1;
         }
 
         body {
@@ -48,7 +48,7 @@
         }
 
         .sub-brand {
-            color: var(--accent-us);
+            color: var(--accent-color);
             font-weight: 600;
             font-size: 1rem;
         }
@@ -160,14 +160,14 @@
 
 <div class="container-fluid px-md-5">
 
-    <!-- CABECERA INSTITUCIONAL UNIVERSIDAD DE SEVILLA -->
+    <!-- CABECERA DE LA PLATAFORMA -->
     <header class="header-us d-flex justify-content-between align-items-center">
         <div>
             <div class="d-flex align-items-center gap-2">
                 <span class="brand-title">Oralis</span>
             </div>
             <div class="sub-brand">
-                <i class="fa-solid fa-graduation-cap"></i> Plataforma de Idiomas — Universidad de Sevilla
+                <i class="fa-solid fa-language"></i> Plataforma Inteligente de Idiomas
             </div>
         </div>
         <div>
@@ -177,7 +177,7 @@
         </div>
     </header>
 
-    <!-- PESTAÑAS DE NAVEGACIÓN CON MODO TUTOR Y PROFESOR -->
+    <!-- PESTAÑAS DE NAVEGACIÓN -->
     <ul class="nav nav-tabs nav-tabs-custom mb-4" id="mainTabs">
         <li class="nav-item">
             <button class="nav-link active" id="tabTutor" onclick="seleccionarModo('tutor_original')">
@@ -444,7 +444,7 @@
 
 </div>
 
-<!-- MODAL INSTITUCIONAL PARA LA GUÍA ACADÉMICA -->
+<!-- MODAL PARA LA GUÍA ACADÉMICA -->
 <div class="modal fade" id="modalGuiaAcademica" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -453,34 +453,34 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <p class="text-secondary">Esta plataforma de la <strong>Universidad de Sevilla</strong> dispone de diferentes modos de estudio para cubrir todas tus necesidades de aprendizaje:</p>
+                <p class="text-secondary">Oralis dispone de diferentes modalidades de interacción adaptadas a tus metas de aprendizaje:</p>
                 
                 <div class="list-group list-group-flush">
                     <div class="list-group-item py-3">
                         <h6 class="fw-bold text-primary"><i class="fa-solid fa-user-graduate me-2"></i> Modo Tutor (Práctica Conversacional)</h6>
-                        <p class="mb-0 small text-dark">Actúa como un compañero de conversación interactivo. Mantiene una charla fluida en el idioma objetivo señalando de forma inmediata cualquier error de concordancia o vocabulario.</p>
+                        <p class="mb-0 small text-dark">Tu compañero de conversación interactiva. Mantiene charlas fluidas e interactivas señalando al instante cualquier error de concordancia o léxico.</p>
                     </div>
 
                     <div class="list-group-item py-3">
-                        <h6 class="fw-bold text-dark"><i class="fa-solid fa-chalkboard-user me-2"></i> Modo Profesor (Explicación Teórico-Práctica)</h6>
-                        <p class="mb-0 small text-dark">A quien le pides que te explique estructuras complejas, reglas de gramática o diferencias léxicas. Te responderá detallando la teoría con ejemplos comprensibles para tu nivel.</p>
+                        <h6 class="fw-bold text-dark"><i class="fa-solid fa-chalkboard-user me-2"></i> Modo Profesor (Explicación Teórica)</h6>
+                        <p class="mb-0 small text-dark">Diseñado para pedir explicaciones detalladas sobre gramática, reglas, sintaxis o dudas específicas. Responde con explicaciones claras y ejemplos adaptados a tu nivel.</p>
                     </div>
 
                     <div class="list-group-item py-3">
                         <h6 class="fw-bold text-success"><i class="fa-solid fa-comments me-2"></i> Modo Prácticas Orales (Simulación de Roles)</h6>
-                        <p class="mb-0 small text-dark">Permite simular situaciones reales con roles específicos (entrevista laboral, restaurante, atención médica, etc.) o definir tu propio rol personalizado.</p>
+                        <p class="mb-0 small text-dark">Permite simular situaciones reales con roles específicos (entrevista laboral, atención médica, hotel, etc.) o personalizar tu propio rol.</p>
                     </div>
 
                     <div class="list-group-item py-3">
                         <h6 class="fw-bold text-warning text-dark"><i class="fa-solid fa-award me-2"></i> Modo Exámenes Oficiales</h6>
-                        <p class="mb-0 small text-dark">Especializado en simulacros de pruebas oficiales acreditadas (Cambridge, IELTS, TOEFL, Goethe, DELF, etc.).</p>
+                        <p class="mb-0 small text-dark">Preparación para pruebas acreditadas oficiales (Cambridge, IELTS, TOEFL, Goethe, DELF, etc.).</p>
                     </div>
 
                     <div class="list-group-item py-3">
                         <h6 class="fw-bold text-danger"><i class="fa-solid fa-file-pen me-2"></i> Modo Writing (Evaluación de Redacciones)</h6>
-                        <p class="mb-0 small text-dark">Modo exclusivo para corrección de ensayos o textos. Permite elegir entre dos métodos:
-                            <br>• <strong>Método 1 (Corrección Directa):</strong> Señala el fallo y muestra la solución e explicación inmediata.
-                            <br>• <strong>Método 2 (Subrayado + Pistas):</strong> Subraya el error sin dar la solución y ofrece pistas orientadoras para que el estudiante deduza el fallo solo.
+                        <p class="mb-0 small text-dark">Modo exclusivo para revisión de escritos. Ofrece dos alternativas:
+                            <br>• <strong>Método 1 (Corrección Directa):</strong> Muestra inmediatamente el error, la versión correcta y la explicación gramatical.
+                            <br>• <strong>Método 2 (Subrayado + Pistas):</strong> Destaca la zona errónea y ofrece pistas pedagógicas desplegables para que el estudiante resuelva el fallo por sí mismo.
                         </p>
                     </div>
                 </div>
@@ -946,7 +946,6 @@
         return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // ABRIR VENTANA DE LA GUÍA ACADÉMICA CON DETALLES
     function abrirGuiaUso() {
         var myModal = new bootstrap.Modal(document.getElementById('modalGuiaAcademica'));
         myModal.show();
