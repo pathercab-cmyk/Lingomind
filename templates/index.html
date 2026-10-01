@@ -188,6 +188,11 @@
             </button>
         </li>
         <li class="nav-item">
+            <button class="nav-link text-info fw-bold" id="tabBanco" onclick="seleccionarModo('banco')">
+                <i class="fa-solid fa-layer-group me-1"></i> Banco de Recursos
+            </button>
+        </li>
+        <li class="nav-item">
             <button class="nav-link text-success fw-bold" id="tabCuaderno" onclick="seleccionarModo('cuaderno')">
                 <i class="fa-solid fa-book-bookmark me-1"></i> Mi Cuaderno
             </button>
@@ -221,7 +226,7 @@
 
             <div class="col-md-2">
                 <label class="control-label">Nivel MCERL:</label>
-                <select id="selNivel" class="form-select fw-semibold">
+                <select id="selNivel" class="form-select fw-semibold" onchange="alCambiarNivel()">
                     <option value="A1">A1 - Acceso</option>
                     <option value="A2">A2 - Plataforma</option>
                     <option value="B1" selected>B1 - Umbral</option>
@@ -302,7 +307,35 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: CUADERNO DE VOCABULARIO Y GRAMÁTICA -->
+    <!-- SECCIÓN: BANCO DE RECURSOS (GRAMÁTICA Y VOCABULARIO POR NIVEL) -->
+    <div id="seccionBanco" class="card card-custom p-4 d-none">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h4 class="text-info fw-bold mb-0"><i class="fa-solid fa-layer-group me-2"></i> Banco de Recursos Académicos</h4>
+            <span class="badge bg-info fs-6 text-dark" id="badgeBancoNivel">Nivel: B1</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card p-3 border-info h-100">
+                    <h5 class="fw-bold text-info border-bottom pb-2"><i class="fa-solid fa-book me-2"></i> Puntos Gramaticales Clave</h5>
+                    <div id="contenedorBancoGramatica" class="mt-3">
+                        <em class="text-muted">Cargando contenidos gramaticales...</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card p-3 border-secondary h-100">
+                    <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-list-ol me-2"></i> Vocabulario RECOMENDADO</h5>
+                    <div id="contenedorBancoVocabulario" class="mt-3">
+                        <em class="text-muted">Cargando vocabulario recomendado...</em>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: CUADERNO DE VOCABULARIO Y GRAMÁTICA (APRENDIDO EN CHAT) -->
     <div id="seccionCuaderno" class="card card-custom p-4 d-none">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
             <h4 class="text-success fw-bold mb-0"><i class="fa-solid fa-book-open me-2"></i> Mi Cuaderno de Aprendizaje</h4>
@@ -365,13 +398,15 @@
         cargarExamenesOficiales();
     });
 
-    // REINICIO AUTOMÁTICO DE CHAT AL CAMBIAR DE IDIOMA
     function alCambiarIdioma() {
         nuevoChatLimpio();
         cargarExamenesOficiales();
-        if (modoActual === 'cuaderno') {
-            cargarCuadernoAprendizaje();
-        }
+        if (modoActual === 'cuaderno') cargarCuadernoAprendizaje();
+        if (modoActual === 'banco') cargarBancoRecursos();
+    }
+
+    function alCambiarNivel() {
+        if (modoActual === 'banco') cargarBancoRecursos();
     }
 
     function nuevoChatLimpio() {
@@ -392,6 +427,7 @@
         if(modo === 'practicas_orales') document.getElementById('tabPracticas').classList.add('active');
         if(modo === 'examen') document.getElementById('tabExamenes').classList.add('active');
         if(modo === 'writing') document.getElementById('tabWriting').classList.add('active');
+        if(modo === 'banco') document.getElementById('tabBanco').classList.add('active');
         if(modo === 'cuaderno') document.getElementById('tabCuaderno').classList.add('active');
         if(modo === 'guardados') document.getElementById('tabGuardados').classList.add('active');
 
@@ -401,12 +437,34 @@
         document.getElementById('containerProfesion').classList.toggle('d-none', modo !== 'practicas_orales');
         document.getElementById('containerExamenes').classList.toggle('d-none', modo !== 'examen');
         
-        document.getElementById('seccionPrincipal').classList.toggle('d-none', modo === 'cuaderno' || modo === 'guardados');
+        document.getElementById('seccionPrincipal').classList.toggle('d-none', modo === 'cuaderno' || modo === 'guardados' || modo === 'banco');
+        document.getElementById('seccionBanco').classList.toggle('d-none', modo !== 'banco');
         document.getElementById('seccionCuaderno').classList.toggle('d-none', modo !== 'cuaderno');
         document.getElementById('seccionGuardados').classList.toggle('d-none', modo !== 'guardados');
 
+        if (modo === 'banco') cargarBancoRecursos();
         if (modo === 'cuaderno') cargarCuadernoAprendizaje();
         if (modo === 'guardados') renderizarChatsGuardados();
+    }
+
+    // CARGAR BANCO DE RECURSOS POR NIVEL
+    async function cargarBancoRecursos() {
+        const nivel = document.getElementById('selNivel').value;
+        document.getElementById('badgeBancoNivel').innerText = `Nivel: ${nivel}`;
+
+        try {
+            const res = await fetch(`/api/banco/${nivel}`);
+            const data = await res.json();
+
+            const divGram = document.getElementById('contenedorBancoGramatica');
+            divGram.innerHTML = '<ul class="list-group">' + data.gramatica.map(item => `<li class="list-group-item"><i class="fa-solid fa-check text-info me-2"></i>${escapeHtml(item)}</li>`).join('') + '</ul>';
+
+            const divVocab = document.getElementById('contenedorBancoVocabulario');
+            divVocab.innerHTML = '<ul class="list-group">' + data.vocabulario.map(item => `<li class="list-group-item"><i class="fa-solid fa-bookmark text-secondary me-2"></i>${escapeHtml(item)}</li>`).join('') + '</ul>';
+
+        } catch(e) {
+            console.error("Error cargando banco de recursos:", e);
+        }
     }
 
     // CARGAR DATOS DEL CUADERNO
@@ -656,7 +714,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. Al cambiar de idioma se reiniciará el chat de forma limpia.\n3. Revisa tus progresos en 'Mi Cuaderno' o accede a conversaciones guardadas.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. Consulta el Banco de Recursos para ver la teoría por nivel.\n3. Revisa en 'Mi Cuaderno' tus aprendizajes en las conversaciones.\n4. Guarda y reanuda tus chats cuando desees.");
     }
 </script>
 
