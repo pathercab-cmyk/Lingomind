@@ -470,6 +470,9 @@ document.getElementById('modo').addEventListener('change', toggleModos);
             formData.append('tipo_examen', document.getElementById('tipo_examen').value);
             formData.append('tema', document.getElementById('tema').value);
 
+            // Añade este valor a las variables que envías en FormData:
+            formData.append('metodo_writing', document.getElementById('metodo_writing').value);
+
             const archivoInput = document.getElementById('archivo');
             if (archivoInput.files.length > 0) {
                 formData.append('archivo', archivoInput.files[0]);
