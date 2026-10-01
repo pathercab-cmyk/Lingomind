@@ -3,7 +3,6 @@ from flask import Flask, render_template, request, jsonify
 app = Flask(__name__)
 
 # Estructura en memoria para almacenar sesiones y progreso del estudiante
-# (Se conservan todos los elementos originales y se asegura el soporte extendido)
 PERFILES_USUARIO = {
     "historiales": [], # Almacena chats guardados
     "vocabulario": {}, # Formato: { "en": { "Viajes": ["boarding pass - tarjeta de embarque"] } }
@@ -28,18 +27,16 @@ def chat():
 
         # -------------------------------------------------------------------
         # AQUÍ INTEGRAS TU LLAMADA A LA IA (OpenAI, Gemini, etc.)
-        # Manteniendo todos los parámetros recibidos sin descartar nada.
         # -------------------------------------------------------------------
         respuesta_texto = f"Respuesta simulada en {idioma.upper()} ({nivel}) [Modo: {modo}]: Entendido tu mensaje: '{mensaje}'."
         correccion = "Ninguna"
         explicacion = ""
         
-        # Simulación de extracción de vocabulario y gramática del mensaje
+        # Simulación de extracción de vocabulario y gramática
         nuevo_vocabulario = [f"ejemplo_{len(mensaje)} (traducción)"] if len(mensaje) > 3 else []
         nueva_gramatica = [f"Estructura gramatical ({nivel})"] if len(mensaje) > 3 else []
 
-        # --- REGISTRO AUTOMÁTICO EN EL CUADERNO (Adición conservadora) ---
-        # Vocabulario por Contexto
+        # --- REGISTRO AUTOMÁTICO EN EL CUADERNO ---
         if idioma not in PERFILES_USUARIO["vocabulario"]:
             PERFILES_USUARIO["vocabulario"][idioma] = {}
         if tema not in PERFILES_USUARIO["vocabulario"][idioma]:
@@ -49,7 +46,6 @@ def chat():
             if word not in PERFILES_USUARIO["vocabulario"][idioma][tema]:
                 PERFILES_USUARIO["vocabulario"][idioma][tema].append(word)
 
-        # Gramática por Nivel
         if idioma not in PERFILES_USUARIO["gramatica"]:
             PERFILES_USUARIO["gramatica"][idioma] = {}
         if nivel not in PERFILES_USUARIO["gramatica"][idioma]:
@@ -84,13 +80,21 @@ def obtener_recursos(idioma):
 
 @app.route('/api/examenes/<idioma>', methods=['GET'])
 def obtener_examenes(idioma):
+    # BANCO COMPLETO DE EXÁMENES OFICIALES POR IDIOMA
     examenes = {
-        "en": ["Cambridge B2 First", "Cambridge C1 Advanced", "IELTS Academic", "TOEFL iBT"],
-        "es": ["DELE B1", "DELE B2", "DELE C1", "SIELE"],
-        "fr": ["DELF B1", "DELF B2", "DALF C1"],
-        "de": ["Goethe-Zertifikat B1", "Goethe-Zertifikat B2", "TestDaF"]
+        "en": ["Cambridge B2 First (FCE)", "Cambridge C1 Advanced (CAE)", "Cambridge C2 Proficiency (CPE)", "IELTS Academic/General", "TOEFL iBT", "Linguaskill"],
+        "fr": ["DELF B1", "DELF B2", "DALF C1", "DALF C2", "TCF (Test de Connaissance du Français)"],
+        "de": ["Goethe-Zertifikat B1", "Goethe-Zertifikat B2", "Goethe-Zertifikat C1", "TestDaF", "ÖSD"],
+        "it": ["CELI 2 (B1)", "CELI 3 (B2)", "CILS Uno (B1)", "CILS Due (B2)", "PLIDA"],
+        "pt": ["PLE B1 (DEPLE)", "PLE B2 (DIPLE)", "PLE C1 (DAPLE)", "Celpe-Bras"],
+        "nl": ["CNaVT (Certificaat Nederlands als Vreemde Taal)", "Inburgeringsexamen"],
+        "zh": ["HSK 1 - 2", "HSK 3 - 4", "HSK 5 - 6 (Hanyu Shuiping Kaoshi)"],
+        "ja": ["JLPT N5 - N4", "JLPT N3 - N2", "JLPT N1 (Japanese-Language Proficiency Test)"],
+        "ru": ["TORFL / TRKI Basic", "TORFL / TRKI Level 1 (B1)", "TORFL / TRKI Level 2 (B2)"],
+        "es": ["DELE B1", "DELE B2", "DELE C1", "DELE C2", "SIELE Global"],
+        "ar": ["ALPT (Arabic Language Proficiency Test)", "Examen Oficial AL-ARABIYA"]
     }
-    return jsonify({"examenes": examenes.get(idioma, ["Examen Oficial Estándar"])})
+    return jsonify({"examenes": examenes.get(idioma, ["Certificación Oficial Estándar"])})
 
 @app.route('/api/banco/<nivel>', methods=['GET'])
 def obtener_banco(nivel):
