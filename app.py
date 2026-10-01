@@ -21,27 +21,27 @@ app = Flask(__name__)
 # Cliente de Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Mapa completo de idiomas para gTTS
+# Mapa completo de idiomas para gTTS (Incluye Neerlandés)
 TTS_LANG_MAP = {
     'en': 'en', 'fr': 'fr', 'de': 'de', 'it': 'it', 'pt': 'pt',
-    'zh': 'zh-CN', 'ja': 'ja', 'ru': 'ru', 'es': 'es', 'ar': 'ar',
-    'nl': 'nl'
+    'nl': 'nl', 'zh': 'zh-CN', 'ja': 'ja', 'ru': 'ru', 'es': 'es', 'ar': 'ar'
 }
 
-# Estructura de exámenes por idioma según la Universidad de Sevilla
+# Estructura de exámenes por idioma según la Universidad de Sevilla (Incluye Neerlandés)
 EXAMENES_CONFIG = {
     'en': ['Cambridge (PET, FCE, CAE, CPE)', 'IELTS', 'TOEFL iBT', 'Linguaskill', 'Acreditación US (B1/B2)'],
     'fr': ['DELF (A1-B2)', 'DALF (C1-C2)', 'TCF', 'Acreditación US (B1/B2)'],
     'de': ['Goethe-Zertifikat', 'TestDaF', 'DSH', 'Acreditación US (B1/B2)'],
     'it': ['CELI', 'CILS', 'PLIDA', 'Acreditación US (B1/B2)'],
     'pt': ['CAPLE (PLE)', 'CELPE-Bras', 'Acreditación US (B1/B2)'],
+    'nl': ['CNaVT (Certificaat Nederlands als Vreemde Taal)', 'Staatsexamen NT2', 'Acreditación US (B1/B2)'],
     'zh': ['HSK (Nivel 1 al 6)', 'HSKK (Oral)'],
     'ja': ['JLPT / Noken (N5 al N1)'],
     'ru': ['TORFL / TRKI (A1 a C2)'],
     'es': ['DELE', 'SIELE'],
-    'ar': ['Acreditación Oficial Universitaria (A1-C1)'],
-    'nl': ['CNaVT (Certificaat Nederlands als Vreemde Taal)', 'Staatsexamen NT2', 'Acreditación US (B1/B2)']
+    'ar': ['Acreditación Oficial Universitaria (A1-C1)']
 }
+
 # Banco de Recursos Académicos (Gramática y Vocabulario)
 BANCO_RECURSOS = {
     "A1": {
@@ -107,7 +107,7 @@ Idioma objetivo: {idioma.upper()}
 Nivel MCERL del alumno: {nivel}
 
 Tu rol como Tutor Original:
-1. Responde de forma amable, cercana y motivadora en {idioma.upper()} adaptado estrictamente al nivel {nivel}.
+1. Responde de forma amable, cercana y motivadora en {idioma.upper()} adaptado strictly al nivel {nivel}.
 2. Evalúa de forma continua el progreso, corrige errores sutilmente y ofrece guía académica clara en español.
 3. Propón preguntas de seguimiento para mantener viva la interacción pedagógica.
 
