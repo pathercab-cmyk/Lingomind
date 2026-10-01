@@ -128,20 +128,7 @@ Modo ACTIVO: Evaluador de Writing - Método Socrático/Guiado.
     return prompt_base
 
 # --- RUTA PARA VER LOS COMENTARIOS / FEEDBACK ---
-@app.route('/admin/feedback')
-@login_required
-def ver_feedback():
-    # Puedes restringirlo a tu correo si lo deseas:
-    # if current_user.email != "tu_correo@gmail.com":
-    #     return "Acceso no autorizado", 403
 
-    todos_los_comentarios = Comentario.query.order_by(Comentario.fecha.desc()).all()
-    
-    html = "<h1>Comentarios y Feedback Recibidos</h1><ul>"
-    for c in todos_los_comentarios:
-        html += f"<li><strong>{c.usuario.email}</strong> ({c.puntuacion}/5 estrellas) - {c.fecha.strftime('%d/%m/%Y %H:%M')}<br>'{c.texto}'</li><br>"
-    html += "</ul><br><a href='/'>Volver al Chat</a>"
-    return html
 
 # --- RUTAS DE AUTENTICACIÓN ---
 
@@ -282,5 +269,20 @@ def inicializar_base_datos():
 # Se ejecuta al iniciar la aplicación (funciona tanto con Gunicorn en Render como en desarrollo local)
 inicializar_base_datos()
 
+@app.route('/admin/feedback')
+@login_required
+def ver_feedback():
+    # Puedes restringirlo a tu correo si lo deseas:
+    # if current_user.email != "tu_correo@gmail.com":
+    #     return "Acceso no autorizado", 403
+
+    todos_los_comentarios = Comentario.query.order_by(Comentario.fecha.desc()).all()
+    
+    html = "<h1>Comentarios y Feedback Recibidos</h1><ul>"
+    for c in todos_los_comentarios:
+        html += f"<li><strong>{c.usuario.email}</strong> ({c.puntuacion}/5 estrellas) - {c.fecha.strftime('%d/%m/%Y %H:%M')}<br>'{c.texto}'</li><br>"
+    html += "</ul><br><a href='/'>Volver al Chat</a>"
+    return html
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
