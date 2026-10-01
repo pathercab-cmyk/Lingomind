@@ -1,6 +1,5 @@
 flask
-openai
+groq
 gunicorn
-werkzeug
 pypdf
 python-docx
