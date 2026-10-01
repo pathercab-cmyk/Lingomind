@@ -24,7 +24,8 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # Mapa completo de idiomas para gTTS
 TTS_LANG_MAP = {
     'en': 'en', 'fr': 'fr', 'de': 'de', 'it': 'it', 'pt': 'pt',
-    'zh': 'zh-CN', 'ja': 'ja', 'ru': 'ru', 'es': 'es', 'ar': 'ar'
+    'zh': 'zh-CN', 'ja': 'ja', 'ru': 'ru', 'es': 'es', 'ar': 'ar',
+    'nl': 'nl'
 }
 
 # Estructura de exámenes por idioma según la Universidad de Sevilla
@@ -38,9 +39,9 @@ EXAMENES_CONFIG = {
     'ja': ['JLPT / Noken (N5 al N1)'],
     'ru': ['TORFL / TRKI (A1 a C2)'],
     'es': ['DELE', 'SIELE'],
-    'ar': ['Acreditación Oficial Universitaria (A1-C1)']
+    'ar': ['Acreditación Oficial Universitaria (A1-C1)'],
+    'nl': ['CNaVT (Certificaat Nederlands als Vreemde Taal)', 'Staatsexamen NT2', 'Acreditación US (B1/B2)']
 }
-
 # Banco de Recursos Académicos (Gramática y Vocabulario)
 BANCO_RECURSOS = {
     "A1": {
