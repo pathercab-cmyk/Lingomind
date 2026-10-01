@@ -290,10 +290,10 @@
                 </div>
 
                 <div id="chatBox" class="chat-container mb-3">
-                    <!-- Los mensajes del chat dinámico se cargan según el modo seleccionado -->
+                    <!-- Contenido dinámico por modo -->
                 </div>
 
-                <!-- CONTROLES MODO ESTÁNDAR (CON MICRÓFONO) -->
+                <!-- CONTROLES MODO ESTÁNDAR (Tutor, Prácticas, Exámenes) -->
                 <div id="controlEstandard" class="input-group">
                     <button class="btn btn-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
                         <i class="fa-solid fa-microphone me-1"></i> <span id="txtBtnMicChat">Dictar</span>
@@ -304,16 +304,16 @@
                     </button>
                 </div>
 
-                <!-- CONTROLES MODO WRITING CON SELECTOR DE MÉTODOS SOLICITADOS -->
+                <!-- CONTROLES EXCLUSIVOS MODO WRITING CON SELECTOR DE MÉTODOS -->
                 <div id="controlWriting" class="d-none">
                     <div class="bg-light p-2 mb-2 rounded border d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-dark small"><i class="fa-solid fa-sliders me-1 text-primary"></i> Modo de Corrección:</span>
+                        <span class="fw-bold text-dark small"><i class="fa-solid fa-sliders me-1 text-primary"></i> Modo de Corrección Exclusivo para Writing:</span>
                         <div class="btn-group btn-group-sm" role="group">
                             <input type="radio" class="btn-check" name="metodoWriting" id="metodoGramatica" value="gramatica" checked>
-                            <label class="btn btn-outline-primary fw-semibold" for="metodoGramatica"><i class="fa-solid fa-check-double me-1"></i> Método 1: Corrección Directa + Explicación</label>
+                            <label class="btn btn-outline-primary fw-semibold" for="metodoGramatica"><i class="fa-solid fa-check-double me-1"></i> Método 1: Corrección Directa</label>
                             
                             <input type="radio" class="btn-check" name="metodoWriting" id="metodoPistas" value="pistas">
-                            <label class="btn btn-outline-warning text-dark fw-semibold" for="metodoPistas"><i class="fa-solid fa-lightbulb me-1"></i> Método 2: Subrayar Errores + Pistas</label>
+                            <label class="btn btn-outline-warning text-dark fw-semibold" for="metodoPistas"><i class="fa-solid fa-lightbulb me-1"></i> Método 2: Subrayado + Pistas</label>
                         </div>
                     </div>
 
@@ -444,7 +444,7 @@
 
 </div>
 
-<!-- JAVASCRIPT LÓGICO -->
+<!-- JAVASCRIPT LÓGICO DE NAVEGACIÓN Y CONEXIÓN -->
 <script>
     let modoActual = 'tutor_original';
     
@@ -543,9 +543,9 @@
         const historial = chatsPorModo[modoActual] || [];
 
         if (historial.length === 0) {
-            let mensajeInicio = `Bienvenido al modo ${modoActual.replace('_', ' ').toUpperCase()} (${idiomaSel}). ¿En qué te gustaría trabajar hoy?`;
+            let mensajeInicio = `Bienvenido al modo ${modoActual.replace('_', ' ').toUpperCase()} (${idiomaSel}). Los errores se señalarán directamente en la conversación.`;
             if (modoActual === 'writing') {
-                mensajeInicio = `Modo Writing activo (${idiomaSel}). Selecciona arriba si deseas Corrección Directa o el Modo Desafío con Pistas.`;
+                mensajeInicio = `Modo Writing activo (${idiomaSel}). Elige arriba entre Corrección Directa o Modo Desafío con Pistas.`;
             }
             chatBox.innerHTML = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${mensajeInicio}</div>`;
         } else {
@@ -555,8 +555,9 @@
                 
                 let htmlOralis = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(item.oralis)}`;
                 
-                // RENDERING MÉTODO 1 vs MÉTODO 2 EN WRITING
-                if (item.metodo_writing === 'pistas' && item.pista) {
+                // LÓGICA DE VISUALIZACIÓN DE CORRECCIÓN:
+                // Si estamos en Writing y el usuario eligió PISTAS
+                if (item.modo === 'writing' && item.metodo_writing === 'pistas' && item.pista) {
                     htmlOralis += `
                         <div class="hint-box">
                             <i class="fa-solid fa-pen-ruler me-1"></i> <strong>Texto con error detectado:</strong><br>
@@ -572,10 +573,12 @@
                             </div>
                         </div>
                     `;
-                } else if (item.correccion) {
+                } 
+                // En TODOS LOS DEMÁS CASOS (Tutor, Prácticas Orales, Exámenes o Writing Método Directo) muestra el error y corrección DIRECTAMENTE
+                else if (item.correccion) {
                     htmlOralis += `
                         <div class="correction-box">
-                            <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Corrección sugerida:</strong> ${escapeHtml(item.correccion)}<br>
+                            <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Corrección directa:</strong> ${escapeHtml(item.correccion)}<br>
                             ${item.explicacion ? `<small class="d-block mt-1"><strong>Explicación:</strong> ${escapeHtml(item.explicacion)}</small>` : ''}
                         </div>
                     `;
@@ -668,6 +671,7 @@
             chatsPorModo[modoActual].push({
                 usuario: textoMostrar,
                 oralis: respuestaTexto,
+                modo: data.modo,
                 metodo_writing: data.metodo_writing,
                 correccion: data.correccion,
                 explicacion: data.explicacion,
@@ -896,7 +900,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma y nivel deseado.\n2. Al cambiar de pestaña, cada modo mantiene su chat independiente.\n3. En Writing puedes elegir entre Corrección Directa o el Modo Desafío con Pistas.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma y nivel deseado.\n2. En los modos Tutor, Prácticas y Exámenes la corrección es directa e inmediata.\n3. En el modo Writing puedes elegir entre Corrección Directa o el Modo Desafío con Pistas.");
     }
 </script>
 
