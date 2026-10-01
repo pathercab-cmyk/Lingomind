@@ -70,7 +70,7 @@
         }
 
         .chat-container {
-            height: 480px;
+            height: 440px;
             overflow-y: auto;
             background-color: #f1f5f9;
             border: 1px solid var(--border-color);
@@ -79,11 +79,12 @@
         }
 
         .msg-bubble {
-            max-width: 82%;
+            max-width: 85%;
             margin-bottom: 18px;
             padding: 14px 18px;
             border-radius: 12px;
             line-height: 1.5;
+            white-space: pre-wrap;
         }
 
         .msg-user {
@@ -112,15 +113,6 @@
             padding: 10px;
             border-bottom: 1px solid #f1f5f9;
             font-size: 0.88rem;
-        }
-
-        .saved-chat-card {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .saved-chat-card:hover {
-            border-color: var(--primary-color) !important;
-            background-color: #f0f9ff;
         }
 
         .control-label {
@@ -277,7 +269,8 @@
                     </div>
                 </div>
 
-                <div class="input-group">
+                <!-- CONTROLES MODO ESTÁNDAR (CON MICRÓFONO) -->
+                <div id="controlEstandard" class="input-group">
                     <button class="btn btn-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
                         <i class="fa-solid fa-microphone me-1"></i> <span id="txtBtnMicChat">Dictar</span>
                     </button>
@@ -286,6 +279,26 @@
                         Enviar <i class="fa-solid fa-paper-plane ms-1"></i>
                     </button>
                 </div>
+
+                <!-- CONTROLES EXCLUSIVOS MODO WRITING (TEXTAREA Y SUBIDA DE ARCHIVOS) -->
+                <div id="controlWriting" class="d-none">
+                    <div class="mb-2">
+                        <textarea id="userMsgWriting" class="form-control" rows="5" placeholder="Escribe tu redacción, ensayo o texto largo aquí para su revisión..."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center bg-light p-2 border rounded">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="inputArchivoWriting" class="btn btn-outline-secondary btn-sm fw-bold">
+                                <i class="fa-solid fa-paperclip me-1"></i> Adjuntar Archivo (.pdf, .docx, .txt)
+                            </label>
+                            <input type="file" id="inputArchivoWriting" class="d-none" onchange="mostrarNombreArchivo(this)">
+                            <span id="nombreArchivoSeleccionado" class="small text-muted fw-semibold">Sin archivo seleccionado</span>
+                        </div>
+                        <button class="btn btn-primary fw-bold px-4" onclick="enviarWriting()">
+                            Enviar Redacción <i class="fa-solid fa-paper-plane ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -307,7 +320,7 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: BANCO DE RECURSOS (GRAMÁTICA Y VOCABULARIO POR NIVEL) -->
+    <!-- SECCIÓN: BANCO DE RECURSOS -->
     <div id="seccionBanco" class="card card-custom p-4 d-none">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
             <h4 class="text-info fw-bold mb-0"><i class="fa-solid fa-layer-group me-2"></i> Banco de Recursos Académicos</h4>
@@ -335,7 +348,7 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: CUADERNO DE VOCABULARIO Y GRAMÁTICA (APRENDIDO EN CHAT) -->
+    <!-- SECCIÓN: CUADERNO DE APRENDIZAJE -->
     <div id="seccionCuaderno" class="card card-custom p-4 d-none">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
             <h4 class="text-success fw-bold mb-0"><i class="fa-solid fa-book-open me-2"></i> Mi Cuaderno de Aprendizaje</h4>
@@ -345,7 +358,7 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="card p-3 border-success h-100">
-                    <h5 class="fw-bold text-success border-bottom pb-2"><i class="fa-solid fa-spell-check me-2"></i> Vocabulario Aprendido (por Contexto)</h5>
+                    <h5 class="fw-bold text-success border-bottom pb-2"><i class="fa-solid fa-spell-check me-2"></i> Vocabulario Aprendido</h5>
                     <div id="contenedorVocabularioContexto" class="mt-3">
                         <em class="text-muted">Cargando vocabulario...</em>
                     </div>
@@ -354,7 +367,7 @@
 
             <div class="col-md-6">
                 <div class="card p-3 border-primary h-100">
-                    <h5 class="fw-bold text-primary border-bottom pb-2"><i class="fa-solid fa-graduation-cap me-2"></i> Gramática Estudiada (por Nivel)</h5>
+                    <h5 class="fw-bold text-primary border-bottom pb-2"><i class="fa-solid fa-graduation-cap me-2"></i> Gramática Estudiada</h5>
                     <div id="contenedorGramaticaNivel" class="mt-3">
                         <em class="text-muted">Cargando gramática...</em>
                     </div>
@@ -367,7 +380,7 @@
     <div id="seccionGuardados" class="card card-custom p-4 d-none">
         <div class="border-bottom pb-2 mb-3">
             <h4 class="text-primary fw-bold mb-1"><i class="fa-solid fa-folder-open me-2"></i> Conversaciones Guardadas</h4>
-            <p class="text-muted mb-0">Accede rápidamente a tus prácticas anteriores agrupadas por idioma y nivel.</p>
+            <p class="text-muted mb-0">Accede rápidamente a tus prácticas anteriores.</p>
         </div>
 
         <div id="listaChatsGuardados" class="row g-3">
@@ -413,7 +426,7 @@
         historialConversacion = [];
         document.getElementById('chatBox').innerHTML = `
             <div class="msg-bubble msg-oralis">
-                <strong>Oralis:</strong> Nuevo chat iniciado para el idioma seleccionado. ¿En qué tema deseas enfocar la sesión?
+                <strong>Oralis:</strong> Nuevo chat iniciado. ¿De qué te gustaría hablar o redactar hoy?
             </div>
         `;
         actualizarHistorialVisual();
@@ -437,6 +450,15 @@
         document.getElementById('containerProfesion').classList.toggle('d-none', modo !== 'practicas_orales');
         document.getElementById('containerExamenes').classList.toggle('d-none', modo !== 'examen');
         
+        // INTERCAMBIO ENTRADA ESTÁNDAR / WRITING
+        if (modo === 'writing') {
+            document.getElementById('controlEstandard').classList.add('d-none');
+            document.getElementById('controlWriting').classList.remove('d-none');
+        } else {
+            document.getElementById('controlEstandard').classList.remove('d-none');
+            document.getElementById('controlWriting').classList.add('d-none');
+        }
+
         document.getElementById('seccionPrincipal').classList.toggle('d-none', modo === 'cuaderno' || modo === 'guardados' || modo === 'banco');
         document.getElementById('seccionBanco').classList.toggle('d-none', modo !== 'banco');
         document.getElementById('seccionCuaderno').classList.toggle('d-none', modo !== 'cuaderno');
@@ -447,7 +469,113 @@
         if (modo === 'guardados') renderizarChatsGuardados();
     }
 
-    // CARGAR BANCO DE RECURSOS POR NIVEL
+    function mostrarNombreArchivo(input) {
+        const nombreSpan = document.getElementById('nombreArchivoSeleccionado');
+        if (input.files && input.files[0]) {
+            nombreSpan.innerText = input.files[0].name;
+            nombreSpan.classList.remove('text-muted');
+            nombreSpan.classList.add('text-primary');
+        } else {
+            nombreSpan.innerText = 'Sin archivo seleccionado';
+            nombreSpan.classList.add('text-muted');
+            nombreSpan.classList.remove('text-primary');
+        }
+    }
+
+    // ENVÍO EN MODO CHAT ESTÁNDAR
+    async function enviarMensaje() {
+        const input = document.getElementById('userMsg');
+        const mensaje = input.value.trim();
+        if (!mensaje) return;
+        input.value = "";
+        await procesarEnvio(mensaje, null);
+    }
+
+    // ENVÍO EN MODO WRITING (TEXTAREA + ARCHIVO)
+    async function enviarWriting() {
+        const textarea = document.getElementById('userMsgWriting');
+        const inputArchivo = document.getElementById('inputArchivoWriting');
+        const mensaje = textarea.value.trim();
+        const archivo = inputArchivo.files[0] || null;
+
+        if (!mensaje && !archivo) {
+            alert("Por favor, escribe un texto o adjunta un archivo para enviar.");
+            return;
+        }
+
+        let textoAMostrar = mensaje;
+        if (archivo) {
+            textoAMostrar += `\n[Archivo adjunto: ${archivo.name}]`;
+        }
+
+        textarea.value = "";
+        inputArchivo.value = "";
+        document.getElementById('nombreArchivoSeleccionado').innerText = 'Sin archivo seleccionado';
+
+        await procesarEnvio(mensaje, archivo, textoAMostrar);
+    }
+
+    async function procesarEnvio(mensaje, archivo = null, textoVisual = null) {
+        if(escuchando) detenerMicrofono();
+
+        const chatBox = document.getElementById('chatBox');
+        const textoMostrar = textoVisual || mensaje;
+        
+        chatBox.innerHTML += `<div class="msg-bubble msg-user"><strong>Tú:</strong> ${escapeHtml(textoMostrar)}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        let formData = new FormData();
+        formData.append('mensaje', mensaje);
+        formData.append('idioma', document.getElementById('selIdioma').value);
+        formData.append('nivel', document.getElementById('selNivel').value);
+        formData.append('modo', modoActual);
+        formData.append('profesion', document.getElementById('selProfesion').value);
+        formData.append('tipo_examen', document.getElementById('selExamen').value);
+        formData.append('tema', document.getElementById('inputTema').value);
+        if (archivo) formData.append('archivo', archivo);
+
+        try {
+            const res = await fetch('/chat', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) throw new Error(`Error en servidor: ${res.status}`);
+
+            const data = await res.json();
+            const respuestaTexto = data.respuesta || "Mensaje procesado.";
+
+            let htmlOralis = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(respuestaTexto)}<br>`;
+            if (data.vocabulario) {
+                htmlOralis += `<div class="mt-1 text-primary"><small><strong>Vocabulario registrado:</strong> ${escapeHtml(data.vocabulario)}</small></div>`;
+            }
+            htmlOralis += `</div>`;
+
+            chatBox.innerHTML += htmlOralis;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            historialConversacion.push({ usuario: textoMostrar, oralis: respuestaTexto });
+            actualizarHistorialVisual();
+
+        } catch (err) {
+            console.error("Error al comunicarse con el servidor:", err);
+            chatBox.innerHTML += `<div class="msg-bubble msg-oralis text-danger">Error al procesar la solicitud. Inténtalo de nuevo.</div>`;
+        }
+    }
+
+    function actualizarHistorialVisual() {
+        const box = document.getElementById('historyBox');
+        document.getElementById('counterMensajes').innerText = `${historialConversacion.length} Mensajes`;
+
+        box.innerHTML = historialConversacion.map((item, idx) => `
+            <div class="history-item">
+                <strong class="text-primary">#${idx+1} Estudiante:</strong> ${escapeHtml(item.usuario)}<br>
+                <span class="text-secondary">Oralis:</span> ${escapeHtml(item.oralis)}
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
     async function cargarBancoRecursos() {
         const nivel = document.getElementById('selNivel').value;
         document.getElementById('badgeBancoNivel').innerText = `Nivel: ${nivel}`;
@@ -462,12 +590,9 @@
             const divVocab = document.getElementById('contenedorBancoVocabulario');
             divVocab.innerHTML = '<ul class="list-group">' + data.vocabulario.map(item => `<li class="list-group-item"><i class="fa-solid fa-bookmark text-secondary me-2"></i>${escapeHtml(item)}</li>`).join('') + '</ul>';
 
-        } catch(e) {
-            console.error("Error cargando banco de recursos:", e);
-        }
+        } catch(e) {}
     }
 
-    // CARGAR DATOS DEL CUADERNO
     async function cargarCuadernoAprendizaje() {
         const idioma = document.getElementById('selIdioma').value;
         document.getElementById('badgeCuadernoIdioma').innerText = `Idioma: ${idioma.toUpperCase()}`;
@@ -476,10 +601,9 @@
             const res = await fetch(`/api/obtener_recursos_aprendidos/${idioma}`);
             const data = await res.json();
 
-            // Vocabulario por Contexto
             const divVocab = document.getElementById('contenedorVocabularioContexto');
             if (Object.keys(data.vocabulario).length === 0) {
-                divVocab.innerHTML = `<em class="text-muted">Aún no hay vocabulario registrado en este idioma.</em>`;
+                divVocab.innerHTML = `<em class="text-muted">Aún no hay vocabulario registrado.</em>`;
             } else {
                 let htmlVocab = '';
                 for (const [contexto, lista] of Object.entries(data.vocabulario)) {
@@ -492,7 +616,6 @@
                 divVocab.innerHTML = htmlVocab;
             }
 
-            // Gramática por Nivel
             const divGram = document.getElementById('contenedorGramaticaNivel');
             if (Object.keys(data.gramatica).length === 0) {
                 divGram.innerHTML = `<em class="text-muted">Aún no hay puntos gramaticales registrados.</em>`;
@@ -508,15 +631,12 @@
                 divGram.innerHTML = htmlGram;
             }
 
-        } catch(e) {
-            console.error("Error al cargar cuaderno:", e);
-        }
+        } catch(e) {}
     }
 
-    // GUARDADO Y CARGA DE CHATS
     async function guardarSesionActual() {
         if (historialConversacion.length === 0) {
-            alert("El chat está vacío. Escribe algo antes de guardarlo.");
+            alert("El chat está vacío. Escribe o envía algo antes de guardarlo.");
             return;
         }
 
@@ -537,19 +657,19 @@
             body: JSON.stringify(nuevaSesion)
         });
 
-        alert("¡Conversación guardada con éxito!");
+        alert("¡Conversación guardada correctamente!");
     }
 
     function renderizarChatsGuardados() {
         const divLista = document.getElementById('listaChatsGuardados');
         if (chatsGuardadosLocal.length === 0) {
-            divLista.innerHTML = `<em class="text-muted">No tienes conversaciones guardadas en este momento.</em>`;
+            divLista.innerHTML = `<em class="text-muted">No tienes conversaciones guardadas.</em>`;
             return;
         }
 
         divLista.innerHTML = chatsGuardadosLocal.map(chat => `
             <div class="col-md-6">
-                <div class="card p-3 border saved-chat-card" onclick="cargarChatGuardado(${chat.id})">
+                <div class="card p-3 border" style="cursor:pointer;" onclick="cargarChatGuardado(${chat.id})">
                     <div class="d-flex justify-content-between">
                         <span class="badge bg-primary">${chat.idioma.toUpperCase()}</span>
                         <span class="badge bg-secondary">${chat.nivel}</span>
@@ -579,76 +699,7 @@
         });
 
         actualizarHistorialVisual();
-        seleccionarModo('tutor_original');
-    }
-
-    // ENVÍO ROBUSTO DE MENSAJES
-    async function enviarMensaje() {
-        const input = document.getElementById('userMsg');
-        const mensaje = input.value.trim();
-        if (!mensaje) return;
-        input.value = "";
-        await enviarMensajeConTexto(mensaje);
-    }
-
-    async function enviarMensajeConTexto(mensaje) {
-        if(escuchando) detenerMicrofono();
-
-        const chatBox = document.getElementById('chatBox');
-        chatBox.innerHTML += `<div class="msg-bubble msg-user"><strong>Tú:</strong> ${escapeHtml(mensaje)}</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        const payload = {
-            mensaje: mensaje,
-            idioma: document.getElementById('selIdioma').value,
-            nivel: document.getElementById('selNivel').value,
-            modo: modoActual,
-            profesion: document.getElementById('selProfesion').value,
-            tipo_examen: document.getElementById('selExamen').value,
-            tema: document.getElementById('inputTema').value
-        };
-
-        try {
-            const res = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) throw new Error(`Error en servidor: ${res.status}`);
-
-            const data = await res.json();
-            const respuestaTexto = data.respuesta || "Mensaje procesado.";
-
-            let htmlOralis = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(respuestaTexto)}<br>`;
-            if (data.vocabulario) {
-                htmlOralis += `<div class="mt-1 text-primary"><small><strong>Vocabulario guardado:</strong> ${escapeHtml(data.vocabulario)}</small></div>`;
-            }
-            htmlOralis += `</div>`;
-
-            chatBox.innerHTML += htmlOralis;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            historialConversacion.push({ usuario: mensaje, oralis: respuestaTexto });
-            actualizarHistorialVisual();
-
-        } catch (err) {
-            console.error("Error al comunicarse con el servidor:", err);
-            chatBox.innerHTML += `<div class="msg-bubble msg-oralis text-danger">Error al conectar con la plataforma. Inténtalo de nuevo.</div>`;
-        }
-    }
-
-    function actualizarHistorialVisual() {
-        const box = document.getElementById('historyBox');
-        document.getElementById('counterMensajes').innerText = `${historialConversacion.length} Mensajes`;
-
-        box.innerHTML = historialConversacion.map((item, idx) => `
-            <div class="history-item">
-                <strong class="text-primary">#${idx+1} Estudiante:</strong> ${escapeHtml(item.usuario)}<br>
-                <span class="text-secondary">Oralis:</span> ${escapeHtml(item.oralis)}
-            </div>
-        `).join('');
-        box.scrollTop = box.scrollHeight;
+        seleccionarModo(sesion.modo || 'tutor_original');
     }
 
     async function cargarExamenesOficiales() {
@@ -663,7 +714,6 @@
         } catch(e) {}
     }
 
-    // MICRÓFONO CONTINUO
     function alternarMicrofono(inputId, btnId) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -714,7 +764,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. Consulta el Banco de Recursos para ver la teoría por nivel.\n3. Revisa en 'Mi Cuaderno' tus aprendizajes en las conversaciones.\n4. Guarda y reanuda tus chats cuando desees.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. Usa el 'Modo Writing' para escribir ensayos y adjuntar archivos (.pdf, .docx, .txt).\n3. Revisa el 'Banco de Recursos' para consultar la gramática teórica.");
     }
 </script>
 
