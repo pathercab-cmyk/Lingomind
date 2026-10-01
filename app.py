@@ -54,7 +54,9 @@ def load_user(user_id):
 
 # Configuración del cliente oficial de Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-MODELO_GROQ = "qwen-2.5-32b"
+
+# MODELO ACTUALIZADO
+MODELO_GROQ = "qwen/qwen3.8-27b"
 
 EXAMENES_OFICIALES = {
     "en": ["Cambridge (PET, FCE, CAE)", "IELTS", "TOEFL", "TOEIC"],
@@ -132,9 +134,6 @@ Modo ACTIVO: Evaluador de Writing - Método Socrático/Guiado.
 """
 
     return prompt_base
-
-# --- RUTA PARA VER LOS COMENTARIOS / FEEDBACK ---
-
 
 # --- RUTAS DE AUTENTICACIÓN ---
 
@@ -222,6 +221,7 @@ def chat():
                 temperature=0.6,
                 max_completion_tokens=2048,
                 top_p=0.95,
+                reasoning_effort="default",
                 stream=True
             )
 
@@ -229,7 +229,7 @@ def chat():
                 if chunk.choices and len(chunk.choices) > 0:
                     content = chunk.choices[0].delta.content
                     if content:
-                        # 🧹 Filtrado directo para eliminar asteriscos y guiones bajos de Markdown
+                        # 🧹 Filtrado directo para eliminar asteriscos y guiones bajos
                         content_limpio = content.replace('*', '').replace('_', '')
                         yield f"data: {json.dumps({'content': content_limpio})}\n\n"
 
@@ -275,16 +275,11 @@ def inicializar_base_datos():
                 print(f"❌ Error al inicializar la base de datos: {e}")
                 return
 
-# Se ejecuta al iniciar la aplicación (funciona tanto con Gunicorn en Render como en desarrollo local)
 inicializar_base_datos()
 
 @app.route('/admin/feedback')
 @login_required
 def ver_feedback():
-    # Puedes restringirlo a tu correo si lo deseas:
-    # if current_user.email != "tu_correo@gmail.com":
-    #     return "Acceso no autorizado", 403
-
     todos_los_comentarios = Comentario.query.order_by(Comentario.fecha.desc()).all()
     
     html = "<h1>Comentarios y Feedback Recibidos</h1><ul>"
