@@ -58,24 +58,18 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # MODELO ACTUALIZADO
 MODELO_GROQ = "qwen/qwen3.8-27b"
 
-# LISTA COMPLETA DE IDIOMAS Y EXÁMENES OFICIALES RESTAURADA
+# DICCIONARIO CON LOS 10 IDIOMAS SOLICITADOS
 EXAMENES_OFICIALES = {
     "en": ["Cambridge (PET, FCE, CAE, CPE)", "IELTS", "TOEFL iBT", "TOEIC", "Linguaskill"],
     "fr": ["DELF / DALF", "TCF", "TEF"],
     "de": ["Goethe-Zertifikat", "TestDaF", "DSH", "telc Deutsch"],
-    "it": ["CELI", "CILS", "PLIDA"],
+    "nl": ["CNaVT", "Inburgeringsexamen", "NT2 State Examination"],
     "pt": ["CAPLE", "CELPE-Bras"],
+    "ro": ["RLA - Romanian Language Assessment", "Certificat de competență lingvistică"],
+    "ja": ["JLPT (N5, N4, N3, N2, N1)", "BJT (Business Japanese)"],
     "zh": ["HSK (Hanyu Shuiping Kaoshi)", "HSKK"],
-    "ja": ["JLPT (N5, N4, N3, N2, N1)"],
-    "ko": ["TOPIK (I, II)"],
-    "ru": ["TORFL / TRKI"],
-    "es": ["DELE", "SIELE"],
-    "ar": ["ALPT", "AL-ARABIYYA"],
-    "nl": ["CNaVT", "Inburgeringsexamen"],
-    "ro": ["RLA - Romanian Language Assessment"],
-    "sv": ["TISUS", "Swedex"],
-    "pl": ["Egzamin certyfikatowy z języka polskiego"],
-    "tr": ["TÖMER", "TYS"]
+    "it": ["CELI", "CILS", "PLIDA"],
+    "es": ["DELE", "SIELE"]
 }
 
 def extraer_texto_archivo(file):
