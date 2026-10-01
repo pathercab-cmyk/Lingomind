@@ -377,11 +377,23 @@
         });
 
         // Alternar visibilidad de configuraciones según el modo
-        function toggleModos() {
-            const modo = document.getElementById('modo').value;
-            document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
-            document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
-        }
+       function toggleModos() {
+    const modo = document.getElementById('modo').value;
+    
+    // Muestra u oculta según el modo seleccionado
+    if (document.getElementById('group-profesion')) {
+        document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
+    }
+    if (document.getElementById('group-examen')) {
+        document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
+    }
+    if (document.getElementById('group-writing')) {
+        document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
+    }
+}
+
+// Asegúrate de llamar a toggleModos al cambiar el select de modo
+document.getElementById('modo').addEventListener('change', toggleModos);
 
         function toggleCustomProfesion() {
             const profesion = document.getElementById('profesion').value;
