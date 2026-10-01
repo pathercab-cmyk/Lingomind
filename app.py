@@ -21,13 +21,13 @@ app = Flask(__name__)
 # Cliente de Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Mapa completo de idiomas para gTTS (Text-to-Speech)
+# Mapa completo de idiomas para gTTS
 TTS_LANG_MAP = {
     'en': 'en', 'fr': 'fr', 'de': 'de', 'it': 'it', 'pt': 'pt',
     'zh': 'zh-CN', 'ja': 'ja', 'ru': 'ru', 'es': 'es', 'ar': 'ar'
 }
 
-# Estructura de exámenes por idioma según el marco universitario (US)
+# Estructura de exámenes por idioma según la Universidad de Sevilla
 EXAMENES_CONFIG = {
     'en': ['Cambridge (PET, FCE, CAE, CPE)', 'IELTS', 'TOEFL iBT', 'Linguaskill', 'Acreditación US (B1/B2)'],
     'fr': ['DELF (A1-B2)', 'DALF (C1-C2)', 'TCF', 'Acreditación US (B1/B2)'],
@@ -37,7 +37,36 @@ EXAMENES_CONFIG = {
     'zh': ['HSK (Nivel 1 al 6)', 'HSKK (Oral)'],
     'ja': ['JLPT / Noken (N5 al N1)'],
     'ru': ['TORFL / TRKI (A1 a C2)'],
-    'es': ['DELE', 'SIELE']
+    'es': ['DELE', 'SIELE'],
+    'ar': ['Acreditación Oficial Universitaria (A1-C1)']
+}
+
+# Banco de Recursos Académicos (Gramática y Vocabulario)
+BANCO_RECURSOS = {
+    "A1": {
+        "gramatica": ["Presente simple y verbos auxiliares", "Artículos definidos e indefinidos", "Pronombres personales y posesivos", "Estructura de oraciones básicas"],
+        "vocabulario": ["Saludos, presentaciones y despedidas", "Números, días y meses", "La familia y la vivienda", "Comida y bebidas cotidianas"]
+    },
+    "A2": {
+        "gramatica": ["Pasado simple e imperfecto", "Comparativos y superlativos", "Verbos modales básicos (can, must, should)", "Preposiciones de tiempo y lugar"],
+        "vocabulario": ["Trabajo y rutinas diarias", "Viajes, transporte y direcciones", "Deportes y tiempo libre", "Ropa y compras"]
+    },
+    "B1": {
+        "gramatica": ["Presente perfecto y tiempos compuestos", "Primer y segundo condicional", "Voz pasiva básica", "Estilo directo e indirecto (Reported Speech)"],
+        "vocabulario": ["Educación y vida universitaria", "Tecnología y redes sociales", "Medio ambiente y naturaleza", "Salud, cuerpo y bienestar"]
+    },
+    "B2": {
+        "gramatica": ["Tercer condicional y mixtos", "Subjuntivo y formas impersonales", "Verbos frasales (Phrasal Verbs)", "Conectores del discurso complejo"],
+        "vocabulario": ["Economía, negocios y empleo", "Arte, cultura y literatura", "Ciencia e innovación", "Política y sociedad"]
+    },
+    "C1": {
+        "gramatica": ["Inversión gramatical y énfasis", "Estructuras avanzadas de participio", "Matices modales y especulación", "Cohesión textual avanzada"],
+        "vocabulario": ["Debates académicos y filosofía", "Jerga profesional y corporativa", "Tecnicismos e investigación", "Expresiones idiomáticas y modismos"]
+    },
+    "C2": {
+        "gramatica": ["Dominio absoluto de registros estilísticos", "Sintaxis literaria y retórica", "Variaciones dialectales y arcaísmos"],
+        "vocabulario": ["Léxico erudito y especializado", "Metáforas complejas y dobles sentidos", "Lenguaje jurídico y formal extremo"]
+    }
 }
 
 @app.route('/')
@@ -48,6 +77,11 @@ def index():
 def obtener_examenes(idioma):
     examenes = EXAMENES_CONFIG.get(idioma, ['Acreditación Oficial Universitaria'])
     return jsonify({"examenes": examenes})
+
+@app.route('/api/banco/<nivel>')
+def obtener_banco(nivel):
+    recursos = BANCO_RECURSOS.get(nivel, BANCO_RECURSOS["B1"])
+    return jsonify(recursos)
 
 
 # =======================================================
@@ -61,7 +95,6 @@ def chat():
     idioma = data.get('idioma', 'en')
     nivel = data.get('nivel', 'B1')
     modo = data.get('modo', 'tutor_original') 
-    # Modos: 'tutor_original', 'profesor', 'practicas_orales', 'examen', 'conversacion'
     profesion = data.get('profesion', 'General')
     tema = data.get('tema', 'General')
     tipo_examen = data.get('tipo_examen', 'Acreditación US')
@@ -294,49 +327,6 @@ def text_to_speech():
         tts.write_to_fp(fp)
         fp.seek(0)
         return send_file(fp, mimetype='audio/mpeg')
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# =======================================================
-# 5. ANIMIND (RECOMENDADOR DE ANIME)
-# =======================================================
-
-@app.route('/animind')
-def animind():
-    return render_template('animind.html')
-
-@app.route('/animind/recomendar', methods=['POST'])
-def recomendar_anime():
-    data = request.json or {}
-    mensaje_voz = data.get('mensaje_voz', '')
-
-    system_prompt = """
-Eres AniMind, recomendador inteligente de anime.
-Responde OBLIGATORIAMENTE en JSON estricto:
-{
-  "titulo": "Título de la obra",
-  "sinopsis_corta": "Resumen conciso",
-  "razon_recomendacion": "Por qué encaja con el usuario",
-  "plataformas": [
-    {
-      "nombre": "Plataforma de streaming",
-      "audios": ["Audio original", "Doblajes"],
-      "subtitulos": ["Subtítulos disponibles"]
-    }
-  ]
-}
-"""
-    try:
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Consulta: {mensaje_voz}"}
-            ],
-            model="qwen/qwen3.8-27b",
-            response_format={"type": "json_object"}
-        )
-        return jsonify(json.loads(chat_completion.choices[0].message.content))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
