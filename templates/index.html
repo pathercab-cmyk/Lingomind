@@ -100,6 +100,16 @@
             margin-right: auto;
         }
 
+        .correction-box {
+            background-color: #fff1f2;
+            border-left: 4px solid #e11d48;
+            color: #881337;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+
         .history-box {
             height: 380px;
             overflow-y: auto;
@@ -238,7 +248,7 @@
                 </select>
             </div>
 
-            <!-- SELECTOR DE ROL / PROFESIÓN -->
+            <!-- SELECTOR DE ROL / PROFESIÓN CON OPCIÓN PERSONALIZADA -->
             <div class="col-md-3 d-none" id="containerProfesion">
                 <label class="control-label">Rol / Profesión Simular:</label>
                 <select id="selProfesion" class="form-select fw-semibold" onchange="comprobarProfesionCustom()">
@@ -280,7 +290,7 @@
                 </div>
 
                 <div id="chatBox" class="chat-container mb-3">
-                    <div class="msg-bubble msg-oralis" id="msgBienvenida">
+                    <div class="msg-bubble msg-oralis">
                         <strong>Oralis:</strong> Bienvenido. He abierto un nuevo chat para ti. ¿De qué te gustaría hablar hoy?
                     </div>
                 </div>
@@ -584,9 +594,20 @@
             const data = await res.json();
             const respuestaTexto = data.respuesta || "Mensaje procesado.";
 
-            let htmlOralis = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(respuestaTexto)}<br>`;
+            let htmlOralis = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(respuestaTexto)}`;
+
+            // BLOQUE DE CORRECCIÓN VISIBLE
+            if (data.correccion) {
+                htmlOralis += `
+                    <div class="correction-box">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Corrección sugerida:</strong> ${escapeHtml(data.correccion)}<br>
+                        ${data.explicacion ? `<small class="d-block mt-1"><strong>Explicación:</strong> ${escapeHtml(data.explicacion)}</small>` : ''}
+                    </div>
+                `;
+            }
+
             if (data.vocabulario) {
-                htmlOralis += `<div class="mt-1 text-primary"><small><strong>Vocabulario registrado:</strong> ${escapeHtml(data.vocabulario)}</small></div>`;
+                htmlOralis += `<div class="mt-2 text-primary"><small><strong>Vocabulario registrado:</strong> ${escapeHtml(data.vocabulario)}</small></div>`;
             }
             htmlOralis += `</div>`;
 
@@ -819,7 +840,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma (incluido Rumano) y nivel.\n2. Las respuestas se generan en el idioma de aprendizaje objetivo.\n3. En Prácticas Orales puedes simular roles/profesiones predefinidas o escribir un rol personalizado.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma (incluido Rumano) y nivel.\n2. Las respuestas señalan los errores gramaticales directamente en pantalla.\n3. En Prácticas Orales puedes simular roles/profesiones predefinidas o escribir un rol personalizado.");
     }
 </script>
 
