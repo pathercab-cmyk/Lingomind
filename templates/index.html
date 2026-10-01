@@ -79,7 +79,7 @@
             <div class="section-title">Configuración</div>
             <div class="form-group">
                 <label for="idioma">Idioma Objetivo:</label>
-                <select id="idioma" name="idioma" onchange="actualizarTodo()">
+                <select id="idioma" name="idioma" onchange="cambiarConfiguracion()">
                     <option value="en" selected>Inglés</option>
                     <option value="fr">Francés</option>
                     <option value="de">Alemán</option>
@@ -91,7 +91,7 @@
 
             <div class="form-group">
                 <label for="nivel">Nivel Marco Europeo (CEFR):</label>
-                <select id="nivel" name="nivel" onchange="actualizarTodo()">
+                <select id="nivel" name="nivel" onchange="cambiarConfiguracion()">
                     <option value="A1">A1 (Principiante)</option>
                     <option value="A2">A2 (Básico)</option>
                     <option value="B1" selected>B1 (Intermedio)</option>
@@ -220,15 +220,13 @@
         <div class="chat-header">
             <span>Oralis AI - Tutor en Tiempo Real</span>
             <div>
+                <button class="btn-action btn-secondary" onclick="iniciarNuevoChat()" style="width: auto; display: inline-block; margin-right: 5px;">➕ Nuevo Chat</button>
                 <button class="btn-action btn-secondary" onclick="guardarChat()" style="width: auto; display: inline-block;">💾 Guardar Chat</button>
             </div>
         </div>
 
         <div id="chat-box" class="chat-box">
-            <div class="mensaje mensaje-oralis">
-                <div class="contenido-texto">¡Hola! Soy Oralis. Corregiré automáticamente todos tus mensajes para ayudarte a perfeccionar tu nivel. Escríbeme o háblame para comenzar.</div>
-                <button type="button" class="btn-audio" onclick="reproducirTexto(this.previousElementSibling.innerText)">🔊 Escuchar</button>
-            </div>
+            <!-- Los mensajes del chat se colocan aquí dinámicamente -->
         </div>
 
         <div class="chat-input-area">
@@ -320,7 +318,7 @@
             document.getElementById('profesion_custom').style.display = (val === 'Otro') ? 'block' : 'none';
         }
 
-        // BANCO DE RECOMENDACIONES EXPANDIDO POR CADA NIVEL
+        // RECOMENDACIONES POR NIVEL
         const recomendacionNiveles = {
             'A1': {
                 vocab: "Presentaciones personales, Familia, Rutina diaria, Números, Horarios y Colores.",
@@ -347,6 +345,11 @@
                 gram: "Estructuras sintácticas complejas, Variaciones estilísticas avanzadas, Control total de registros y Cohesión textual superior."
             }
         };
+
+        function cambiarConfiguracion() {
+            actualizarTodo();
+            iniciarNuevoChat();
+        }
 
         function actualizarTodo() {
             const idioma = document.getElementById('idioma').value;
@@ -378,6 +381,16 @@
             actualizarExamenes();
         }
 
+        function iniciarNuevoChat() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '';
+            const idioma = document.getElementById('idioma').value.toUpperCase();
+            const nivel = document.getElementById('nivel').value;
+
+            const bienvenida = `¡Hola! He iniciado una nueva sesión para practicar en **${idioma}** (Nivel **${nivel}**). Siempre corregiré tus errores gramaticales y de vocabulario. ¡Escríbeme cuando quieras!`;
+            agregarMensaje('oralis', bienvenida);
+        }
+
         function pedirExplicacion(consulta) {
             document.getElementById('input-mensaje').value = consulta;
             document.getElementById('form-chat').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
@@ -406,7 +419,6 @@
             indicator.innerText = (input.files && input.files[0]) ? '📄 Archivo cargado: ' + input.files[0].name : '';
         }
 
-        // GESTIÓN CORREGIDA DE MENSAJES Y VISIBILIDAD DE TEXTO
         function agregarMensaje(emisor, texto) {
             const chatBox = document.getElementById('chat-box');
             const msgDiv = document.createElement('div');
@@ -453,6 +465,7 @@
             agregarMensaje('user', textoUsuario);
 
             const formData = new FormData(document.getElementById('form-chat'));
+            formData.append('mensaje', mensaje);
             formData.append('idioma', document.getElementById('idioma').value);
             formData.append('nivel', document.getElementById('nivel').value);
             formData.append('modo', document.getElementById('modo').value);
@@ -470,19 +483,28 @@
 
             try {
                 const response = await fetch('/chat', { method: 'POST', body: formData });
+
+                if (!response.ok) {
+                    elemTextoOralis.innerText = "Error en el servidor al procesar tu solicitud.";
+                    return;
+                }
+
                 const reader = response.body.getReader();
-                const decoder = new TextDecoder();
+                const decoder = new TextDecoder("utf-8");
+                let buffer = '';
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // Mantener la línea incompleta para el siguiente ciclo
 
                     for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const dataStr = line.substring(6).trim();
+                        const trimmedLine = line.trim();
+                        if (trimmedLine.startsWith('data: ')) {
+                            const dataStr = trimmedLine.substring(6).trim();
                             if (dataStr) {
                                 try {
                                     const data = JSON.parse(dataStr);
@@ -491,15 +513,19 @@
                                         const chatBox = document.getElementById('chat-box');
                                         chatBox.scrollTop = chatBox.scrollHeight;
                                     }
-                                } catch(err) {
-                                    console.error("Error al procesar chunk:", err);
+                                } catch (jsonErr) {
+                                    // Si no es JSON, mostrarlo directamente
+                                    elemTextoOralis.innerText += dataStr;
                                 }
                             }
+                        } else if (trimmedLine && !trimmedLine.startsWith(':')) {
+                            elemTextoOralis.innerText += line;
                         }
                     }
                 }
             } catch (err) {
-                elemTextoOralis.innerText = "Lo siento, ha ocurrido un error de conexión.";
+                console.error("Error en comunicación:", err);
+                elemTextoOralis.innerText = "Lo siento, ha ocurrido un error de conexión con Oralis.";
             }
         }
 
@@ -538,6 +564,7 @@
 
         window.onload = function() {
             actualizarTodo();
+            iniciarNuevoChat();
             toggleModos();
         };
     </script>
