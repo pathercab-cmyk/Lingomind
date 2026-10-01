@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 
+# Lectura opcional de archivos adjuntos
 try:
     import pypdf
 except ImportError:
@@ -14,10 +15,11 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Máximo 16MB
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Estructura en memoria para almacenar sesiones y progreso del estudiante
 PERFILES_USUARIO = {
     "historiales": [],
     "vocabulario": {},
@@ -48,12 +50,14 @@ def index():
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
+        # Procesamiento Multipart (Archivos en Writing) o JSON estándar
         if request.content_type and 'multipart/form-data' in request.content_type:
             mensaje = request.form.get('mensaje', '')
             idioma = request.form.get('idioma', 'en')
             nivel = request.form.get('nivel', 'B1')
             modo = request.form.get('modo', 'tutor_original')
             profesion = request.form.get('profesion', '')
+            profesion_custom = request.form.get('profesion_custom', '')
             tipo_examen = request.form.get('tipo_examen', '')
             tema = request.form.get('tema') or 'Redacción Genérica'
             
@@ -73,19 +77,32 @@ def chat():
             nivel = data.get('nivel', 'B1')
             modo = data.get('modo', 'tutor_original')
             profesion = data.get('profesion', '')
+            profesion_custom = data.get('profesion_custom', '')
             tipo_examen = data.get('tipo_examen', '')
             tema = data.get('tema') or 'Conversación General'
 
-        if modo == 'writing':
+        # Determinar rol o profesión activa
+        rol_activo = profesion_custom if (profesion == 'Otro' and profesion_custom) else profesion
+
+        # Lógica de simulación según el modo activo
+        if modo == 'practicas_orales':
+            respuesta_texto = f"Simulación de Rol ({rol_activo}) en {idioma.upper()} ({nivel}): Entendido tu mensaje en el contexto profesional: '{mensaje}'."
+            correccion = "Ajuste de registro profesional aplicado."
+        elif modo == 'writing':
             respuesta_texto = f"Revisión de Writing ({idioma.upper()} - {nivel}): Se ha analizado tu texto ({len(mensaje)} caracteres). La estructura general es adecuada."
             correccion = "Sugerencias de mejora gramatical aplicadas."
+        elif modo == 'examen':
+            respuesta_texto = f"Evaluación para {tipo_examen} ({nivel}): Excelente respuesta. Mantén el uso de conectores avanzados."
+            correccion = "Uso correcto de la estructura solicitada."
         else:
-            respuesta_texto = f"Respuesta en {idioma.upper()} ({nivel}) [Modo: {modo}]: {mensaje[:100]}..."
+            respuesta_texto = f"Respuesta simulada en {idioma.upper()} ({nivel}) [Modo: {modo}]: Entendido tu mensaje: '{mensaje}'."
             correccion = "Ninguna"
 
-        nuevo_vocabulario = [f"palabra_{len(mensaje)} (traducción)"] if len(mensaje) > 10 else []
-        nueva_gramatica = [f"Estructura avanzada ({nivel})"] if len(mensaje) > 10 else []
+        # Simulación de extracción de vocabulario y gramática aprendida
+        nuevo_vocabulario = [f"ejemplo_{len(mensaje)} (traducción)"] if len(mensaje) > 3 else []
+        nueva_gramatica = [f"Estructura gramatical ({nivel})"] if len(mensaje) > 3 else []
 
+        # --- REGISTRO EN EL CUADERNO DE APRENDIZAJE ---
         if idioma not in PERFILES_USUARIO["vocabulario"]:
             PERFILES_USUARIO["vocabulario"][idioma] = {}
         if tema not in PERFILES_USUARIO["vocabulario"][idioma]:
@@ -129,18 +146,22 @@ def obtener_recursos(idioma):
 @app.route('/api/examenes/<idioma>', methods=['GET'])
 def obtener_examenes(idioma):
     examenes = {
-        "en": ["Cambridge B2 First (FCE)", "Cambridge C1 Advanced (CAE)", "Cambridge C2 Proficiency (CPE)", "IELTS Academic/General", "TOEFL iBT"],
-        "fr": ["DELF B1", "DELF B2", "DALF C1", "DALF C2"],
-        "de": ["Goethe-Zertifikat B1", "Goethe-Zertifikat B2", "TestDaF"],
-        "it": ["CELI 2 (B1)", "CELI 3 (B2)", "CILS Uno (B1)", "CILS Due (B2)"],
-        "pt": ["PLE B1 (DEPLE)", "PLE B2 (DIPLE)", "Celpe-Bras"],
-        "es": ["DELE B1", "DELE B2", "DELE C1", "SIELE Global"]
+        "en": ["Cambridge B2 First (FCE)", "Cambridge C1 Advanced (CAE)", "Cambridge C2 Proficiency (CPE)", "IELTS Academic/General", "TOEFL iBT", "Linguaskill"],
+        "fr": ["DELF B1", "DELF B2", "DALF C1", "DALF C2", "TCF (Test de Connaissance du Français)"],
+        "de": ["Goethe-Zertifikat B1", "Goethe-Zertifikat B2", "Goethe-Zertifikat C1", "TestDaF", "ÖSD"],
+        "it": ["CELI 2 (B1)", "CELI 3 (B2)", "CILS Uno (B1)", "CILS Due (B2)", "PLIDA"],
+        "pt": ["PLE B1 (DEPLE)", "PLE B2 (DIPLE)", "PLE C1 (DAPLE)", "Celpe-Bras"],
+        "nl": ["CNaVT (Certificaat Nederlands als Vreemde Taal)", "Inburgeringsexamen"],
+        "zh": ["HSK 1 - 2", "HSK 3 - 4", "HSK 5 - 6 (Hanyu Shuiping Kaoshi)"],
+        "ja": ["JLPT N5 - N4", "JLPT N3 - N2", "JLPT N1 (Japanese-Language Proficiency Test)"],
+        "ru": ["TORFL / TRKI Basic", "TORFL / TRKI Level 1 (B1)", "TORFL / TRKI Level 2 (B2)"],
+        "es": ["DELE B1", "DELE B2", "DELE C1", "DELE C2", "SIELE Global"],
+        "ar": ["ALPT (Arabic Language Proficiency Test)", "Examen Oficial AL-ARABIYA"]
     }
     return jsonify({"examenes": examenes.get(idioma, ["Certificación Oficial Estándar"])})
 
 @app.route('/api/banco/<nivel>', methods=['GET'])
 def obtener_banco(nivel):
-    # BANCO DE RECURSOS EXTENDIDO POR NIVEL MCERL
     banco_datos = {
         "A1": {
             "gramatica": [
@@ -157,9 +178,7 @@ def obtener_banco(nivel):
                 "Objetos de la clase, hogar y ropa fundamental",
                 "Nacionalidades, países y profesiones más comunes"
             ],
-            "conectores": [
-                "and (y)", "but (pero)", "because (porque)", "or (o)", "so (así que)"
-            ],
+            "conectores": ["and (y)", "but (pero)", "because (porque)", "or (o)", "so (así que)"],
             "fonetica": [
                 "Sonidos vocálicos cortos vs. largos básicos",
                 "Entonación ascendente en preguntas cerradas (Yes/No questions)",
@@ -171,7 +190,7 @@ def obtener_banco(nivel):
                 "Pasado Simple (verbos regulares e irregulares clave)",
                 "Pasado Continuo para acciones interrumpidas",
                 "Comparativos y Superlativos (adj. cortos y largos)",
-                "Verbos modales básicos: Can, Could, Must, Should (habilidad, permiso, consejo)",
+                "Verbos modales básicos: Can, Could, Must, Should",
                 "Futuro con 'Going to' vs. 'Will' para planes e intenciones"
             ],
             "vocabulario": [
@@ -181,109 +200,99 @@ def obtener_banco(nivel):
                 "Tiempo atmosférico, estaciones y actividades de ocio",
                 "Partes del cuerpo humano, síntomas y enfermedades comunes"
             ],
-            "conectores": [
-                "also (también)", "however (sin embargo)", "then (entonces)", "besides (además)", "firstly / secondly (en primer lugar)"
-            ],
+            "conectores": ["also (también)", "however (sin embargo)", "then (entonces)", "besides (además)", "firstly / secondly"],
             "fonetica": [
                 "Pronunciación de la terminación regular -ed (/t/, /d/, /ɪd/)",
                 "Acentuación léxica de palabras de dos y tres sílabas",
-                "Aproximación a las formas débiles en verbos auxiliares"
+                "Formas débiles en verbos auxiliares"
             ]
         },
         "B1": {
             "gramatica": [
-                "Present Perfect Simple vs. Past Simple (experiencias temporales)",
-                "Primer y Segundo Condicional (situaciones reales e hipotéticas)",
+                "Present Perfect Simple vs. Past Simple",
+                "Primer y Segundo Condicional (reales e hipotéticas)",
                 "Voz Pasiva básica en presente y pasado simple",
-                "Estilo Indirecto (Reported Speech): cambios de tiempo verbal básico",
-                "Oraciones relativas especificativas y explicativas (who, which, where, whose)"
+                "Estilo Indirecto (Reported Speech) básico",
+                "Oraciones relativas especificativas y explicativas"
             ],
             "vocabulario": [
-                "Entorno laboral, solicitudes de empleo y descripción de tareas",
+                "Entorno laboral, solicitudes de empleo y tareas",
                 "Medios de comunicación, nuevas tecnologías y redes sociales",
-                "Medio ambiente, reciclaje, clima y problemas ambientales",
+                "Medio ambiente, reciclaje y clima",
                 "Rasgos de carácter, emociones y relaciones interpersonales",
                 "Entretenimiento, eventos culturales y pasatiempos"
             ],
-            "conectores": [
-                "although / even though (aunque)", "in order to (para / con el fin de)", "therefore (por lo tanto)", "as a result (como resultado)", "on the other hand (por otro lado)"
-            ],
+            "conectores": ["although (aunque)", "in order to (para)", "therefore (por lo tanto)", "as a result", "on the other hand"],
             "fonetica": [
                 "Uso de la vocal neutra Schwa (/ə/) en sílabas átonas",
-                "Ritmo del habla basado en palabras de contenido y de función",
-                "Entonación descendente para afirmaciones y preguntas abiertas (WH-)"
+                "Ritmo del habla basado en palabras de contenido",
+                "Entonación descendente para preguntas abiertas (WH-)"
             ]
         },
         "B2": {
             "gramatica": [
-                "Tercer Condicional y Condicionales Mixtos (arrepentimientos e hipótesis pasadas)",
-                "Tiempos verbales perfectos continuos (Present/Past Perfect Continuous)",
-                "Verbos Modales de deducción y especulación pasada (must have, can't have, might have)",
-                "Voz Pasiva avanzada e Impersonal (It is said that..., He is believed to...)",
-                "Estructuras causativas (have/get something done) y verbos seguidos de Gerundio/Infinitivo"
+                "Tercer Condicional y Condicionales Mixtos",
+                "Tiempos verbales perfectos continuos",
+                "Verbos Modales de deducción y especulación pasada",
+                "Voz Pasiva avanzada e Impersonal",
+                "Estructuras causativas (have/get something done) y Gerundio/Infinitivo"
             ],
             "vocabulario": [
-                "Economía, negocios, finanzas personales y consumo responsable",
-                "Educación universitaria, investigación académica y métodos de estudio",
-                "Salud mental, bienestar, estilos de vida y medicina moderna",
+                "Economía, negocios, finanzas personales y consumo",
+                "Educación universitaria e investigación académica",
+                "Salud mental, bienestar y estilos de vida",
                 "Criminalidad, leyes, justicia y debate social",
-                "Expresiones idiomáticas complejas (Phrasal Verbs frecuentes de nivel intermedio-alto)"
+                "Phrasal Verbs frecuentes de nivel intermedio-alto"
             ],
-            "conectores": [
-                "nevertheless (a pesar de ello)", "futhermore / moreover (además / más aún)", "despite / in spite of (a pesar de)", "consequently (en consecuencia)", "in contrast (en contraste)"
-            ],
+            "conectores": ["nevertheless (a pesar de ello)", "furthermore (además)", "despite (a pesar de)", "consequently", "in contrast"],
             "fonetica": [
-                "Conexión léxica (Connected Speech: Linking, Assimilation, Elision)",
-                "Contrastes de acento principal y secundario en oraciones complejas",
-                "Diferenciación precisa entre pares mínimos consonánticos y vocálicos"
+                "Conexión léxica (Connected Speech: Linking, Assimilation)",
+                "Contrastes de acento principal y secundario",
+                "Diferenciación de pares mínimos consonánticos"
             ]
         },
         "C1": {
             "gramatica": [
-                "Inversión Gramatical tras adverbios negativos/restrictivos (Seldom, Rarely, Hardly...)",
-                "Cláusulas de participio activo, pasivo y perfecto (Having finished..., Built in...)",
-                "Subjuntivo formal y fórmulas de deseo/insistencia (I'd rather you didn't..., It is crucial that...)",
-                "Estructuras de hendidura (Cleft sentences: What I love about it is..., It was John who...)",
-                "Uso avanzado de determinantes, cuantificadores y modificadores enfáticos"
+                "Inversión Gramatical tras adverbios negativos/restrictivos",
+                "Cláusulas de participio activo, pasivo y perfecto",
+                "Subjuntivo formal y fórmulas de deseo/insistencia",
+                "Estructuras de hendidura (Cleft sentences)",
+                "Uso avanzado de determinantes y modificadores enfáticos"
             ],
             "vocabulario": [
-                "Jerga científica, tecnológica, innovación y debate bioético",
-                "Política internacional, diplomacia, globalización y socioeconomía",
+                "Jerga científica, tecnológica e innovación bioética",
+                "Política internacional, diplomacia y globalización",
                 "Arte, literatura, crítica estética y análisis cultural",
-                "Vocabulario académico formal de investigación y redacción de ensayos",
-                "Modismos avanzados, Phrasal Verbs matizados y colocaciones léxicas refinadas"
+                "Vocabulario académico formal de investigación",
+                "Modismos avanzados y colocaciones léxicas refinadas"
             ],
-            "conectores": [
-                "notwithstanding (no obstante)", "on the grounds that (bajo el argumento de que)", "albeit (si bien / aunque)", "in light of (a la luz de)", "conversely (por el contrario)"
-            ],
+            "conectores": ["notwithstanding", "on the grounds that", "albeit", "in light of", "conversely"],
             "fonetica": [
-                "Modulación del tono y la entonación para denotar ironía, énfasis o cautela",
-                "Manejo fluido de la acentuación tonal según el foco de información (Tonic Placement)",
-                "Naturalidad en la pronunciación veloz sin pérdida de inteligibilidad"
+                "Modulación del tono para denotar ironía o cautela",
+                "Manejo fluido de la acentuación tonal (Tonic Placement)",
+                "Naturalidad en la pronunciación veloz"
             ]
         },
         "C2": {
             "gramatica": [
-                "Dominio total de matices estilísticos, arcaísmos útiles y registros literarios",
-                "Consistencia total en estructuras complejas anidadas y condensadas",
-                "Flexibilidad sintáctica absoluta para la reorganización del discurso según intención",
-                "Manejo avanzado de ambigüedad calculada, metáforas gramaticales y eufemismos",
-                "Estructuras persuasivas complejas de nivel nativo para la oratoria formal"
+                "Dominio total de matices estilísticos y registros literarios",
+                "Consistencia total en estructuras complejas anidadas",
+                "Flexibilidad sintáctica absoluta para la reorganización del discurso",
+                "Manejo avanzado de ambigüedad calculada y eufemismos",
+                "Estructuras persuasivas complejas para oratoria formal"
             ],
             "vocabulario": [
-                "Léxico erudito, terminología especializada multidisciplinar y neologismos",
-                "Recursos estilísticos, metáforas elaboradas, proverbios y referencias culturales profundas",
-                "Vocabulario de negociación de alto nivel, arbitraje y retórica parlamentaria",
-                "Sinónimos de alta precisión para matices sutiles de sentido o registro",
-                "Expresiones idiomáticas nativas de alta especificidad o raigambre cultural"
+                "Léxico erudito, terminología especializada y neologismos",
+                "Recursos estilísticos, metáforas elaboradas y proverbios",
+                "Vocabulario de negociación de alto nivel y retórica",
+                "Sinónimos de alta precisión para matices sutiles",
+                "Expresiones idiomáticas nativas de alta especificidad"
             ],
-            "conectores": [
-                "be that as it may (sea como fuere)", "by the same token (del mismo modo)", "insofar as (en la medida en que)", "to the extent that (hasta el punto de que)", "notwithstanding the fact that (a pesar del hecho de que)"
-            ],
+            "conectores": ["be that as it may", "by the same token", "insofar as", "to the extent that", "notwithstanding the fact that"],
             "fonetica": [
-                "Comprensión y producción natural de diversos acentos y variedades dialectales",
-                "Gestión magistral del ritmo, las pausas dramáticas y los matices afectivos",
-                "Fluidez y entonación indistinguible de la de un hablante nativo educado"
+                "Comprensión y producción natural de diversos acentos dialectales",
+                "Gestión magistral del ritmo y pausas dramáticas",
+                "Fluidez y entonación de nivel nativo educado"
             ]
         }
     }
