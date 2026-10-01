@@ -274,6 +274,21 @@ def inicializar_base_datos():
                 print(f"❌ Error al inicializar la base de datos: {e}")
                 return
 
+# --- RUTA PARA ACTUALIZAR PREFERENCIAS AL CAMBIAR DROPDOWN ---
+
+@app.route('/api/actualizar_preferencias', methods=['POST'])
+@login_required
+def actualizar_preferencias():
+    data = request.get_json()
+    if data:
+        if 'idioma' in data:
+            current_user.idioma = data['idioma']
+        if 'nivel' in data:
+            current_user.nivel = data['nivel']
+        db.session.commit()
+        return jsonify({"status": "ok"})
+    return jsonify({"status": "error"}), 400
+
 inicializar_base_datos()
 
 @app.route('/admin/feedback')
