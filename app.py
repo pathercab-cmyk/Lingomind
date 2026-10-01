@@ -226,12 +226,13 @@ def chat():
             )
 
             for chunk in completion:
-                content = chunk.choices[0].delta.content
-                if content:
-                    yield f"data: {json.dumps({'content': content})}\n\n"
+                if chunk.choices and len(chunk.choices) > 0:
+                    content = chunk.choices[0].delta.content
+                    if content:
+                        yield f"data: {json.dumps({'content': content})}\n\n"
 
         except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'content': f'Error al conectar con la IA: {str(e)}'})}\n\n"
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
