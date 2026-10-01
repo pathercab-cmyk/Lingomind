@@ -232,5 +232,22 @@ def obtener_examenes(idioma):
 with app.app_context():
     db.create_all()
 
+def inicializar_base_datos():
+    with app.app_context():
+        for intento in range(1, 6):
+            try:
+                db.create_all()
+                print("✅ Base de datos conectada y tablas creadas correctamente.")
+                return
+            except OperationalError:
+                print(f"⏳ Esperando a la base de datos (intento {intento}/5)...")
+                time.sleep(3)
+            except Exception as e:
+                print(f"❌ Error al inicializar la base de datos: {e}")
+                return
+
+# Se ejecuta al iniciar la aplicación (funciona tanto con Gunicorn en Render como en desarrollo local)
+inicializar_base_datos()
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
