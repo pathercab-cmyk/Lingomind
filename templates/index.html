@@ -110,6 +110,16 @@
             font-size: 0.9rem;
         }
 
+        .hint-box {
+            background-color: #fefce8;
+            border-left: 4px solid #eab308;
+            color: #713f12;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+
         .history-box {
             height: 380px;
             overflow-y: auto;
@@ -123,15 +133,6 @@
             padding: 10px;
             border-bottom: 1px solid #f1f5f9;
             font-size: 0.88rem;
-        }
-
-        .saved-chat-card {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .saved-chat-card:hover {
-            border-color: var(--primary-color) !important;
-            background-color: #f0f9ff;
         }
 
         .control-label {
@@ -248,7 +249,6 @@
                 </select>
             </div>
 
-            <!-- SELECTOR DE ROL / PROFESIÓN CON OPCIÓN PERSONALIZADA -->
             <div class="col-md-3 d-none" id="containerProfesion">
                 <label class="control-label">Rol / Profesión Simular:</label>
                 <select id="selProfesion" class="form-select fw-semibold" onchange="comprobarProfesionCustom()">
@@ -285,14 +285,12 @@
                     <span id="badgeModoActivo" class="badge bg-primary fs-6 fw-normal">Modo Activo: Tutor</span>
                     <div>
                         <button class="btn btn-sm btn-outline-success me-1" onclick="guardarSesionActual()"><i class="fa-solid fa-floppy-disk"></i> Guardar Chat</button>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="nuevoChatLimpio()"><i class="fa-solid fa-plus"></i> Nuevo Chat</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="nuevoChatLimpio()"><i class="fa-solid fa-plus"></i> Limpiar Chat</button>
                     </div>
                 </div>
 
                 <div id="chatBox" class="chat-container mb-3">
-                    <div class="msg-bubble msg-oralis">
-                        <strong>Oralis:</strong> Bienvenido. He abierto un nuevo chat para ti. ¿De qué te gustaría hablar hoy?
-                    </div>
+                    <!-- Los mensajes del chat dinámico se cargan según el modo seleccionado -->
                 </div>
 
                 <!-- CONTROLES MODO ESTÁNDAR (CON MICRÓFONO) -->
@@ -306,11 +304,23 @@
                     </button>
                 </div>
 
-                <!-- CONTROLES MODO WRITING (TEXTAREA Y SUBIDA DE ARCHIVOS) -->
+                <!-- CONTROLES MODO WRITING CON SELECTOR DE MÉTODOS SOLICITADOS -->
                 <div id="controlWriting" class="d-none">
+                    <div class="bg-light p-2 mb-2 rounded border d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark small"><i class="fa-solid fa-sliders me-1 text-primary"></i> Modo de Corrección:</span>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="metodoWriting" id="metodoGramatica" value="gramatica" checked>
+                            <label class="btn btn-outline-primary fw-semibold" for="metodoGramatica"><i class="fa-solid fa-check-double me-1"></i> Método 1: Corrección Directa + Explicación</label>
+                            
+                            <input type="radio" class="btn-check" name="metodoWriting" id="metodoPistas" value="pistas">
+                            <label class="btn btn-outline-warning text-dark fw-semibold" for="metodoPistas"><i class="fa-solid fa-lightbulb me-1"></i> Método 2: Subrayar Errores + Pistas</label>
+                        </div>
+                    </div>
+
                     <div class="mb-2">
                         <textarea id="userMsgWriting" class="form-control" rows="5" placeholder="Escribe tu redacción, ensayo o texto largo aquí para su revisión..."></textarea>
                     </div>
+
                     <div class="d-flex justify-content-between align-items-center bg-light p-2 border rounded">
                         <div class="d-flex align-items-center gap-2">
                             <label for="inputArchivoWriting" class="btn btn-outline-secondary btn-sm fw-bold">
@@ -437,7 +447,14 @@
 <!-- JAVASCRIPT LÓGICO -->
 <script>
     let modoActual = 'tutor_original';
-    let historialConversacion = [];
+    
+    let chatsPorModo = {
+        'tutor_original': [],
+        'practicas_orales': [],
+        'examen': [],
+        'writing': []
+    };
+
     let chatsGuardadosLocal = [];
 
     const SPEECH_LANG_MAP = {
@@ -453,6 +470,7 @@
 
     document.addEventListener("DOMContentLoaded", function() {
         cargarExamenesOficiales();
+        seleccionarModo('tutor_original');
     });
 
     function alCambiarIdioma() {
@@ -473,13 +491,8 @@
     }
 
     function nuevoChatLimpio() {
-        historialConversacion = [];
-        const idiomaSel = document.getElementById('selIdioma').value.toUpperCase();
-        document.getElementById('chatBox').innerHTML = `
-            <div class="msg-bubble msg-oralis">
-                <strong>Oralis:</strong> Conversación iniciada en ${idiomaSel}. ¿En qué tema deseas enfocar la sesión?
-            </div>
-        `;
+        chatsPorModo[modoActual] = [];
+        renderizarChatActual();
         actualizarHistorialVisual();
     }
 
@@ -517,6 +530,65 @@
         if (modo === 'banco') cargarBancoRecursos();
         if (modo === 'cuaderno') cargarCuadernoAprendizaje();
         if (modo === 'guardados') renderizarChatsGuardados();
+
+        if (chatsPorModo[modo]) {
+            renderizarChatActual();
+            actualizarHistorialVisual();
+        }
+    }
+
+    function renderizarChatActual() {
+        const chatBox = document.getElementById('chatBox');
+        const idiomaSel = document.getElementById('selIdioma').value.toUpperCase();
+        const historial = chatsPorModo[modoActual] || [];
+
+        if (historial.length === 0) {
+            let mensajeInicio = `Bienvenido al modo ${modoActual.replace('_', ' ').toUpperCase()} (${idiomaSel}). ¿En qué te gustaría trabajar hoy?`;
+            if (modoActual === 'writing') {
+                mensajeInicio = `Modo Writing activo (${idiomaSel}). Selecciona arriba si deseas Corrección Directa o el Modo Desafío con Pistas.`;
+            }
+            chatBox.innerHTML = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${mensajeInicio}</div>`;
+        } else {
+            chatBox.innerHTML = '';
+            historial.forEach((item, index) => {
+                chatBox.innerHTML += `<div class="msg-bubble msg-user"><strong>Tú:</strong> ${escapeHtml(item.usuario)}</div>`;
+                
+                let htmlOralis = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(item.oralis)}`;
+                
+                // RENDERING MÉTODO 1 vs MÉTODO 2 EN WRITING
+                if (item.metodo_writing === 'pistas' && item.pista) {
+                    htmlOralis += `
+                        <div class="hint-box">
+                            <i class="fa-solid fa-pen-ruler me-1"></i> <strong>Texto con error detectado:</strong><br>
+                            <div class="my-1 border p-2 bg-white rounded">${item.texto_subrayado}</div>
+                            
+                            <button class="btn btn-sm btn-outline-warning text-dark fw-bold mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePista${index}">
+                                <i class="fa-solid fa-lightbulb me-1"></i> Ver Pista para corregirlo
+                            </button>
+                            <div class="collapse mt-2" id="collapsePista${index}">
+                                <div class="card card-body bg-light text-dark small border-warning">
+                                    <strong>Pista del Tutor:</strong> ${escapeHtml(item.pista)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.correccion) {
+                    htmlOralis += `
+                        <div class="correction-box">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Corrección sugerida:</strong> ${escapeHtml(item.correccion)}<br>
+                            ${item.explicacion ? `<small class="d-block mt-1"><strong>Explicación:</strong> ${escapeHtml(item.explicacion)}</small>` : ''}
+                        </div>
+                    `;
+                }
+
+                if (item.vocabulario) {
+                    htmlOralis += `<div class="mt-2 text-primary"><small><strong>Vocabulario registrado:</strong> ${escapeHtml(item.vocabulario)}</small></div>`;
+                }
+                htmlOralis += `</div>`;
+                chatBox.innerHTML += htmlOralis;
+            });
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function mostrarNombreArchivo(input) {
@@ -566,11 +638,8 @@
     async function procesarEnvio(mensaje, archivo = null, textoVisual = null) {
         if(escuchando) detenerMicrofono();
 
-        const chatBox = document.getElementById('chatBox');
         const textoMostrar = textoVisual || mensaje;
-        
-        chatBox.innerHTML += `<div class="msg-bubble msg-user"><strong>Tú:</strong> ${escapeHtml(textoMostrar)}</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const metodoWritingSel = document.querySelector('input[name="metodoWriting"]:checked')?.value || 'gramatica';
 
         let formData = new FormData();
         formData.append('mensaje', mensaje);
@@ -581,6 +650,7 @@
         formData.append('profesion_custom', document.getElementById('inputProfesionCustom').value);
         formData.append('tipo_examen', document.getElementById('selExamen').value);
         formData.append('tema', document.getElementById('inputTema').value);
+        formData.append('metodo_writing', metodoWritingSel);
         if (archivo) formData.append('archivo', archivo);
 
         try {
@@ -594,40 +664,32 @@
             const data = await res.json();
             const respuestaTexto = data.respuesta || "Mensaje procesado.";
 
-            let htmlOralis = `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(respuestaTexto)}`;
+            if (!chatsPorModo[modoActual]) chatsPorModo[modoActual] = [];
+            chatsPorModo[modoActual].push({
+                usuario: textoMostrar,
+                oralis: respuestaTexto,
+                metodo_writing: data.metodo_writing,
+                correccion: data.correccion,
+                explicacion: data.explicacion,
+                texto_subrayado: data.texto_subrayado,
+                pista: data.pista,
+                vocabulario: data.vocabulario
+            });
 
-            // BLOQUE DE CORRECCIÓN VISIBLE
-            if (data.correccion) {
-                htmlOralis += `
-                    <div class="correction-box">
-                        <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Corrección sugerida:</strong> ${escapeHtml(data.correccion)}<br>
-                        ${data.explicacion ? `<small class="d-block mt-1"><strong>Explicación:</strong> ${escapeHtml(data.explicacion)}</small>` : ''}
-                    </div>
-                `;
-            }
-
-            if (data.vocabulario) {
-                htmlOralis += `<div class="mt-2 text-primary"><small><strong>Vocabulario registrado:</strong> ${escapeHtml(data.vocabulario)}</small></div>`;
-            }
-            htmlOralis += `</div>`;
-
-            chatBox.innerHTML += htmlOralis;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            historialConversacion.push({ usuario: textoMostrar, oralis: respuestaTexto });
+            renderizarChatActual();
             actualizarHistorialVisual();
 
         } catch (err) {
             console.error("Error al comunicarse con el servidor:", err);
-            chatBox.innerHTML += `<div class="msg-bubble msg-oralis text-danger">Error al procesar la solicitud. Inténtalo de nuevo.</div>`;
         }
     }
 
     function actualizarHistorialVisual() {
         const box = document.getElementById('historyBox');
-        document.getElementById('counterMensajes').innerText = `${historialConversacion.length} Mensajes`;
+        const historial = chatsPorModo[modoActual] || [];
+        document.getElementById('counterMensajes').innerText = `${historial.length} Mensajes`;
 
-        box.innerHTML = historialConversacion.map((item, idx) => `
+        box.innerHTML = historial.map((item, idx) => `
             <div class="history-item">
                 <strong class="text-primary">#${idx+1} Estudiante:</strong> ${escapeHtml(item.usuario)}<br>
                 <span class="text-secondary">Oralis:</span> ${escapeHtml(item.oralis)}
@@ -711,8 +773,9 @@
     }
 
     async function guardarSesionActual() {
-        if (historialConversacion.length === 0) {
-            alert("El chat está vacío. Escribe o envía algo antes de guardarlo.");
+        const historial = chatsPorModo[modoActual] || [];
+        if (historial.length === 0) {
+            alert("El chat actual está vacío. Escribe o envía algo antes de guardarlo.");
             return;
         }
 
@@ -723,7 +786,7 @@
             tema: document.getElementById('inputTema').value,
             modo: modoActual,
             fecha: new Date().toLocaleString(),
-            mensajes: [...historialConversacion]
+            mensajes: [...historial]
         };
 
         chatsGuardadosLocal.push(nuevaSesion);
@@ -765,17 +828,10 @@
         document.getElementById('selNivel').value = sesion.nivel;
         document.getElementById('inputTema').value = sesion.tema;
 
-        historialConversacion = [...sesion.mensajes];
+        modoActual = sesion.modo || 'tutor_original';
+        chatsPorModo[modoActual] = [...sesion.mensajes];
 
-        const chatBox = document.getElementById('chatBox');
-        chatBox.innerHTML = '';
-        historialConversacion.forEach(m => {
-            chatBox.innerHTML += `<div class="msg-bubble msg-user"><strong>Tú:</strong> ${escapeHtml(m.usuario)}</div>`;
-            chatBox.innerHTML += `<div class="msg-bubble msg-oralis"><strong>Oralis:</strong> ${escapeHtml(m.oralis)}</div>`;
-        });
-
-        actualizarHistorialVisual();
-        seleccionarModo(sesion.modo || 'tutor_original');
+        seleccionarModo(modoActual);
     }
 
     async function cargarExamenesOficiales() {
@@ -840,9 +896,12 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma (incluido Rumano) y nivel.\n2. Las respuestas señalan los errores gramaticales directamente en pantalla.\n3. En Prácticas Orales puedes simular roles/profesiones predefinidas o escribir un rol personalizado.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma y nivel deseado.\n2. Al cambiar de pestaña, cada modo mantiene su chat independiente.\n3. En Writing puedes elegir entre Corrección Directa o el Modo Desafío con Pistas.");
     }
 </script>
+
+<!-- Bootstrap JS para desplegables (pistas) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
