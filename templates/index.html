@@ -142,6 +142,16 @@
             background-color: #f0f9ff;
             border-color: #0284c7 !important;
         }
+
+        @keyframes pulse-animation {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .animate-pulse {
+            animation: pulse-animation 1.2s infinite;
+        }
     </style>
 </head>
 <body class="py-4">
@@ -203,20 +213,20 @@
     <div class="card card-custom p-3 mb-4">
         <div class="row g-3">
             <div class="col-md-3">
-               <label class="control-label">Idioma Objetivo:</label>
-<select id="selIdioma" class="form-select fw-semibold" onchange="cargarExamenesOficiales()">
-    <option value="en" selected>🇬🇧 Inglés (English)</option>
-    <option value="fr">🇫🇷 Francés (Français)</option>
-    <option value="de">🇩🇪 Alemán (Deutsch)</option>
-    <option value="it">🇮🇹 Italiano (Italiano)</option>
-    <option value="pt">🇵🇹 Portugués (Português)</option>
-    <option value="nl">🇳🇱 Neerlandés (Nederlands)</option>
-    <option value="zh">🇨🇳 Chino Mandarin (中文)</option>
-    <option value="ja">🇯🇵 Japonés (日本語)</option>
-    <option value="ru">🇷🇺 Ruso (Русский)</option>
-    <option value="es">🇪🇸 Español para Extranjeros</option>
-    <option value="ar">🇸🇦 Árabe (العربية)</option>
-</select>
+                <label class="control-label">Idioma Objetivo:</label>
+                <select id="selIdioma" class="form-select fw-semibold" onchange="cargarExamenesOficiales()">
+                    <option value="en" selected>🇬🇧 Inglés (English)</option>
+                    <option value="fr">🇫🇷 Francés (Français)</option>
+                    <option value="de">🇩🇪 Alemán (Deutsch)</option>
+                    <option value="it">🇮🇹 Italiano (Italiano)</option>
+                    <option value="pt">🇵🇹 Portugués (Português)</option>
+                    <option value="nl">🇳🇱 Neerlandés (Nederlands)</option>
+                    <option value="zh">🇨🇳 Chino Mandarin (中文)</option>
+                    <option value="ja">🇯🇵 Japonés (日本語)</option>
+                    <option value="ru">🇷🇺 Ruso (Русский)</option>
+                    <option value="es">🇪🇸 Español para Extranjeros</option>
+                    <option value="ar">🇸🇦 Árabe (العربية)</option>
+                </select>
             </div>
 
             <div class="col-md-2">
@@ -275,7 +285,10 @@
                 </div>
 
                 <div class="input-group">
-                    <input type="text" id="userMsg" class="form-control form-control-lg" placeholder="Escribe tu mensaje..." onkeypress="if(event.key==='Enter') enviarMensaje()">
+                    <button class="btn btn-outline-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <input type="text" id="userMsg" class="form-control form-control-lg" placeholder="Escribe o dicta tu mensaje..." onkeypress="if(event.key==='Enter') enviarMensaje()">
                     <button class="btn btn-primary px-4 fw-bold" onclick="enviarMensaje()">
                         Enviar <i class="fa-solid fa-paper-plane ms-1"></i>
                     </button>
@@ -332,8 +345,13 @@
         </div>
 
         <div class="mb-3">
-            <label class="control-label">Texto de la Redacción:</label>
-            <textarea id="writingTexto" class="form-control" rows="7" placeholder="Escribe tu redacción aquí..."></textarea>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="control-label mb-0">Texto de la Redacción:</label>
+                <button class="btn btn-sm btn-outline-danger fw-semibold" id="btnMicWriting" type="button" onclick="alternarMicrofono('writingTexto', 'btnMicWriting')">
+                    <i class="fa-solid fa-microphone me-1"></i> Dictar por Voz
+                </button>
+            </div>
+            <textarea id="writingTexto" class="form-control" rows="7" placeholder="Escribe o dicta tu redacción aquí..."></textarea>
         </div>
 
         <div class="row g-3 mb-4">
@@ -373,6 +391,26 @@
 <script>
     let modoActual = 'tutor_original';
     let historialConversacion = [];
+
+    // Mapas de códigos BCP 47 para la Web Speech API
+    const SPEECH_LANG_MAP = {
+        'en': 'en-US',
+        'fr': 'fr-FR',
+        'de': 'de-DE',
+        'it': 'it-IT',
+        'pt': 'pt-PT',
+        'nl': 'nl-NL',
+        'zh': 'zh-CN',
+        'ja': 'ja-JP',
+        'ru': 'ru-RU',
+        'es': 'es-ES',
+        'ar': 'ar-SA'
+    };
+
+    let recognizer = null;
+    let escuchando = false;
+    let targetInputId = null;
+    let activeBtnId = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         cargarExamenesOficiales();
@@ -632,6 +670,85 @@
         audio.play();
     }
 
+    function alternarMicrofono(inputId, btnId) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert("Tu navegador no soporta el reconocimiento de voz. Te recomendamos usar Google Chrome o Microsoft Edge.");
+            return;
+        }
+
+        if (escuchando) {
+            detenerMicrofono();
+            return;
+        }
+
+        targetInputId = inputId;
+        activeBtnId = btnId;
+        
+        recognizer = new SpeechRecognition();
+        
+        const idSel = document.getElementById('selIdioma').value;
+        recognizer.lang = SPEECH_LANG_MAP[idSel] || 'en-US';
+        
+        recognizer.continuous = false;
+        recognizer.interimResults = false;
+
+        recognizer.onstart = function() {
+            escuchando = true;
+            const btn = document.getElementById(activeBtnId);
+            if (btn) {
+                btn.classList.remove('btn-outline-danger');
+                btn.classList.add('btn-danger', 'animate-pulse');
+                btn.innerHTML = `<i class="fa-solid fa-microphone-lines me-1"></i> Escuchando...`;
+            }
+        };
+
+        recognizer.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            const inputElem = document.getElementById(targetInputId);
+            if (inputElem) {
+                if (inputElem.tagName.toLowerCase() === 'textarea') {
+                    inputElem.value += (inputElem.value ? ' ' : '') + transcript;
+                } else {
+                    inputElem.value = transcript;
+                }
+            }
+        };
+
+        recognizer.onerror = function(event) {
+            console.error("Error en reconocimiento de voz:", event.error);
+            detenerMicrofono();
+        };
+
+        recognizer.onend = function() {
+            detenerMicrofono();
+        };
+
+        recognizer.start();
+    }
+
+    function detenerMicrofono() {
+        if (recognizer) {
+            recognizer.stop();
+            recognizer = null;
+        }
+        escuchando = false;
+        
+        if (activeBtnId) {
+            const btn = document.getElementById(activeBtnId);
+            if (btn) {
+                btn.classList.remove('btn-danger', 'animate-pulse');
+                btn.classList.add('btn-outline-danger');
+                if (activeBtnId === 'btnMicWriting') {
+                    btn.innerHTML = `<i class="fa-solid fa-microphone me-1"></i> Dictar por Voz`;
+                } else {
+                    btn.innerHTML = `<i class="fa-solid fa-microphone"></i>`;
+                }
+            }
+        }
+    }
+
     function limpiarPantallaChat() {
         document.getElementById('chatBox').innerHTML = '';
     }
@@ -642,7 +759,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma y tu nivel (A1-C2).\n2. Elige el modo académico (Tutor Original, Profesor, Prácticas Orales, Exámenes o Bancos de Gramática y Vocabulario).\n3. Haz clic en 'Generar Informe de Sesión' para obtener tu nota oficial.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma (incluido Neerlandés) y tu nivel (A1-C2).\n2. Usa el botón del micrófono para practicar tu expresión oral dictando tus respuestas.\n3. Navega por las pestañas de Tutor, Profesor, Prácticas, Exámenes o Bancos de Contenido.");
     }
 </script>
 
