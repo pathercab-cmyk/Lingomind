@@ -498,6 +498,38 @@
             iniciarNuevoChat();
             toggleModos();
         };
+
+        document.getElementById('idioma').addEventListener('change', function() {
+    const nuevoIdioma = this.value;
+    const textoIdioma = this.options[this.selectedIndex].text;
+    const nivelActual = document.getElementById('nivel') ? document.getElementById('nivel').value : 'B1';
+
+    // 1. Limpiar el contenedor del chat
+    const chatContainer = document.getElementById('chat-messages'); // Asegúrate de que coincida con el ID de tu contenedor de mensajes
+    if (chatContainer) {
+        chatContainer.innerHTML = '';
+    }
+
+    // 2. Insertar el mensaje de bienvenida actualizado con el nuevo idioma
+    const mensajeBienvenida = document.createElement('div');
+    mensajeBienvenida.className = 'message bot-message'; // Usa la clase CSS correspondiente a los mensajes del bot
+    mensajeBienvenida.innerHTML = `
+        <div class="message-content">
+            ¡Hola! He iniciado una nueva sesión para practicar en <strong>${textoIdioma}</strong> (Nivel <strong>${nivelActual}</strong>). ¡Escríbeme cuando quieras!
+        </div>
+    `;
+    
+    if (chatContainer) {
+        chatContainer.appendChild(mensajeBienvenida);
+    }
+
+    // 3. (Opcional) Guardar en la base de datos o enviar petición al backend para actualizar el idioma del usuario
+    fetch('/api/actualizar_preferencias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idioma: nuevoIdioma, nivel: nivelActual })
+    }).catch(err => console.log('Preferencia guardada localmente'));
+});
     </script>
 </body>
 </html>
