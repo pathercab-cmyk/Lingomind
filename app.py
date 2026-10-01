@@ -98,10 +98,38 @@ def obtener_examenes(idioma):
 
 @app.route('/api/banco/<nivel>', methods=['GET'])
 def obtener_banco(nivel):
-    return jsonify({
-        "gramatica": [f"Estructuras Clave ({nivel})", f"Conectores y Oraciones Subordinadas ({nivel})"],
-        "vocabulario": [f"Vocabulario Profesional ({nivel})", f"Expresiones Cotidianas ({nivel})"]
+    # BANCO DE CONSULTA GENERAL DE GRAMÁTICA Y VOCABULARIO SEGÚN NIVEL
+    banco_datos = {
+        "A1": {
+            "gramatica": ["Verbo To Be / Ser o Estar", "Presente Simple y conectores básicos", "Artículos definidos e indefinidos"],
+            "vocabulario": ["Saludos y Presentaciones", "Números, Días y Meses", "Objetos cotidianos y Familia"]
+        },
+        "A2": {
+            "gramatica": ["Pasado Simple vs. Pasado Continuo", "Comparativos y Superlativos", "Verbos Modales (Can, Must, Should)"],
+            "vocabulario": ["Viajes y Transporte", "Comida y Restaurantes", "Rutina diaria y Hobbies"]
+        },
+        "B1": {
+            "gramatica": ["Present Perfect vs. Past Simple", "Primer y Segundo Condicional", "Voz Pasiva básica"],
+            "vocabulario": ["Trabajo y Profesiones", "Tecnología y Redes Sociales", "Descripciones físicas y de personalidad"]
+        },
+        "B2": {
+            "gramatica": ["Tercer Condicional y Condicionales Mixtos", "Estilo Indirecto (Reported Speech)", "Verbos Modales de Deducción"],
+            "vocabulario": ["Medio Ambiente y Ecología", "Educación y Sistema Académico", "Expresiones Idiomáticas frecuentes"]
+        },
+        "C1": {
+            "gramatica": ["Inversión Gramatical y Énfasis", "Cláusulas de Participio", "Estructuras Avanzadas de Subjuntivo/Deseo"],
+            "vocabulario": ["Vocabulario Académico y Científico", "Negocios y Finanzas", "Matices y Sinónimos Avanzados"]
+        },
+        "C2": {
+            "gramatica": ["Matices Estilísticos Complejos", "Estructuras Literarias e Históricas", "Uso Natural de Arcaísmos e Inversiones"],
+            "vocabulario": ["Jerga Profesional / Expresiones De Época", "Debate Filosófico y Político", "Modismos de Nivel Nativo"]
+        }
+    }
+    res = banco_datos.get(nivel, {
+        "gramatica": [f"Estructuras clave para nivel {nivel}"],
+        "vocabulario": [f"Vocabulario sugerido para nivel {nivel}"]
     })
+    return jsonify(res)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
