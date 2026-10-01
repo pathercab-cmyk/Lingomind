@@ -58,19 +58,24 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # MODELO ACTUALIZADO
 MODELO_GROQ = "qwen/qwen3.8-27b"
 
+# LISTA COMPLETA DE IDIOMAS Y EXÁMENES OFICIALES RESTAURADA
 EXAMENES_OFICIALES = {
-    "en": ["Cambridge (PET, FCE, CAE)", "IELTS", "TOEFL", "TOEIC"],
+    "en": ["Cambridge (PET, FCE, CAE, CPE)", "IELTS", "TOEFL iBT", "TOEIC", "Linguaskill"],
     "fr": ["DELF / DALF", "TCF", "TEF"],
-    "de": ["Goethe-Zertifikat", "TestDaF", "DSH"],
-    "ro": ["RLA - Romanian Language Assessment"],
+    "de": ["Goethe-Zertifikat", "TestDaF", "DSH", "telc Deutsch"],
     "it": ["CELI", "CILS", "PLIDA"],
     "pt": ["CAPLE", "CELPE-Bras"],
-    "nl": ["CNaVT", "Inburgeringsexamen"],
-    "zh": ["HSK (Hanyu Shuiping Kaoshi)"],
-    "ja": ["JLPT (N5 - N1)"],
+    "zh": ["HSK (Hanyu Shuiping Kaoshi)", "HSKK"],
+    "ja": ["JLPT (N5, N4, N3, N2, N1)"],
+    "ko": ["TOPIK (I, II)"],
     "ru": ["TORFL / TRKI"],
     "es": ["DELE", "SIELE"],
-    "ar": ["ALPT"]
+    "ar": ["ALPT", "AL-ARABIYYA"],
+    "nl": ["CNaVT", "Inburgeringsexamen"],
+    "ro": ["RLA - Romanian Language Assessment"],
+    "sv": ["TISUS", "Swedex"],
+    "pl": ["Egzamin certyfikatowy z języka polskiego"],
+    "tr": ["TÖMER", "TYS"]
 }
 
 def extraer_texto_archivo(file):
