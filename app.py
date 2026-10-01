@@ -1,34 +1,53 @@
 import os
 import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_bcrypt import Bcrypt
 from groq import Groq
-import pypdf
+import PyPDF2
 import docx
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_oralis_2026')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///oralis.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+# --- MODELOS DE BASE DE DATOS ---
+
+class Usuario(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    idioma = db.Column(db.String(10), default='en')
+    nivel = db.Column(db.String(10), default='B1')
+    comentarios = db.relationship('Comentario', backref='usuario', lazy=True)
+
+class Comentario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    puntuacion = db.Column(db.Integer, nullable=False)
+    texto = db.Column(db.Text, nullable=False)
+    fecha = db.Column(db.DateTime, server_default=db.func.now())
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 
 # Configuración del cliente oficial de Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-# Modelo compatible de Groq (se corrigió el identificador del modelo)
 MODELO_GROQ = "qwen-2.5-32b"
-
-# Base de datos simulada en memoria
-PERFILES_USUARIO = {
-    "default": {
-        "idioma": "en",
-        "nivel": "B1",
-        "modo": "tutor_original",
-        "vocabulario_aprendido": {},
-        "gramatica_estudiada": {}
-    }
-}
 
 EXAMENES_OFICIALES = {
     "en": ["Cambridge (PET, FCE, CAE)", "IELTS", "TOEFL", "TOEIC"],
     "fr": ["DELF / DALF", "TCF", "TEF"],
     "de": ["Goethe-Zertifikat", "TestDaF", "DSH"],
-    "ro": ["RLA - Romanian Language Assessment", "Certificat de Competență Lingvistică"],
+    "ro": ["RLA - Romanian Language Assessment"],
     "it": ["CELI", "CILS", "PLIDA"],
     "pt": ["CAPLE", "CELPE-Bras"],
     "nl": ["CNaVT", "Inburgeringsexamen"],
@@ -38,46 +57,6 @@ EXAMENES_OFICIALES = {
     "es": ["DELE", "SIELE"],
     "ar": ["ALPT"]
 }
-
-BANCO_RECURSOS = {
-    "A1": {
-        "gramatica": ["Presente Simple / Ser y Estar", "Artículos y Sustantivos Básicos", "Estructura de Oraciones Simples"],
-        "vocabulario": ["Saludos y Saludos Cotidianos", "Números y Horas", "Familia y Actividades Diarias"],
-        "conectores": ["y", "pero", "porque"],
-        "fonetica": ["Vocales básicas y sonidos iniciales"]
-    },
-    "A2": {
-        "gramatica": ["Pasado Simple", "Comparativos y Superlativos", "Verbos Modales Básicos"],
-        "vocabulario": ["Viajes y Transporte", "Compras y Comida", "Trabajo y Profesiones"],
-        "conectores": ["además", "sin embargo", "entonces"],
-        "fonetica": ["Terminaciones en -ed y consonantes suaves"]
-    },
-    "B1": {
-        "gramatica": ["Tiempos Perfectos (Present Perfect)", "Condicional Primario", "Voz Pasiva Introductoria"],
-        "vocabulario": ["Opiniones y Sentimientos", "Tecnología y Medio Ambiente", "Experiencias Personales"],
-        "conectores": ["por lo tanto", "a pesar de", "en primer lugar"],
-        "fonetica": ["Intonación de preguntas y acento léxico"]
-    },
-    "B2": {
-        "gramatica": ["Condicionales Mixtos", "Estilo Indirecto (Reported Speech)", "Subjuntivo / Modales en Pasado"],
-        "vocabulario": ["Debates y Argumentación", "Términos Académicos y Profesionales", "Expresiones Idiomáticas"],
-        "conectores": ["en consecuencia", "no obstante", "por consiguiente"],
-        "fonetica": ["Ritmo en oraciones complejas y enlaces fónicos"]
-    },
-    "C1": {
-        "gramatica": ["Inversión Gramatical", "Estructuras Avanzadas de Subjuntivo", "Matices de Aspecto y Modo"],
-        "vocabulario": ["Vocabulario Técnico / Formal", "Matices Semánticos Prolijos", "Sarcasmo e Ironía Fina"],
-        "conectores": ["de ahí que", "en vista de lo cual", "amén de"],
-        "fonetica": ["Variaciones dialectales y matices emocionales"]
-    },
-    "C2": {
-        "gramatica": ["Dominio Sintáctico Total", "Estilo Literario y Retórico", "Flexibilidad de Expresión Nativa"],
-        "vocabulario": ["Jerga Especializada", "Neologismos y Arcaísmos", "Metáforas Complejas"],
-        "conectores": ["consustancialmente", "en puridad", "sin perjuicio de"],
-        "fonetica": ["Fluidez absoluta equivalente a un hablante nativo culto"]
-    }
-}
-
 
 def extraer_texto_archivo(file):
     filename = file.filename.lower()
@@ -100,80 +79,80 @@ def extraer_texto_archivo(file):
         print(f"Error procesando archivo: {e}")
     return texto.strip()
 
-
 def construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing):
     prof_final = profesion_custom if profesion == "Otro" else profesion
 
     prompt_base = f"""Eres Oralis, una plataforma de inteligencia artificial especializada en la enseñanza de idiomas.
-Estás interactuando con un estudiante que aprende el idioma con código ISO '{idioma}' en un nivel MCERL '{nivel}'.
-Tema o contexto general de la sesión: {tema}.
+Estás interactuando con un estudiante que aprende el idioma '{idioma}' en nivel '{nivel}'.
+Tema o contexto general: {tema}.
 
-Instrucciones generales de tono e interacción:
-1. Responde siempre de forma pedagógica, motivadora y adaptable.
-2. Tu respuesta principal debe ser en el idioma objetivo ({idioma}), adaptando la complejidad sintáctica al nivel {nivel}.
-3. Si el usuario te hace una pregunta teórica en español o pide una explicación gramatical, explica la regla detalladamente en español y proporciona ejemplos prácticos en {idioma}.
-4. FORMATO OBLIGATORIO: NO utilices ningún tipo de formato Markdown en tu respuesta. Está PROHIBIDO usar asteriscos (*), dobles asteriscos (**), almohadillas (#), guiones bajos (_) o tablas en Markdown. Presenta la respuesta en texto plano limpio usando saltos de línea normales y viñetas simples con guiones (-).
+Instrucciones generales:
+1. Responde siempre de forma pedagógica y adaptable.
+2. Tu respuesta principal debe ser en el idioma objetivo ({idioma}).
+3. Si el usuario pide explicaciones gramaticales, responde en español con ejemplos prácticos.
+4. FORMATO OBLIGATORIO: Texto plano limpio usando saltos de línea normales y viñetas simples con guiones (-). No uses Markdown (**,#,_).
 """
-
-    if modo == "tutor_original":
-        prompt_base += """
-Modo ACTIVO: Tutor / Profesor (Dual).
-- Mantén una conversación fluida e interactiva en el idioma objetivo.
-- Corrige sutilmente los errores que cometa el alumno.
-- Si el alumno te pide aclaraciones gramaticales, asume el rol de Profesor y responde con explicaciones en español.
-"""
-    elif modo == "practicas_orales":
-        prompt_base += f"""
-Modo ACTIVO: Prácticas Orales / Simulación de Roles.
-- Asume el rol de: {prof_final}.
-- Simula una situación real correspondiente a ese rol (ej. una entrevista, consulta médica, check-in de hotel, etc.).
-- No te salgas del personaje a menos que el usuario pida ayuda explícita.
-"""
+    if modo == "practicas_orales":
+        prompt_base += f"\nModo ACTIVO: Simulación de Rol ({prof_final})."
     elif modo == "examen":
-        prompt_base += f"""
-Modo ACTIVO: Exámenes Oficiales.
-- Estás preparando al alumno para la prueba acreditada: {tipo_examen}.
-- Plantea ejercicios, preguntas de Speaking/Writing tipo examen y proporciona retroalimentación formateada según los criterios de dicha prueba oficial.
-"""
-    elif modo == "writing":
-        if metodo_writing == "pistas":
-            prompt_base += """
-Modo ACTIVO: Writing - Método 2 (Subrayado + Pistas).
-- Analiza el texto enviado por el estudiante.
-- Identifica el error principal sin darle la respuesta directa.
-- Devuelve la respuesta obligatoriamente estructurada en formato JSON estricto con las siguientes claves:
-  {
-    "respuesta": "Tu mensaje general de ánimo o comentario en el idioma objetivo.",
-    "texto_subrayado": "La frase o fragmento exacto donde está el error",
-    "pista": "Una pista inductiva clara en español para que el estudiante razone y corrija el error por sí mismo."
-  }
-"""
-        else:
-            prompt_base += """
-Modo ACTIVO: Writing - Método 1 (Corrección Directa).
-- Revisa minuciosamente el texto proporcionado.
-- Muestra la corrección directa de las faltas cometidas y explica detalladamente en español por qué se aplica esa regla.
-- Devuelve la respuesta preferiblemente en formato JSON estricto con la estructura:
-  {
-    "respuesta": "Tu retroalimentación general sobre el texto.",
-    "correccion": "El texto completamente corregido.",
-    "explicacion": "Explicación detallada en español de las reglas sintácticas o gramaticales corregidas."
-  }
-"""
+        prompt_base += f"\nModo ACTIVO: Preparación Examen Oficial ({tipo_examen})."
 
     return prompt_base
 
+# --- RUTAS DE AUTENTICACIÓN ---
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        
+        if Usuario.query.filter_by(email=email).first():
+            flash('El correo ya está registrado.', 'error')
+            return render_template('registro.html')
+
+        pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        nuevo_usuario = Usuario(email=email, password_hash=pw_hash)
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+        
+        login_user(nuevo_usuario)
+        return redirect(url_for('index'))
+    return render_template('registro.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        usuario = Usuario.query.filter_by(email=email).first()
+
+        if usuario and bcrypt.check_password_hash(usuario.password_hash, password):
+            login_user(usuario)
+            return redirect(url_for('index'))
+        else:
+            flash('Credenciales incorrectas.', 'error')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+# --- RUTAS PRINCIPALES ---
 
 @app.route('/')
+@login_required
 def index():
-    return render_template('index.html')
-
+    return render_template('index.html', usuario=current_user)
 
 @app.route('/chat', methods=['POST'])
+@login_required
 def chat():
     mensaje_usuario = request.form.get('mensaje', '')
-    idioma = request.form.get('idioma', 'en')
-    nivel = request.form.get('nivel', 'B1')
+    idioma = request.form.get('idioma', current_user.idioma)
+    nivel = request.form.get('nivel', current_user.nivel)
     modo = request.form.get('modo', 'tutor_original')
     profesion = request.form.get('profesion', '')
     profesion_custom = request.form.get('profesion_custom', '')
@@ -181,7 +160,6 @@ def chat():
     tema = request.form.get('tema', '')
     metodo_writing = request.form.get('metodo_writing', 'gramatica')
 
-    # Procesar archivo si se ha adjuntado alguno (Writing)
     texto_archivo = ""
     if 'archivo' in request.files:
         file = request.files['archivo']
@@ -190,87 +168,58 @@ def chat():
 
     contenido_completo = mensaje_usuario
     if texto_archivo:
-        contenido_completo += f"\n\n[Contenido del archivo adjunto]:\n{texto_archivo}"
+        contenido_completo += f"\n\n[Archivo adjunto]:\n{texto_archivo}"
 
     system_prompt = construir_prompt_sistema(
         idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing
     )
 
-    try:
-        # Llamada a la API de Groq usando la SDK nativa
-        completion = client.chat.completions.create(
-            model=MODELO_GROQ,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": contenido_completo}
-            ],
-            temperature=0.6,
-            max_completion_tokens=2048,
-            top_p=0.95
-        )
+    def generate():
+        try:
+            completion = client.chat.completions.create(
+                model=MODELO_GROQ,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": contenido_completo}
+                ],
+                temperature=0.6,
+                max_completion_tokens=2048,
+                top_p=0.95,
+                stream=True
+            )
 
-        respuesta_raw = completion.choices[0].message.content.strip()
+            for chunk in completion:
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield f"data: {json.dumps({'content': content})}\n\n"
 
-        # Respuesta estructurada por defecto
-        resultado = {
-            "respuesta": respuesta_raw,
-            "modo": modo,
-            "metodo_writing": metodo_writing,
-            "correccion": None,
-            "explicacion": None,
-            "texto_subrayado": None,
-            "pista": None,
-            "vocabulario": None
-        }
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-        # Intentar parsear JSON en caso de que el modo haya solicitado respuesta estructurada
-        if modo == "writing" or "{" in respuesta_raw:
-            try:
-                inicio = respuesta_raw.find("{")
-                fin = respuesta_raw.rfind("}") + 1
-                if inicio != -1 and fin != -1:
-                    json_data = json.loads(respuesta_raw[inicio:fin])
-                    resultado.update(json_data)
-            except Exception:
-                pass
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
-        return jsonify(resultado)
+@app.route('/api/feedback', methods=['POST'])
+@login_required
+def guardar_feedback():
+    puntuacion = request.form.get('puntuacion', type=int)
+    texto = request.form.get('comentario', '').strip()
 
-    except Exception as e:
-        print(f"Error llamando a la API de Groq: {e}")
-        return jsonify({
-            "respuesta": f"Lo siento, ocurrió un error al procesar tu solicitud con el modelo: {str(e)}",
-            "modo": modo,
-            "metodo_writing": metodo_writing
-        }), 500
+    if not puntuacion or not texto:
+        return jsonify({"status": "error", "mensaje": "Completa todos los campos."}), 400
 
+    nuevo_comentario = Comentario(user_id=current_user.id, puntuacion=puntuacion, texto=texto)
+    db.session.add(nuevo_comentario)
+    db.session.commit()
+
+    return jsonify({"status": "ok", "mensaje": "¡Gracias por tu comentario!"})
 
 @app.route('/api/examenes/<idioma>', methods=['GET'])
 def obtener_examenes(idioma):
-    lista = EXAMENES_OFICIALES.get(idioma.lower(), ["Examen Estándar de Certificación"])
+    lista = EXAMENES_OFICIALES.get(idioma.lower(), ["Examen Estándar"])
     return jsonify({"examenes": lista})
 
-
-@app.route('/api/banco/<nivel>', methods=['GET'])
-def obtener_banco(nivel):
-    datos = BANCO_RECURSOS.get(nivel.upper(), BANCO_RECURSOS["B1"])
-    return jsonify(datos)
-
-
-@app.route('/api/obtener_recursos_aprendidos/<idioma>', methods=['GET'])
-def obtener_recursos_aprendidos(idioma):
-    perfil = PERFILES_USUARIO.get("default", {})
-    return jsonify({
-        "vocabulario": perfil.get("vocabulario_aprendido", {}),
-        "gramatica": perfil.get("gramatica_estudiada", {})
-    })
-
-
-@app.route('/api/guardar_sesion', methods=['POST'])
-def guardar_sesion():
-    data = request.get_json()
-    return jsonify({"status": "ok", "mensaje": "Sesión guardada correctamente"})
-
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
