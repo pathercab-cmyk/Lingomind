@@ -78,15 +78,19 @@
         <div class="section-box">
             <div class="section-title">Configuración</div>
             <div class="form-group">
-                <label for="idioma">Idioma Objetivo:</label>
-                <select id="idioma" name="idioma" onchange="cambiarConfiguracion()">
-                    <option value="en" selected>Inglés</option>
-                    <option value="fr">Francés</option>
-                    <option value="de">Alemán</option>
-                    <option value="it">Italiano</option>
-                    <option value="pt">Portugués</option>
-                    <option value="es">Español</option>
-                </select>
+               <label for="idioma">Idioma Objetivo:</label>
+                    <select name="idioma" id="idioma" class="form-select">
+                        <option value="en" {% if usuario.idioma == 'en' %}selected{% endif %}>Inglés</option>
+                        <option value="fr" {% if usuario.idioma == 'fr' %}selected{% endif %}>Francés</option>
+                        <option value="de" {% if usuario.idioma == 'de' %}selected{% endif %}>Alemán</option>
+                        <option value="nl" {% if usuario.idioma == 'nl' %}selected{% endif %}>Neerlandés</option>
+                        <option value="pt" {% if usuario.idioma == 'pt' %}selected{% endif %}>Portugués</option>
+                        <option value="ro" {% if usuario.idioma == 'ro' %}selected{% endif %}>Rumano</option>
+                        <option value="ja" {% if usuario.idioma == 'ja' %}selected{% endif %}>Japonés</option>
+                        <option value="zh" {% if usuario.idioma == 'zh' %}selected{% endif %}>Chino Mandarín</option>
+                        <option value="it" {% if usuario.idioma == 'it' %}selected{% endif %}>Italiano</option>
+                        <option value="es" {% if usuario.idioma == 'es' %}selected{% endif %}>Español (ELE)</option>
+                    </select>
             </div>
 
             <div class="form-group">
