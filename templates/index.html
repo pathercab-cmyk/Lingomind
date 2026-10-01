@@ -145,12 +145,12 @@
 
         @keyframes pulse-animation {
             0% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.4; }
             100% { opacity: 1; }
         }
 
         .animate-pulse {
-            animation: pulse-animation 1.2s infinite;
+            animation: pulse-animation 1s infinite;
         }
     </style>
 </head>
@@ -258,7 +258,7 @@
             <div class="col-md-3 d-none" id="containerExamenes">
                 <label class="control-label">Examen Oficial Acreditado:</label>
                 <select id="selExamen" class="form-select fw-semibold">
-                    <!-- Dinámico -->
+                    <!-- Carga dinámica -->
                 </select>
             </div>
 
@@ -284,9 +284,10 @@
                     </div>
                 </div>
 
+                <!-- CONTENEDOR DE INPUT Y BOTÓN DE MICRÓFONO REFORZADO -->
                 <div class="input-group">
-                    <button class="btn btn-outline-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
-                        <i class="fa-solid fa-microphone"></i>
+                    <button class="btn btn-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
+                        <i class="fa-solid fa-microphone me-1"></i> Dictar
                     </button>
                     <input type="text" id="userMsg" class="form-control form-control-lg" placeholder="Escribe o dicta tu mensaje..." onkeypress="if(event.key==='Enter') enviarMensaje()">
                     <button class="btn btn-primary px-4 fw-bold" onclick="enviarMensaje()">
@@ -345,9 +346,10 @@
         </div>
 
         <div class="mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="d-flex justify-content-between align-items-center mb-2">
                 <label class="control-label mb-0">Texto de la Redacción:</label>
-                <button class="btn btn-sm btn-outline-danger fw-semibold" id="btnMicWriting" type="button" onclick="alternarMicrofono('writingTexto', 'btnMicWriting')">
+                <!-- BOTÓN DE MICRÓFONO EN WRITING -->
+                <button class="btn btn-danger btn-sm fw-semibold" id="btnMicWriting" type="button" onclick="alternarMicrofono('writingTexto', 'btnMicWriting')">
                     <i class="fa-solid fa-microphone me-1"></i> Dictar por Voz
                 </button>
             </div>
@@ -387,12 +389,12 @@
 
 </div>
 
-<!-- JAVASCRIPT CON TODOS LOS BOTONES Y RUTAS FUNCIONALES -->
+<!-- JAVASCRIPT CON RECONOCIMIENTO DE VOZ COMPLETO -->
 <script>
     let modoActual = 'tutor_original';
     let historialConversacion = [];
 
-    // Mapas de códigos BCP 47 para la Web Speech API
+    // Mapas BCP 47 para la Web Speech API
     const SPEECH_LANG_MAP = {
         'en': 'en-US',
         'fr': 'fr-FR',
@@ -670,11 +672,12 @@
         audio.play();
     }
 
+    // FUNCIÓN DEL MICRÓFONO CON WEB SPEECH API
     function alternarMicrofono(inputId, btnId) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            alert("Tu navegador no soporta el reconocimiento de voz. Te recomendamos usar Google Chrome o Microsoft Edge.");
+            alert("Tu navegador no soporta el reconocimiento de voz. Usa Google Chrome o Microsoft Edge.");
             return;
         }
 
@@ -698,8 +701,7 @@
             escuchando = true;
             const btn = document.getElementById(activeBtnId);
             if (btn) {
-                btn.classList.remove('btn-outline-danger');
-                btn.classList.add('btn-danger', 'animate-pulse');
+                btn.classList.add('animate-pulse');
                 btn.innerHTML = `<i class="fa-solid fa-microphone-lines me-1"></i> Escuchando...`;
             }
         };
@@ -738,12 +740,11 @@
         if (activeBtnId) {
             const btn = document.getElementById(activeBtnId);
             if (btn) {
-                btn.classList.remove('btn-danger', 'animate-pulse');
-                btn.classList.add('btn-outline-danger');
+                btn.classList.remove('animate-pulse');
                 if (activeBtnId === 'btnMicWriting') {
                     btn.innerHTML = `<i class="fa-solid fa-microphone me-1"></i> Dictar por Voz`;
                 } else {
-                    btn.innerHTML = `<i class="fa-solid fa-microphone"></i>`;
+                    btn.innerHTML = `<i class="fa-solid fa-microphone me-1"></i> Dictar`;
                 }
             }
         }
@@ -759,7 +760,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma (incluido Neerlandés) y tu nivel (A1-C2).\n2. Usa el botón del micrófono para practicar tu expresión oral dictando tus respuestas.\n3. Navega por las pestañas de Tutor, Profesor, Prácticas, Exámenes o Bancos de Contenido.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma (incluido Neerlandés) y tu nivel (A1-C2).\n2. Haz clic en el botón rojo 'Dictar' o 'Dictar por Voz' para hablar directamente con el micrófono.\n3. Practica en las pestañas de Tutor, Profesor, Prácticas Orales, Exámenes o Bancos de Contenido.");
     }
 </script>
 
