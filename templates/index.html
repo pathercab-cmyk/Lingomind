@@ -280,7 +280,7 @@
                     </button>
                 </div>
 
-                <!-- CONTROLES EXCLUSIVOS MODO WRITING (TEXTAREA Y SUBIDA DE ARCHIVOS) -->
+                <!-- CONTROLES MODO WRITING (TEXTAREA Y ARCHIVO) -->
                 <div id="controlWriting" class="d-none">
                     <div class="mb-2">
                         <textarea id="userMsgWriting" class="form-control" rows="5" placeholder="Escribe tu redacción, ensayo o texto largo aquí para su revisión..."></textarea>
@@ -320,7 +320,7 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: BANCO DE RECURSOS -->
+    <!-- SECCIÓN: BANCO DE RECURSOS AMPLIADO -->
     <div id="seccionBanco" class="card card-custom p-4 d-none">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
             <h4 class="text-info fw-bold mb-0"><i class="fa-solid fa-layer-group me-2"></i> Banco de Recursos Académicos</h4>
@@ -328,8 +328,9 @@
         </div>
 
         <div class="row g-4">
+            <!-- Columna 1: Gramática Clave -->
             <div class="col-md-6">
-                <div class="card p-3 border-info h-100">
+                <div class="card p-3 border-info h-100 shadow-sm">
                     <h5 class="fw-bold text-info border-bottom pb-2"><i class="fa-solid fa-book me-2"></i> Puntos Gramaticales Clave</h5>
                     <div id="contenedorBancoGramatica" class="mt-3">
                         <em class="text-muted">Cargando contenidos gramaticales...</em>
@@ -337,11 +338,32 @@
                 </div>
             </div>
 
+            <!-- Columna 2: Vocabulario Temático -->
             <div class="col-md-6">
-                <div class="card p-3 border-secondary h-100">
-                    <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-list-ol me-2"></i> Vocabulario RECOMENDADO</h5>
+                <div class="card p-3 border-secondary h-100 shadow-sm">
+                    <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-list-ol me-2"></i> Vocabulario Temático</h5>
                     <div id="contenedorBancoVocabulario" class="mt-3">
                         <em class="text-muted">Cargando vocabulario recomendado...</em>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna 3: Conectores y Expresiones -->
+            <div class="col-md-6">
+                <div class="card p-3 border-warning h-100 shadow-sm">
+                    <h5 class="fw-bold text-warning border-bottom pb-2"><i class="fa-solid fa-link me-2"></i> Conectores y Expresiones</h5>
+                    <div id="contenedorBancoConectores" class="mt-3">
+                        <em class="text-muted">Cargando conectores...</em>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna 4: Fonética y Pronunciación -->
+            <div class="col-md-6">
+                <div class="card p-3 border-success h-100 shadow-sm">
+                    <h5 class="fw-bold text-success border-bottom pb-2"><i class="fa-solid fa-bullhorn me-2"></i> Fonética y Pronunciación</h5>
+                    <div id="contenedorBancoFonetica" class="mt-3">
+                        <em class="text-muted">Cargando guía fonética...</em>
                     </div>
                 </div>
             </div>
@@ -450,7 +472,6 @@
         document.getElementById('containerProfesion').classList.toggle('d-none', modo !== 'practicas_orales');
         document.getElementById('containerExamenes').classList.toggle('d-none', modo !== 'examen');
         
-        // INTERCAMBIO ENTRADA ESTÁNDAR / WRITING
         if (modo === 'writing') {
             document.getElementById('controlEstandard').classList.add('d-none');
             document.getElementById('controlWriting').classList.remove('d-none');
@@ -482,7 +503,6 @@
         }
     }
 
-    // ENVÍO EN MODO CHAT ESTÁNDAR
     async function enviarMensaje() {
         const input = document.getElementById('userMsg');
         const mensaje = input.value.trim();
@@ -491,7 +511,6 @@
         await procesarEnvio(mensaje, null);
     }
 
-    // ENVÍO EN MODO WRITING (TEXTAREA + ARCHIVO)
     async function enviarWriting() {
         const textarea = document.getElementById('userMsgWriting');
         const inputArchivo = document.getElementById('inputArchivoWriting');
@@ -576,6 +595,7 @@
         box.scrollTop = box.scrollHeight;
     }
 
+    // CARGAR Y RENDERIZAR EL BANCO DE RECURSOS EXTENDIDO
     async function cargarBancoRecursos() {
         const nivel = document.getElementById('selNivel').value;
         document.getElementById('badgeBancoNivel').innerText = `Nivel: ${nivel}`;
@@ -584,13 +604,33 @@
             const res = await fetch(`/api/banco/${nivel}`);
             const data = await res.json();
 
+            // 1. Gramática
             const divGram = document.getElementById('contenedorBancoGramatica');
-            divGram.innerHTML = '<ul class="list-group">' + data.gramatica.map(item => `<li class="list-group-item"><i class="fa-solid fa-check text-info me-2"></i>${escapeHtml(item)}</li>`).join('') + '</ul>';
+            divGram.innerHTML = '<ul class="list-group list-group-flush">' + 
+                (data.gramatica || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-check text-info me-2"></i>${escapeHtml(item)}</li>`).join('') + 
+                '</ul>';
 
+            // 2. Vocabulario
             const divVocab = document.getElementById('contenedorBancoVocabulario');
-            divVocab.innerHTML = '<ul class="list-group">' + data.vocabulario.map(item => `<li class="list-group-item"><i class="fa-solid fa-bookmark text-secondary me-2"></i>${escapeHtml(item)}</li>`).join('') + '</ul>';
+            divVocab.innerHTML = '<ul class="list-group list-group-flush">' + 
+                (data.vocabulario || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-bookmark text-secondary me-2"></i>${escapeHtml(item)}</li>`).join('') + 
+                '</ul>';
 
-        } catch(e) {}
+            // 3. Conectores
+            const divConect = document.getElementById('contenedorBancoConectores');
+            divConect.innerHTML = '<ul class="list-group list-group-flush">' + 
+                (data.conectores || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-link text-warning me-2"></i>${escapeHtml(item)}</li>`).join('') + 
+                '</ul>';
+
+            // 4. Fonética
+            const divFon = document.getElementById('contenedorBancoFonetica');
+            divFon.innerHTML = '<ul class="list-group list-group-flush">' + 
+                (data.fonetica || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-volume-high text-success me-2"></i>${escapeHtml(item)}</li>`).join('') + 
+                '</ul>';
+
+        } catch(e) {
+            console.error("Error al cargar el banco de recursos:", e);
+        }
     }
 
     async function cargarCuadernoAprendizaje() {
@@ -764,7 +804,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. Usa el 'Modo Writing' para escribir ensayos y adjuntar archivos (.pdf, .docx, .txt).\n3. Revisa el 'Banco de Recursos' para consultar la gramática teórica.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. Usa el 'Modo Writing' para escribir ensayos y adjuntar archivos (.pdf, .docx, .txt).\n3. Revisa el 'Banco de Recursos' ampliado con Gramática, Vocabulario, Conectores y Fonética por nivel.");
     }
 </script>
 
