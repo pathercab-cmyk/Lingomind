@@ -9,7 +9,7 @@
         body { display: flex; height: 100vh; background-color: #f4f6f9; color: #333; }
         
         /* SIDEBAR */
-        .sidebar { width: 360px; background-color: #ffffff; border-right: 1px solid #e1e8ed; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .sidebar { width: 380px; background-color: #ffffff; border-right: 1px solid #e1e8ed; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
         .sidebar h2 { color: #1e40af; font-size: 1.5rem; margin-bottom: 5px; }
         
         .section-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
@@ -25,14 +25,14 @@
         .btn-secondary { background-color: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; margin-top: 5px; }
         .btn-secondary:hover { background-color: #cbd5e1; }
 
-        .btn-explain { background-color: #3b82f6; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-top: 4px; display: inline-block; }
+        .btn-explain { background-color: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-top: 4px; display: inline-block; font-weight: 600; }
         .btn-explain:hover { background-color: #1d4ed8; }
 
-        /* PESTAÑAS Y DESPLEGABLES DEL CUADERNO */
+        /* PESTAÑAS Y DESPLEGABLES */
         details { margin-bottom: 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; }
         summary { font-weight: 600; font-size: 0.85rem; cursor: pointer; color: #1e293b; outline: none; }
-        .details-content { padding-top: 6px; font-size: 0.8rem; color: #475569; }
-        .tree-node { margin-left: 10px; margin-top: 4px; }
+        .details-content { padding-top: 6px; font-size: 0.8rem; color: #475569; display: flex; flex-direction: column; gap: 6px; }
+        .tree-node { margin-left: 10px; }
 
         .feedback-section { margin-top: auto; }
         .user-info { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; }
@@ -42,13 +42,15 @@
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; }
         .chat-header { background-color: #ffffff; padding: 15px 20px; border-bottom: 1px solid #e1e8ed; font-weight: 600; color: #1e293b; display: flex; justify-content: space-between; align-items: center; }
         
-        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #f8fafc; }
-        .mensaje { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; }
-        .mensaje-usuario { align-self: flex-end; background-color: #2563eb; color: white; border-bottom-right-radius: 2px; }
-        .mensaje-oralis { align-self: flex-start; background-color: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background-color: #f8fafc; }
         
-        .contenido-texto { margin-bottom: 8px; }
-        .btn-audio { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+        /* ESTILOS DE LOS MENSAJES */
+        .mensaje { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; }
+        .mensaje-usuario { align-self: flex-end; background-color: #2563eb; color: white; border-bottom-right-radius: 2px; }
+        .mensaje-oralis { align-self: flex-start; background-color: #ffffff !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; border-bottom-left-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        .contenido-texto { min-height: 20px; font-size: 0.95rem; color: #1e293b; margin-bottom: 8px; white-space: pre-wrap; }
+        .btn-audio { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; }
         .btn-audio:hover { background: #e2e8f0; }
 
         /* INPUT AREA */
@@ -139,59 +141,53 @@
             </div>
         </div>
 
-        <!-- MI CUADERNO CON PESTAÑAS Y DESPLEGABLES -->
+        <!-- MI CUADERNO CON CLASIFICACIÓN -->
         <div class="section-box">
             <div class="section-title">📖 Mi Cuaderno</div>
             <div style="font-size: 0.8rem; margin-bottom: 8px; color: #475569;">
-                <strong>Filtro Actual:</strong> <span id="lbl-idioma">Inglés</span> (<span id="lbl-nivel">B1</span>)
+                <strong>Filtro:</strong> <span id="lbl-idioma">Inglés</span> (<span id="lbl-nivel">B1</span>)
             </div>
 
             <details open>
-                <summary>📚 Vocabulario</summary>
+                <summary>📚 Vocabulario Clasificado</summary>
                 <div class="details-content">
                     <details>
-                        <summary>📌 Tema: Viajes</summary>
+                        <summary>📌 Viajes y Turismo</summary>
                         <div class="details-content">
-                            <div class="tree-node"><strong>Sustantivos:</strong> Flight, Ticket, Gate</div>
-                            <div class="tree-node"><strong>Verbos:</strong> To book, To land, To board</div>
-                            <div class="tree-node"><strong>Adjetivos:</strong> Delayed, Direct, Crowded</div>
+                            <div class="tree-node"><strong>• Sustantivos:</strong> Flight, Boarding Pass, Luggage</div>
+                            <div class="tree-node"><strong>• Verbos:</strong> To book, To check in, To depart</div>
+                            <div class="tree-node"><strong>• Adjetivos:</strong> Crowded, Delayed, Scenic</div>
                         </div>
                     </details>
                     <details>
-                        <summary>📌 Tema: Negocios</summary>
+                        <summary>📌 Trabajo y Negocios</summary>
                         <div class="details-content">
-                            <div class="tree-node"><strong>Sustantivos:</strong> Meeting, Agreement, Budget</div>
-                            <div class="tree-node"><strong>Verbos:</strong> To negotiate, To sign, To confirm</div>
+                            <div class="tree-node"><strong>• Sustantivos:</strong> Meeting, Deadline, Budget</div>
+                            <div class="tree-node"><strong>• Verbos:</strong> To schedule, To negotiate, To achieve</div>
                         </div>
                     </details>
                 </div>
             </details>
 
             <details>
-                <summary>✍️ Gramática</summary>
+                <summary>✍️ Gramática Registrada</summary>
                 <div class="details-content">
                     <details>
-                        <summary>🔹 Tiempos Verbales</summary>
+                        <summary>🔹 Estructuras Clave</summary>
                         <div class="details-content">
                             <div class="tree-node">• Present Perfect vs Past Simple</div>
-                            <div class="tree-node">• Conditional Sentences (Type 1 & 2)</div>
-                        </div>
-                    </details>
-                    <details>
-                        <summary>🔹 Conectores y Estructuras</summary>
-                        <div class="details-content">
-                            <div class="tree-node">• Although / However / In spite of</div>
+                            <div class="tree-node">• First & Second Conditionals</div>
                         </div>
                     </details>
                 </div>
             </details>
         </div>
 
-        <!-- BANCO RECOMENDADO CON BOTONES DE EXPLICACIÓN -->
+        <!-- BANCO DE RECOMENDACIONES POR NIVEL -->
         <div class="section-box">
             <div class="section-title">💡 Banco Recomendado</div>
-            <div style="font-size: 0.85rem;" id="banco-recomendado">
-                <!-- Se llena dinámicamente -->
+            <div id="banco-recomendado" style="font-size: 0.85rem;">
+                <!-- Generado dinámicamente -->
             </div>
         </div>
 
@@ -230,24 +226,20 @@
 
         <div id="chat-box" class="chat-box">
             <div class="mensaje mensaje-oralis">
-                <div class="contenido-texto">¡Hola! Soy Oralis. Corregiré tus errores de vocabulario y gramática en cada mensaje para ayudarte a mejorar. Escríbeme o háblame cuando quieras comenzar.</div>
+                <div class="contenido-texto">¡Hola! Soy Oralis. Corregiré automáticamente todos tus mensajes para ayudarte a perfeccionar tu nivel. Escríbeme o háblame para comenzar.</div>
                 <button type="button" class="btn-audio" onclick="reproducirTexto(this.previousElementSibling.innerText)">🔊 Escuchar</button>
             </div>
         </div>
 
         <div class="chat-input-area">
             <form id="form-chat" class="chat-form" onsubmit="enviarMensaje(event)">
-                <!-- Adjuntar Archivo (Writing) -->
                 <button type="button" id="btn-attach" class="btn-icon" title="Adjuntar documento" style="display: none;" onclick="document.getElementById('archivo').click();">📎</button>
                 <input type="file" id="archivo" name="archivo" accept=".pdf,.docx,.txt" style="display: none;" onchange="mostrarNombreArchivo()">
 
-                <!-- Micrófono -->
                 <button type="button" id="btn-mic" class="btn-icon" title="Hablar por micrófono" onclick="toggleMicrofono()">🎤</button>
 
-                <!-- Input -->
                 <input type="text" id="input-mensaje" name="mensaje" placeholder="Escribe tu mensaje aquí..." autocomplete="off">
 
-                <!-- Enviar -->
                 <button type="submit" class="btn-send">Enviar</button>
             </form>
             <div id="file-indicator" class="file-indicator"></div>
@@ -328,6 +320,34 @@
             document.getElementById('profesion_custom').style.display = (val === 'Otro') ? 'block' : 'none';
         }
 
+        // BANCO DE RECOMENDACIONES EXPANDIDO POR CADA NIVEL
+        const recomendacionNiveles = {
+            'A1': {
+                vocab: "Presentaciones personales, Familia, Rutina diaria, Números, Horarios y Colores.",
+                gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the), Pronombres personales y Adjetivos posesivos."
+            },
+            'A2': {
+                vocab: "Comida, Compras, Ropa, Tiempo meteorológico, Transporte, Lugares de la ciudad y Hobbies.",
+                gram: "Pasado simple, Presente continuo, Comparativos y superlativos, Expresión de planes (Going to), Preposiciones de lugar/tiempo."
+            },
+            'B1': {
+                vocab: "Viajes, Experiencias personales, Trabajo/Profesiones, Sentimientos, Tecnología y Medios de comunicación.",
+                gram: "Present Perfect, Pasado continuo, Condicionales (Tipo 1 y 2), Voz pasiva básica, Modal Verbs (Can, Must, Should)."
+            },
+            'B2': {
+                vocab: "Educación, Medio ambiente, Salud y bienestar, Sociedad, Términos de negocios y Expresiones modismáticas.",
+                gram: "Past Perfect, Condicional 3 y Mixto, Tiempos continuos perfectos, Discurso indirecto (Reported Speech), Verbos frasales (Phrasal verbs)."
+            },
+            'C1': {
+                vocab: "Política, Economía, Ciencia y tecnología avanzada, Arte, Filosofía, Modismos complejas y Sinónimos académicos.",
+                gram: "Inversiones gramaticales, Estructuras enfáticas (Cleft sentences), Subjuntivo / Formas avanzadas, Tiempos de futuro perfecto continuo."
+            },
+            'C2': {
+                vocab: "Registros literarios, Modismos regionales, Humor/Sarcasmo, Jerga profesional especializada y Matices de significado.",
+                gram: "Estructuras sintácticas complejas, Variaciones estilísticas avanzadas, Control total de registros y Cohesión textual superior."
+            }
+        };
+
         function actualizarTodo() {
             const idioma = document.getElementById('idioma').value;
             const nivel = document.getElementById('nivel').value;
@@ -335,17 +355,24 @@
             document.getElementById('lbl-idioma').innerText = idioma.toUpperCase();
             document.getElementById('lbl-nivel').innerText = nivel;
             
-            // Actualizar Banco Recomendado con botones de explicación
+            // Cargar recomendaciones según el nivel seleccionado
+            const recs = recomendacionNiveles[nivel] || recomendacionNiveles['B1'];
             const bancoBox = document.getElementById('banco-recomendado');
             bancoBox.innerHTML = `
-                <div style="margin-bottom: 8px;">
-                    • <strong>Vocabulario recomendado:</strong> Términos de trabajo y expresiones idiomáticas de nivel ${nivel}.<br>
-                    <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame el vocabulario clave recomendado para el nivel ${nivel} en ${idioma.toUpperCase()}')">💡 Explicar Vocabulario</button>
-                </div>
-                <div>
-                    • <strong>Gramática clave:</strong> Uso de condicionales y conectores avanzados en ${idioma.toUpperCase()}.<br>
-                    <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame la gramática clave y conectores recomendados para el nivel ${nivel} en ${idioma.toUpperCase()}')">💡 Explicar Gramática</button>
-                </div>
+                <details open>
+                    <summary>📚 Vocabulario Recomendado (${nivel})</summary>
+                    <div class="details-content">
+                        <div>${recs.vocab}</div>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame y dame ejemplos de vocabulario de nivel ${nivel} en ${idioma.toUpperCase()} sobre: ${recs.vocab}')">💡 Explicar Vocabulario</button>
+                    </div>
+                </details>
+                <details open>
+                    <summary>✍️ Gramática Recomendada (${nivel})</summary>
+                    <div class="details-content">
+                        <div>${recs.gram}</div>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame detenidamente con reglas y ejemplos los temas de gramática de nivel ${nivel} en ${idioma.toUpperCase()}: ${recs.gram}')">💡 Explicar Gramática</button>
+                    </div>
+                </details>
             `;
 
             actualizarExamenes();
@@ -379,24 +406,36 @@
             indicator.innerText = (input.files && input.files[0]) ? '📄 Archivo cargado: ' + input.files[0].name : '';
         }
 
+        // GESTIÓN CORREGIDA DE MENSAJES Y VISIBILIDAD DE TEXTO
         function agregarMensaje(emisor, texto) {
             const chatBox = document.getElementById('chat-box');
             const msgDiv = document.createElement('div');
             msgDiv.className = 'mensaje ' + (emisor === 'user' ? 'mensaje-usuario' : 'mensaje-oralis');
 
             if (emisor === 'oralis') {
-                msgDiv.innerHTML = `
-                    <div class="contenido-texto"></div>
-                    <button type="button" class="btn-audio" onclick="reproducirTexto(this.previousElementSibling.innerText)">🔊 Escuchar</button>
-                `;
+                const textContainer = document.createElement('div');
+                textContainer.className = 'contenido-texto';
+                textContainer.innerText = texto;
+
+                const audioBtn = document.createElement('button');
+                audioBtn.type = 'button';
+                audioBtn.className = 'btn-audio';
+                audioBtn.innerHTML = '🔊 Escuchar';
+                audioBtn.onclick = function() {
+                    reproducirTexto(textContainer.innerText);
+                };
+
+                msgDiv.appendChild(textContainer);
+                msgDiv.appendChild(audioBtn);
                 chatBox.appendChild(msgDiv);
-                return msgDiv.querySelector('.contenido-texto');
+                
+                chatBox.scrollTop = chatBox.scrollHeight;
+                return textContainer;
             } else {
                 msgDiv.innerText = texto;
                 chatBox.appendChild(msgDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
             }
-
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         async function enviarMensaje(e) {
@@ -443,11 +482,18 @@
 
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
-                            const data = JSON.parse(line.substring(6));
-                            if (data.content) {
-                                elemTextoOralis.innerText += data.content;
-                                const chatBox = document.getElementById('chat-box');
-                                chatBox.scrollTop = chatBox.scrollHeight;
+                            const dataStr = line.substring(6).trim();
+                            if (dataStr) {
+                                try {
+                                    const data = JSON.parse(dataStr);
+                                    if (data.content) {
+                                        elemTextoOralis.innerText += data.content;
+                                        const chatBox = document.getElementById('chat-box');
+                                        chatBox.scrollTop = chatBox.scrollHeight;
+                                    }
+                                } catch(err) {
+                                    console.error("Error al procesar chunk:", err);
+                                }
                             }
                         }
                     }
