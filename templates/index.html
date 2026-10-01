@@ -25,10 +25,14 @@
         .btn-secondary { background-color: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; margin-top: 5px; }
         .btn-secondary:hover { background-color: #cbd5e1; }
 
-        /* CUADERNO Y BANCO */
-        .cuaderno-tree { font-size: 0.85rem; max-height: 180px; overflow-y: auto; background: #fff; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; }
+        .btn-explain { background-color: #3b82f6; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-top: 4px; display: inline-block; }
+        .btn-explain:hover { background-color: #1d4ed8; }
+
+        /* PESTAÑAS Y DESPLEGABLES DEL CUADERNO */
+        details { margin-bottom: 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; }
+        summary { font-weight: 600; font-size: 0.85rem; cursor: pointer; color: #1e293b; outline: none; }
+        .details-content { padding-top: 6px; font-size: 0.8rem; color: #475569; }
         .tree-node { margin-left: 10px; margin-top: 4px; }
-        .tree-tag { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
 
         .feedback-section { margin-top: auto; }
         .user-info { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; }
@@ -135,31 +139,59 @@
             </div>
         </div>
 
-        <!-- MI CUADERNO -->
+        <!-- MI CUADERNO CON PESTAÑAS Y DESPLEGABLES -->
         <div class="section-box">
             <div class="section-title">📖 Mi Cuaderno</div>
-            <div class="cuaderno-tree" id="cuaderno-contenido">
-                <div><strong>Idioma:</strong> <span id="lbl-idioma">Inglés</span> (<span id="lbl-nivel">B1</span>)</div>
-                <div class="tree-node">
-                    <strong>📚 Vocabulario</strong>
-                    <div class="tree-node">
-                        <em>📌 Tema: Viajes</em>
-                        <div class="tree-node">• Sustantivos: Flight, Boarding Pass</div>
-                        <div class="tree-node">• Verbos: To book, To land</div>
-                    </div>
-                </div>
-                <div class="tree-node" style="margin-top: 5px;">
-                    <strong>✍️ Gramática</strong>
-                    <div class="tree-node">• Present Perfect vs Past Simple</div>
-                </div>
+            <div style="font-size: 0.8rem; margin-bottom: 8px; color: #475569;">
+                <strong>Filtro Actual:</strong> <span id="lbl-idioma">Inglés</span> (<span id="lbl-nivel">B1</span>)
             </div>
+
+            <details open>
+                <summary>📚 Vocabulario</summary>
+                <div class="details-content">
+                    <details>
+                        <summary>📌 Tema: Viajes</summary>
+                        <div class="details-content">
+                            <div class="tree-node"><strong>Sustantivos:</strong> Flight, Ticket, Gate</div>
+                            <div class="tree-node"><strong>Verbos:</strong> To book, To land, To board</div>
+                            <div class="tree-node"><strong>Adjetivos:</strong> Delayed, Direct, Crowded</div>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>📌 Tema: Negocios</summary>
+                        <div class="details-content">
+                            <div class="tree-node"><strong>Sustantivos:</strong> Meeting, Agreement, Budget</div>
+                            <div class="tree-node"><strong>Verbos:</strong> To negotiate, To sign, To confirm</div>
+                        </div>
+                    </details>
+                </div>
+            </details>
+
+            <details>
+                <summary>✍️ Gramática</summary>
+                <div class="details-content">
+                    <details>
+                        <summary>🔹 Tiempos Verbales</summary>
+                        <div class="details-content">
+                            <div class="tree-node">• Present Perfect vs Past Simple</div>
+                            <div class="tree-node">• Conditional Sentences (Type 1 & 2)</div>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>🔹 Conectores y Estructuras</summary>
+                        <div class="details-content">
+                            <div class="tree-node">• Although / However / In spite of</div>
+                        </div>
+                    </details>
+                </div>
+            </details>
         </div>
 
-        <!-- BANCO RECOMENDADO -->
+        <!-- BANCO RECOMENDADO CON BOTONES DE EXPLICACIÓN -->
         <div class="section-box">
             <div class="section-title">💡 Banco Recomendado</div>
             <div style="font-size: 0.85rem;" id="banco-recomendado">
-                Cargando recomendaciones para nivel B1...
+                <!-- Se llena dinámicamente -->
             </div>
         </div>
 
@@ -198,7 +230,7 @@
 
         <div id="chat-box" class="chat-box">
             <div class="mensaje mensaje-oralis">
-                <div class="contenido-texto">¡Hola! Soy Oralis. Siempre corregiré tus errores gramaticales y de vocabulario para ayudarte a mejorar. Escríbeme o háblame cuando quieras comenzar.</div>
+                <div class="contenido-texto">¡Hola! Soy Oralis. Corregiré tus errores de vocabulario y gramática en cada mensaje para ayudarte a mejorar. Escríbeme o háblame cuando quieras comenzar.</div>
                 <button type="button" class="btn-audio" onclick="reproducirTexto(this.previousElementSibling.innerText)">🔊 Escuchar</button>
             </div>
         </div>
@@ -226,7 +258,7 @@
         let rec;
         let escuchando = false;
 
-        // Configuración de Reconocimiento de Voz
+        // Reconocimiento de Voz
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             rec = new SpeechRecognition();
@@ -270,7 +302,7 @@
             }
         }
 
-        // Reproducción de voz
+        // Reproducción de Voz
         function reproducirTexto(texto) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -303,13 +335,25 @@
             document.getElementById('lbl-idioma').innerText = idioma.toUpperCase();
             document.getElementById('lbl-nivel').innerText = nivel;
             
-            // Actualizar Banco Recomendado
-            document.getElementById('banco-recomendado').innerHTML = `
-                • <strong>Vocabulario recomendado:</strong> Términos de trabajo y expresiones idiomáticas de nivel ${nivel}.<br>
-                • <strong>Gramática clave:</strong> Uso de condicionales y conector sintácticos en ${idioma.toUpperCase()}.
+            // Actualizar Banco Recomendado con botones de explicación
+            const bancoBox = document.getElementById('banco-recomendado');
+            bancoBox.innerHTML = `
+                <div style="margin-bottom: 8px;">
+                    • <strong>Vocabulario recomendado:</strong> Términos de trabajo y expresiones idiomáticas de nivel ${nivel}.<br>
+                    <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame el vocabulario clave recomendado para el nivel ${nivel} en ${idioma.toUpperCase()}')">💡 Explicar Vocabulario</button>
+                </div>
+                <div>
+                    • <strong>Gramática clave:</strong> Uso de condicionales y conectores avanzados en ${idioma.toUpperCase()}.<br>
+                    <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame la gramática clave y conectores recomendados para el nivel ${nivel} en ${idioma.toUpperCase()}')">💡 Explicar Gramática</button>
+                </div>
             `;
 
             actualizarExamenes();
+        }
+
+        function pedirExplicacion(consulta) {
+            document.getElementById('input-mensaje').value = consulta;
+            document.getElementById('form-chat').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
         }
 
         async function actualizarExamenes() {
