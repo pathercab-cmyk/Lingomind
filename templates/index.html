@@ -115,6 +115,15 @@
             font-size: 0.88rem;
         }
 
+        .saved-chat-card {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .saved-chat-card:hover {
+            border-color: var(--primary-color) !important;
+            background-color: #f0f9ff;
+        }
+
         .control-label {
             font-size: 0.85rem;
             font-weight: 700;
@@ -228,14 +237,20 @@
                 </select>
             </div>
 
+            <!-- SELECTOR DE ROL / PROFESIÓN CON OPCIÓN PERSONALIZADA -->
             <div class="col-md-3 d-none" id="containerProfesion">
-                <label class="control-label">Rol / Práctica Profesional:</label>
-                <select id="selProfesion" class="form-select fw-semibold">
+                <label class="control-label">Rol / Profesión Simular:</label>
+                <select id="selProfesion" class="form-select fw-semibold" onchange="comprobarProfesionCustom()">
                     <option value="Camarero / Barista">☕ Camarero / Barista</option>
                     <option value="Médico / Personal de Salud">🩺 Médico / Sanitario</option>
-                    <option value="Entrevistador de Trabajo">💼 Entrevista Laboral</option>
+                    <option value="Entrevistador de Trabajo">💼 Entrevistador de Trabajo</option>
                     <option value="Recepcionista de Hotel">🏨 Recepcionista Hotelero</option>
+                    <option value="Guía Turístico">🗺️ Guía Turístico</option>
+                    <option value="Profesor / Tutor Académico">🎓 Profesor / Tutor</option>
+                    <option value="Atención al Cliente">📞 Atención al Cliente</option>
+                    <option value="Otro">✏️ Personalizar Rol / Profesión...</option>
                 </select>
+                <input type="text" id="inputProfesionCustom" class="form-control mt-2 d-none" placeholder="Escribe el rol (ej: Ingeniero de Software)...">
             </div>
 
             <div class="col-md-3 d-none" id="containerExamenes">
@@ -269,7 +284,7 @@
                     </div>
                 </div>
 
-                <!-- CONTROLES MODO ESTÁNDAR (CON MICRÓFONO) -->
+                <!-- CONTROLES MODO ESTÁNDAR (CON MICRÓFONO/DICTADO) -->
                 <div id="controlEstandard" class="input-group">
                     <button class="btn btn-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
                         <i class="fa-solid fa-microphone me-1"></i> <span id="txtBtnMicChat">Dictar</span>
@@ -280,7 +295,7 @@
                     </button>
                 </div>
 
-                <!-- CONTROLES MODO WRITING (TEXTAREA Y ARCHIVO) -->
+                <!-- CONTROLES MODO WRITING (TEXTAREA Y SUBIDA DE ARCHIVOS) -->
                 <div id="controlWriting" class="d-none">
                     <div class="mb-2">
                         <textarea id="userMsgWriting" class="form-control" rows="5" placeholder="Escribe tu redacción, ensayo o texto largo aquí para su revisión..."></textarea>
@@ -328,7 +343,6 @@
         </div>
 
         <div class="row g-4">
-            <!-- Columna 1: Gramática Clave -->
             <div class="col-md-6">
                 <div class="card p-3 border-info h-100 shadow-sm">
                     <h5 class="fw-bold text-info border-bottom pb-2"><i class="fa-solid fa-book me-2"></i> Puntos Gramaticales Clave</h5>
@@ -338,7 +352,6 @@
                 </div>
             </div>
 
-            <!-- Columna 2: Vocabulario Temático -->
             <div class="col-md-6">
                 <div class="card p-3 border-secondary h-100 shadow-sm">
                     <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-list-ol me-2"></i> Vocabulario Temático</h5>
@@ -348,7 +361,6 @@
                 </div>
             </div>
 
-            <!-- Columna 3: Conectores y Expresiones -->
             <div class="col-md-6">
                 <div class="card p-3 border-warning h-100 shadow-sm">
                     <h5 class="fw-bold text-warning border-bottom pb-2"><i class="fa-solid fa-link me-2"></i> Conectores y Expresiones</h5>
@@ -358,7 +370,6 @@
                 </div>
             </div>
 
-            <!-- Columna 4: Fonética y Pronunciación -->
             <div class="col-md-6">
                 <div class="card p-3 border-success h-100 shadow-sm">
                     <h5 class="fw-bold text-success border-bottom pb-2"><i class="fa-solid fa-bullhorn me-2"></i> Fonética y Pronunciación</h5>
@@ -442,6 +453,12 @@
 
     function alCambiarNivel() {
         if (modoActual === 'banco') cargarBancoRecursos();
+    }
+
+    function comprobarProfesionCustom() {
+        const sel = document.getElementById('selProfesion').value;
+        const inputCustom = document.getElementById('inputProfesionCustom');
+        inputCustom.classList.toggle('d-none', sel !== 'Otro');
     }
 
     function nuevoChatLimpio() {
@@ -549,6 +566,7 @@
         formData.append('nivel', document.getElementById('selNivel').value);
         formData.append('modo', modoActual);
         formData.append('profesion', document.getElementById('selProfesion').value);
+        formData.append('profesion_custom', document.getElementById('inputProfesionCustom').value);
         formData.append('tipo_examen', document.getElementById('selExamen').value);
         formData.append('tema', document.getElementById('inputTema').value);
         if (archivo) formData.append('archivo', archivo);
@@ -595,7 +613,6 @@
         box.scrollTop = box.scrollHeight;
     }
 
-    // CARGAR Y RENDERIZAR EL BANCO DE RECURSOS EXTENDIDO
     async function cargarBancoRecursos() {
         const nivel = document.getElementById('selNivel').value;
         document.getElementById('badgeBancoNivel').innerText = `Nivel: ${nivel}`;
@@ -604,25 +621,21 @@
             const res = await fetch(`/api/banco/${nivel}`);
             const data = await res.json();
 
-            // 1. Gramática
             const divGram = document.getElementById('contenedorBancoGramatica');
             divGram.innerHTML = '<ul class="list-group list-group-flush">' + 
                 (data.gramatica || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-check text-info me-2"></i>${escapeHtml(item)}</li>`).join('') + 
                 '</ul>';
 
-            // 2. Vocabulario
             const divVocab = document.getElementById('contenedorBancoVocabulario');
             divVocab.innerHTML = '<ul class="list-group list-group-flush">' + 
                 (data.vocabulario || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-bookmark text-secondary me-2"></i>${escapeHtml(item)}</li>`).join('') + 
                 '</ul>';
 
-            // 3. Conectores
             const divConect = document.getElementById('contenedorBancoConectores');
             divConect.innerHTML = '<ul class="list-group list-group-flush">' + 
                 (data.conectores || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-link text-warning me-2"></i>${escapeHtml(item)}</li>`).join('') + 
                 '</ul>';
 
-            // 4. Fonética
             const divFon = document.getElementById('contenedorBancoFonetica');
             divFon.innerHTML = '<ul class="list-group list-group-flush">' + 
                 (data.fonetica || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-volume-high text-success me-2"></i>${escapeHtml(item)}</li>`).join('') + 
@@ -709,7 +722,7 @@
 
         divLista.innerHTML = chatsGuardadosLocal.map(chat => `
             <div class="col-md-6">
-                <div class="card p-3 border" style="cursor:pointer;" onclick="cargarChatGuardado(${chat.id})">
+                <div class="card p-3 border saved-chat-card" onclick="cargarChatGuardado(${chat.id})">
                     <div class="d-flex justify-content-between">
                         <span class="badge bg-primary">${chat.idioma.toUpperCase()}</span>
                         <span class="badge bg-secondary">${chat.nivel}</span>
@@ -804,7 +817,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. Usa el 'Modo Writing' para escribir ensayos y adjuntar archivos (.pdf, .docx, .txt).\n3. Revisa el 'Banco de Recursos' ampliado con Gramática, Vocabulario, Conectores y Fonética por nivel.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona idioma y nivel.\n2. En Prácticas Orales puedes simular roles/profesiones predefinidas o escribir un rol personalizado.\n3. En Writing puedes redactar o adjuntar archivos (.pdf, .docx, .txt).\n4. Consulta el Banco de Recursos para ver la teoría organizada por niveles.");
     }
 </script>
 
