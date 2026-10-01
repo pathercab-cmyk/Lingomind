@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oralis - Plataforma de Idiomas | Universidad de Sevilla</title>
+    <title>Oralis — Plataforma de Idiomas — Universidad de Sevilla</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -17,8 +17,7 @@
             --texto-principal: #0f172a;
             --texto-secundario: #475569;
             --primary-color: #0284c7;
-            --primary-hover: #0369a1;
-            --accent-us: #991b1b; /* Rojo institucional US */
+            --accent-us: #991b1b;
         }
 
         body {
@@ -28,13 +27,11 @@
             min-height: 100vh;
         }
 
-        /* Estilos de Tarjetas e Interfaz */
         .card-custom {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease-in-out;
         }
 
         .header-us {
@@ -53,10 +50,9 @@
         .sub-brand {
             color: var(--accent-us);
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
 
-        /* Navegación por Pestañas */
         .nav-tabs-custom .nav-link {
             color: var(--texto-secundario);
             font-weight: 600;
@@ -73,13 +69,8 @@
             background: transparent;
         }
 
-        .nav-tabs-custom .nav-link:hover {
-            border-color: #cbd5e1;
-        }
-
-        /* Caja de Chat */
         .chat-container {
-            height: 500px;
+            height: 480px;
             overflow-y: auto;
             background-color: #f1f5f9;
             border: 1px solid var(--border-color);
@@ -93,14 +84,12 @@
             padding: 14px 18px;
             border-radius: 12px;
             line-height: 1.5;
-            position: relative;
         }
 
         .msg-user {
             background-color: #0284c7;
             color: #ffffff;
             margin-left: auto;
-            border-bottom-right-radius: 2px;
         }
 
         .msg-oralis {
@@ -108,21 +97,10 @@
             color: var(--texto-principal);
             border: 1px solid #cbd5e1;
             margin-right: auto;
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         }
 
-        .badge-feedback {
-            font-size: 0.8rem;
-            padding: 4px 8px;
-            border-radius: 6px;
-            margin-top: 6px;
-            display: inline-block;
-        }
-
-        /* Historial Lateral */
         .history-box {
-            height: 500px;
+            height: 480px;
             overflow-y: auto;
             background-color: #ffffff;
             border: 1px solid var(--border-color);
@@ -134,15 +112,8 @@
             padding: 10px;
             border-bottom: 1px solid #f1f5f9;
             font-size: 0.88rem;
-            cursor: pointer;
-            border-radius: 6px;
         }
 
-        .history-item:hover {
-            background-color: #f8fafc;
-        }
-
-        /* Control de Audio y Botones */
         .btn-audio {
             background-color: #e0f2fe;
             color: #0369a1;
@@ -152,11 +123,6 @@
             font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-audio:hover {
-            background-color: #bae6fd;
         }
 
         .control-label {
@@ -165,16 +131,16 @@
             color: var(--texto-secundario);
             margin-bottom: 6px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        /* Modal y Paneles Informativos */
-        .info-card {
-            background: #eff6ff;
-            border-left: 4px solid var(--primary-color);
-            padding: 12px 16px;
-            border-radius: 4px;
-            margin-bottom: 15px;
+        .banco-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .banco-item:hover {
+            background-color: #f0f9ff;
+            border-color: #0284c7 !important;
         }
     </style>
 </head>
@@ -187,23 +153,19 @@
         <div>
             <div class="d-flex align-items-center gap-2">
                 <span class="brand-title">Oralis</span>
-                <span class="badge bg-danger rounded-pill">US Virtual</span>
             </div>
             <div class="sub-brand">
-                <i class="fa-solid fa-graduation-cap"></i> Plataforma de Idiomas y Acreditación — Universidad de Sevilla
+                <i class="fa-solid fa-graduation-cap"></i> Plataforma de Idiomas — Universidad de Sevilla
             </div>
         </div>
-        <div class="d-flex gap-2">
-            <a href="/animind" class="btn btn-outline-dark btn-sm fw-semibold">
-                <i class="fa-solid fa-film text-danger"></i> AniMind Anime
-            </a>
+        <div>
             <button class="btn btn-outline-primary btn-sm fw-semibold" onclick="abrirGuiaUso()">
                 <i class="fa-solid fa-circle-info"></i> Guía Académica
             </button>
         </div>
     </header>
 
-    <!-- PESTAÑAS DE MODOS DE APRENDIZAJE -->
+    <!-- PESTAÑAS DE NAVEGACIÓN -->
     <ul class="nav nav-tabs nav-tabs-custom mb-4" id="mainTabs">
         <li class="nav-item">
             <button class="nav-link active" id="tabTutor" onclick="seleccionarModo('tutor_original')">
@@ -212,17 +174,22 @@
         </li>
         <li class="nav-item">
             <button class="nav-link" id="tabProfesor" onclick="seleccionarModo('profesor')">
-                <i class="fa-solid fa-chalkboard-user me-1"></i> Modo Profesor (Clases)
+                <i class="fa-solid fa-chalkboard-user me-1"></i> Modo Profesor
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link" id="tabPracticas" onclick="seleccionarModo('practicas_orales')">
-                <i class="fa-solid fa-comments me-1"></i> Prácticas Orales (Profesiones)
+                <i class="fa-solid fa-comments me-1"></i> Prácticas Orales
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link" id="tabExamenes" onclick="seleccionarModo('examen')">
-                <i class="fa-solid fa-award me-1"></i> Exámenes Oficiales US
+                <i class="fa-solid fa-award me-1"></i> Exámenes Oficiales
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="tabBancos" onclick="seleccionarModo('bancos')">
+                <i class="fa-solid fa-book-bookmark me-1"></i> Bancos de Gramática y Vocabulario
             </button>
         </li>
         <li class="nav-item">
@@ -232,10 +199,9 @@
         </li>
     </ul>
 
-    <!-- PANEL DE CONFIGURACIÓN DE APRENDIZAJE -->
+    <!-- PANEL DE CONFIGURACIÓN DE PARÁMETROS -->
     <div class="card card-custom p-3 mb-4">
         <div class="row g-3">
-            <!-- Selector de Idioma Completo -->
             <div class="col-md-3">
                 <label class="control-label">Idioma Objetivo:</label>
                 <select id="selIdioma" class="form-select fw-semibold" onchange="cargarExamenesOficiales()">
@@ -252,20 +218,18 @@
                 </select>
             </div>
 
-            <!-- Selector de Nivel MCERL -->
             <div class="col-md-2">
                 <label class="control-label">Nivel MCERL:</label>
-                <select id="selNivel" class="form-select fw-semibold">
-                    <option value="A1">A1 - Acceso / Principiante</option>
-                    <option value="A2">A2 - Plataforma / Básico</option>
-                    <option value="B1" selected>B1 - Umbral / Intermedio</option>
-                    <option value="B2">B2 - Avanzado / Intermedio Alto</option>
-                    <option value="C1">C1 - Dominio / Avanzado</option>
-                    <option value="C2">C2 - Maestría / Nativo</option>
+                <select id="selNivel" class="form-select fw-semibold" onchange="actualizarBancosPorNivel()">
+                    <option value="A1">A1 - Acceso</option>
+                    <option value="A2">A2 - Plataforma</option>
+                    <option value="B1" selected>B1 - Umbral</option>
+                    <option value="B2">B2 - Avanzado</option>
+                    <option value="C1">C1 - Dominio</option>
+                    <option value="C2">C2 - Maestría</option>
                 </select>
             </div>
 
-            <!-- Banco de Profesiones para Prácticas Orales -->
             <div class="col-md-3 d-none" id="containerProfesion">
                 <label class="control-label">Rol / Práctica Profesional:</label>
                 <select id="selProfesion" class="form-select fw-semibold" onchange="comprobarProfesionCustom(this.value)">
@@ -275,46 +239,42 @@
                     <option value="Recepcionista de Hotel">🏨 Recepcionista Hotelero</option>
                     <option value="Guía Turístico / Cultura">🏛️ Guía Turístico</option>
                     <option value="Ingeniero / Técnico">⚙️ Entorno Técnico / Ingeniería</option>
-                    <option value="Atención al Cliente">📞 Atención al Cliente</option>
                     <option value="CUSTOM">✏️ Crear Rol Personalizado...</option>
                 </select>
-                <input type="text" id="inputProfesionCustom" class="form-control mt-2 d-none" placeholder="Escribe el rol profesional deseado...">
+                <input type="text" id="inputProfesionCustom" class="form-control mt-2 d-none" placeholder="Escribe el rol deseado...">
             </div>
 
-            <!-- Selector de Exámenes Oficiales -->
             <div class="col-md-3 d-none" id="containerExamenes">
                 <label class="control-label">Examen Oficial Acreditado:</label>
                 <select id="selExamen" class="form-select fw-semibold">
-                    <!-- Cargado dinámicamente -->
+                    <!-- Dinámico -->
                 </select>
             </div>
 
-            <!-- Tema o Contenido -->
             <div class="col-md-4" id="containerTema">
                 <label class="control-label">Tema o Escenario:</label>
-                <input type="text" id="inputTema" class="form-control" value="Conversación fluida, vocabulario y expresiones cotidianas">
+                <input type="text" id="inputTema" class="form-control" value="Conversación fluida y práctica académica">
             </div>
         </div>
     </div>
 
-    <!-- SECCIÓN CHAT + HISTORIAL (PRINCIPAL) -->
+    <!-- SECCIÓN CHAT + HISTORIAL -->
     <div id="seccionPrincipal" class="row g-3">
-        <!-- Columna del Chat -->
         <div class="col-lg-8">
             <div class="card card-custom p-3">
                 <div class="d-flex justify-content-between align-items-center mb-2 px-1">
                     <span id="badgeModoActivo" class="badge bg-primary fs-6 fw-normal">Modo Activo: Tutor Original</span>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="limpiarPantallaChat()"><i class="fa-solid fa-broom"></i> Limpiar Vista</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="limpiarPantallaChat()"><i class="fa-solid fa-broom"></i> Limpiar Pantalla</button>
                 </div>
 
                 <div id="chatBox" class="chat-container mb-3">
                     <div class="msg-bubble msg-oralis">
-                        <strong>Oralis:</strong> ¡Hola! Soy tu tutor interactivo de idiomas en la Universidad de Sevilla. ¿En qué tema o conversación te gustaría practicar hoy?
+                        <strong>Oralis:</strong> Bienvenido a la Plataforma de Idiomas de la Universidad de Sevilla. ¿En qué tema te gustaría practicar hoy?
                     </div>
                 </div>
 
                 <div class="input-group">
-                    <input type="text" id="userMsg" class="form-control form-control-lg" placeholder="Escribe tu mensaje aquí..." onkeypress="if(event.key==='Enter') enviarMensaje()">
+                    <input type="text" id="userMsg" class="form-control form-control-lg" placeholder="Escribe tu mensaje..." onkeypress="if(event.key==='Enter') enviarMensaje()">
                     <button class="btn btn-primary px-4 fw-bold" onclick="enviarMensaje()">
                         Enviar <i class="fa-solid fa-paper-plane ms-1"></i>
                     </button>
@@ -322,16 +282,15 @@
             </div>
         </div>
 
-        <!-- Columna Lateral: Historial y Evaluación de la Sesión -->
         <div class="col-lg-4">
             <div class="card card-custom p-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="fw-bold mb-0 text-secondary"><i class="fa-solid fa-list-check me-1"></i> Historial de Sesión</h6>
-                    <span id="counterMensajes" class="badge bg-light text-dark border">0 Interacciones</span>
+                    <span id="counterMensajes" class="badge bg-light text-dark border">0 Mensajes</span>
                 </div>
 
                 <div id="historyBox" class="history-box mb-3">
-                    <em class="text-muted d-block text-center mt-4">A medida que dialogues con Oralis, el registro completo se almacenará aquí.</em>
+                    <em class="text-muted d-block text-center mt-4">Tus intervenciones se irán guardando aquí...</em>
                 </div>
 
                 <button class="btn btn-warning w-100 fw-bold py-2 shadow-sm" onclick="evaluarSesionCompleta()">
@@ -341,35 +300,58 @@
         </div>
     </div>
 
+    <!-- SECCIÓN BANCOS DE GRAMÁTICA Y VOCABULARIO -->
+    <div id="seccionBancos" class="card card-custom p-4 d-none">
+        <div class="border-bottom pb-2 mb-3">
+            <h4 class="text-primary fw-bold mb-1"><i class="fa-solid fa-book-bookmark me-2"></i> Banco de Gramática y Vocabulario</h4>
+            <p class="text-muted mb-0">Selecciona cualquier tema para cargarlo automáticamente en el espacio de estudio de Oralis.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-graduation-cap me-1"></i> Estructuras Gramaticales</h5>
+                <div id="bancoGramaticaList" class="d-flex flex-column gap-2 mt-3">
+                    <!-- Carga dinámica -->
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-spell-check me-1"></i> Vocabulario y Expresiones</h5>
+                <div id="bancoVocabularioList" class="d-flex flex-column gap-2 mt-3">
+                    <!-- Carga dinámica -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SECCIÓN MODULO DE WRITING -->
     <div id="seccionWriting" class="card card-custom p-4 d-none">
         <div class="border-bottom pb-2 mb-3">
-            <h4 class="text-primary fw-bold mb-1"><i class="fa-solid fa-pen-nib me-2"></i> Corrector y Analizador de Redacciones (Writing)</h4>
-            <p class="text-muted mb-0">Sube tus ensayos o archivos redactados para una revisión gramatical y léxica bajo los estándares universitarios.</p>
+            <h4 class="text-primary fw-bold mb-1"><i class="fa-solid fa-pen-nib me-2"></i> Corrector de Writing</h4>
+            <p class="text-muted mb-0">Pega tu redacción o adjunta un archivo para recibir una revisión académica oficial.</p>
         </div>
 
         <div class="mb-3">
             <label class="control-label">Texto de la Redacción:</label>
-            <textarea id="writingTexto" class="form-control" rows="7" placeholder="Pega tu texto largo aquí para su corrección..."></textarea>
+            <textarea id="writingTexto" class="form-control" rows="7" placeholder="Escribe tu redacción aquí..."></textarea>
         </div>
 
         <div class="row g-3 mb-4">
             <div class="col-md-6">
-                <label class="control-label">O Adjuntar Documento (PDF, DOCX, TXT):</label>
+                <label class="control-label">Adjuntar Documento (PDF, DOCX, TXT):</label>
                 <input type="file" id="writingFile" class="form-control">
             </div>
             <div class="col-md-6">
-                <label class="control-label">Modalidad de Corrección Pedagógica:</label>
+                <label class="control-label">Tipo de Corrección:</label>
                 <select id="writingModo" class="form-select">
-                    <option value="explicativa">Explicativa (Análisis exhaustivo frase por frase)</option>
-                    <option value="senalar">Categorizada (Clasificar tipo de fallo)</option>
-                    <option value="descubrimiento">Guiada / Autodescubrimiento (Pistas de mejora)</option>
+                    <option value="explicativa">Explicativa (Análisis detallado de errores)</option>
+                    <option value="senalar">Categorizada (Clasificar tipo de error)</option>
+                    <option value="descubrimiento">Guiada (Pistas para autocorregir)</option>
                 </select>
             </div>
         </div>
 
         <button class="btn btn-success px-4 fw-bold py-2" onclick="procesarWriting()">
-            <i class="fa-solid fa-magnifying-glass me-1"></i> Evaluar Redacción
+            <i class="fa-solid fa-magnifying-glass me-1"></i> Corregir Redacción
         </button>
 
         <div id="writingResultado" class="mt-4 p-3 bg-light border rounded d-none"></div>
@@ -386,48 +368,45 @@
 
 </div>
 
-<!-- JAVASCRIPT Y LÓGICA COMPLETA DE INTERACCIÓN -->
+<!-- JAVASCRIPT CON TODOS LOS BOTONES Y RUTAS FUNCIONALES -->
 <script>
     let modoActual = 'tutor_original';
     let historialConversacion = [];
 
-    // Inicialización al cargar la página
     document.addEventListener("DOMContentLoaded", function() {
         cargarExamenesOficiales();
+        actualizarBancosPorNivel();
     });
 
-    // Cambio de modo de aprendizaje
     function seleccionarModo(modo) {
         modoActual = modo;
         
-        // Actualizar pestañas activas
         document.querySelectorAll('#mainTabs .nav-link').forEach(btn => btn.classList.remove('active'));
         if(modo === 'tutor_original') document.getElementById('tabTutor').classList.add('active');
         if(modo === 'profesor') document.getElementById('tabProfesor').classList.add('active');
         if(modo === 'practicas_orales') document.getElementById('tabPracticas').classList.add('active');
         if(modo === 'examen') document.getElementById('tabExamenes').classList.add('active');
+        if(modo === 'bancos') document.getElementById('tabBancos').classList.add('active');
         if(modo === 'writing') document.getElementById('tabWriting').classList.add('active');
 
-        // Mostrar / Ocultar controles según el modo
         document.getElementById('containerProfesion').classList.toggle('d-none', modo !== 'practicas_orales');
         document.getElementById('containerExamenes').classList.toggle('d-none', modo !== 'examen');
         
-        // Alternar vistas principales
-        document.getElementById('seccionPrincipal').classList.toggle('d-none', modo === 'writing');
+        document.getElementById('seccionPrincipal').classList.toggle('d-none', modo === 'writing' || modo === 'bancos');
+        document.getElementById('seccionBancos').classList.toggle('d-none', modo !== 'bancos');
         document.getElementById('seccionWriting').classList.toggle('d-none', modo !== 'writing');
 
-        // Etiqueta informativa de modo activo
         const nombresModos = {
             'tutor_original': 'Modo Tutor Original',
             'profesor': 'Modo Profesor (Clases Magistrales)',
-            'practicas_orales': 'Prácticas Orales y Profesionales',
-            'examen': 'Simulación de Exámenes Oficiales US',
-            'writing': 'Módulo de Redacción (Writing)'
+            'practicas_orales': 'Prácticas Orales',
+            'examen': 'Exámenes Oficiales',
+            'bancos': 'Bancos de Gramática y Vocabulario',
+            'writing': 'Corrección de Writing'
         };
         document.getElementById('badgeModoActivo').innerText = `Modo Activo: ${nombresModos[modo] || modo}`;
     }
 
-    // Cargar dinámicamente exámenes según el idioma seleccionado
     async function cargarExamenesOficiales() {
         const idioma = document.getElementById('selIdioma').value;
         try {
@@ -440,23 +419,63 @@
         }
     }
 
+    async function actualizarBancosPorNivel() {
+        const nivel = document.getElementById('selNivel').value;
+        try {
+            const res = await fetch(`/api/banco/${nivel}`);
+            const data = await res.json();
+
+            const gramaticaDiv = document.getElementById('bancoGramaticaList');
+            const vocabularioDiv = document.getElementById('bancoVocabularioList');
+
+            gramaticaDiv.innerHTML = data.gramatica.map(item => `
+                <div class="card p-3 border banco-item" onclick="cargarTemaEnOralis('${item}')">
+                    <strong class="text-primary"><i class="fa-solid fa-book-open me-2"></i>${item}</strong>
+                    <small class="text-muted">Haz clic para practicar este punto gramatical</small>
+                </div>
+            `).join('');
+
+            vocabularioDiv.innerHTML = data.vocabulario.map(item => `
+                <div class="card p-3 border banco-item" onclick="cargarTemaEnOralis('${item}')">
+                    <strong class="text-success"><i class="fa-solid fa-comments me-2"></i>${item}</strong>
+                    <small class="text-muted">Haz clic para practicar este campo léxico</small>
+                </div>
+            `).join('');
+
+        } catch(e) {
+            console.error("Error al cargar bancos de recursos:", e);
+        }
+    }
+
+    function cargarTemaEnOralis(tema) {
+        document.getElementById('inputTema').value = tema;
+        seleccionarModo('tutor_original');
+        enviarMensajeConTema(`Hola Oralis, me gustaría practicar el tema: "${tema}".`);
+    }
+
     function comprobarProfesionCustom(val) {
         document.getElementById('inputProfesionCustom').classList.toggle('d-none', val !== 'CUSTOM');
     }
 
-    // Enviar mensaje al backend
     async function enviarMensaje() {
         const input = document.getElementById('userMsg');
         const mensaje = input.value.trim();
         if (!mensaje) return;
+        input.value = "";
+        await enviarMensajeConTexto(mensaje);
+    }
 
+    async function enviarMensajeConTema(textoInicial) {
+        await enviarMensajeConTexto(textoInicial);
+    }
+
+    async function enviarMensajeConTexto(mensaje) {
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML += `
             <div class="msg-bubble msg-user">
                 <strong>Tú:</strong> ${escapeHtml(mensaje)}
             </div>
         `;
-        input.value = "";
         chatBox.scrollTop = chatBox.scrollHeight;
 
         let profesionElegida = document.getElementById('selProfesion').value;
@@ -468,7 +487,7 @@
             mensaje: mensaje,
             idioma: document.getElementById('selIdioma').value,
             nivel: document.getElementById('selNivel').value,
-            modo: modoActual,
+            modo: modoActual === 'bancos' ? 'tutor_original' : modoActual,
             profesion: profesionElegida,
             tipo_examen: document.getElementById('selExamen').value,
             tema: document.getElementById('inputTema').value
@@ -488,13 +507,13 @@
             `;
 
             if (data.correccion && data.correccion !== "Todo correcto") {
-                htmlOralis += `<div class="badge-feedback bg-danger-subtle text-danger border border-danger-subtle fw-semibold mt-2"><i class="fa-solid fa-wrench me-1"></i> <strong>Corrección:</strong> ${escapeHtml(data.correccion)}</div><br>`;
+                htmlOralis += `<div class="mt-2 text-danger"><small><strong>Corrección:</strong> ${escapeHtml(data.correccion)}</small></div>`;
             }
             if (data.explicacion) {
-                htmlOralis += `<div class="badge-feedback bg-info-subtle text-dark border border-info-subtle mt-1"><i class="fa-solid fa-lightbulb me-1"></i> <strong>Explicación:</strong> ${escapeHtml(data.explicacion)}</div><br>`;
+                htmlOralis += `<div class="mt-1 text-secondary"><small><strong>Explicación:</strong> ${escapeHtml(data.explicacion)}</small></div>`;
             }
             if (data.vocabulario) {
-                htmlOralis += `<div class="badge-feedback bg-success-subtle text-success border border-success-subtle mt-1"><i class="fa-solid fa-book me-1"></i> <strong>Vocabulario:</strong> ${escapeHtml(data.vocabulario)}</div><br>`;
+                htmlOralis += `<div class="mt-1 text-primary"><small><strong>Vocabulario:</strong> ${escapeHtml(data.vocabulario)}</small></div>`;
             }
 
             const textoAudio = (data.respuesta || '').replace(/'/g, "\\'");
@@ -508,7 +527,6 @@
             chatBox.innerHTML += htmlOralis;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Guardar en el Historial Lateral
             historialConversacion.push({ usuario: mensaje, oralis: data.respuesta });
             actualizarHistorialVisual();
 
@@ -517,10 +535,9 @@
         }
     }
 
-    // Actualizar historial lateral
     function actualizarHistorialVisual() {
         const box = document.getElementById('historyBox');
-        document.getElementById('counterMensajes').innerText = `${historialConversacion.length} Interacciones`;
+        document.getElementById('counterMensajes').innerText = `${historialConversacion.length} Mensajes`;
 
         box.innerHTML = historialConversacion.map((item, idx) => `
             <div class="history-item">
@@ -531,10 +548,9 @@
         box.scrollTop = box.scrollHeight;
     }
 
-    // Evaluación global de la sesión
     async function evaluarSesionCompleta() {
         if (historialConversacion.length === 0) {
-            alert("Atención: Mantén una breve interacción previa en el chat para poder generar el informe de evaluación.");
+            alert("Escribe algunos mensajes con Oralis para poder evaluar tu sesión.");
             return;
         }
 
@@ -553,16 +569,16 @@
         informeDiv.innerHTML = `
             <div class="row g-3">
                 <div class="col-md-6">
-                    <h5>Calificación General: <span class="badge bg-primary fs-5">${data.puntuacion} / 10</span></h5>
+                    <h5>Nota General: <span class="badge bg-primary fs-5">${data.puntuacion} / 10</span></h5>
                 </div>
                 <div class="col-md-6">
                     <h5>Nivel Demostrado: <span class="badge bg-success fs-5">${data.nivel_demostrado}</span></h5>
                 </div>
             </div>
             <hr>
-            <p><strong><i class="fa-solid fa-circle-check text-success me-1"></i> Puntos Fuertes:</strong> ${data.puntos_fuertes}</p>
-            <p><strong><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Aspectos a Corregir:</strong> ${data.errores_principales}</p>
-            <p><strong><i class="fa-solid fa-graduation-cap text-primary me-1"></i> Recomendación Académica:</strong> ${data.consejos_mejora}</p>
+            <p><strong>Puntos Fuertes:</strong> ${data.puntos_fuertes}</p>
+            <p><strong>Aspectos a Mejorar:</strong> ${data.errores_principales}</p>
+            <p><strong>Plan Recomendado:</strong> ${data.consejos_mejora}</p>
         `;
         document.getElementById('informeModalBox').classList.remove('d-none');
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -572,7 +588,6 @@
         document.getElementById('informeModalBox').classList.add('d-none');
     }
 
-    // Procesar Writing
     async function procesarWriting() {
         const formData = new FormData();
         formData.append('texto', document.getElementById('writingTexto').value);
@@ -590,21 +605,20 @@
         const resDiv = document.getElementById('writingResultado');
         resDiv.classList.remove('d-none');
 
-        let html = `<h5 class="text-primary fw-bold">Calificación de Redacción: <span class="badge bg-success">${data.puntuacion_writing || 'N/A'}</span></h5>`;
+        let html = `<h5 class="text-primary fw-bold">Puntuación: <span class="badge bg-success">${data.puntuacion_writing || 'N/A'}</span></h5>`;
         if (data.texto_corregido_sugerido) {
-            html += `<p class="mt-3"><strong><i class="fa-solid fa-file-circle-check me-1"></i> Propuesta de Versión Mejorada:</strong><br>${escapeHtml(data.texto_corregido_sugerido)}</p>`;
+            html += `<p class="mt-3"><strong>Versión Mejorada:</strong><br>${escapeHtml(data.texto_corregido_sugerido)}</p>`;
         }
         if (data.desglose_errores && data.desglose_errores.length > 0) {
-            html += "<h6 class="mt-3 fw-bold">Análisis Detallado de Observaciones:</h6><ul class='list-group'>";
+            html += "<h6 class='mt-3 fw-bold'>Observaciones:</h6><ul class='list-group'>";
             data.desglose_errores.forEach(e => {
-                html += `<li class='list-group-item'><strong>${escapeHtml(e.error)}:</strong> ${escapeHtml(e.explicacion)} ${e.pista ? `<br><small class='text-primary'><i class='fa-solid fa-lightbulb me-1'></i> Pista: ${escapeHtml(e.pista)}</small>` : ''}</li>`;
+                html += `<li class='list-group-item'><strong>${escapeHtml(e.error)}:</strong> ${escapeHtml(e.explicacion)} ${e.pista ? `<br><small class='text-primary'>Pista: ${escapeHtml(e.pista)}</small>` : ''}</li>`;
             });
             html += "</ul>";
         }
         resDiv.innerHTML = html;
     }
 
-    // Audio TTS
     async function reproducirAudio(texto) {
         const res = await fetch('/tts', {
             method: 'POST',
@@ -627,7 +641,7 @@
     }
 
     function abrirGuiaUso() {
-        alert("Oralis - Guía del Estudiante (Universidad de Sevilla):\n\n1. Selecciona tu idioma de preferencia (Inglés, Francés, Alemán, Italiano, Portugués, Chino, Japonés, Ruso, Español, Árabe).\n2. Elige el modo académico (Tutor Original, Profesor, Prácticas Orales o Exámenes Oficiales).\n3. Practica de forma ilimitada y haz clic en 'Generar Informe de Sesión' para obtener tu nota oficial.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma y tu nivel (A1-C2).\n2. Elige el modo académico (Tutor Original, Profesor, Prácticas Orales, Exámenes o Bancos de Gramática y Vocabulario).\n3. Haz clic en 'Generar Informe de Sesión' para obtener tu nota oficial.");
     }
 </script>
 
