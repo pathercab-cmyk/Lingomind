@@ -42,77 +42,99 @@ def extraer_texto_archivo(filepath):
         contenido = f"[Archivo {ext.upper()} adjuntado correctamente]"
     return contenido.strip()
 
-# MÓDULO MEJORADO DE CORRECCIÓN GRAMATICAL Y DETECCIÓN DE ERRORES
-def analizar_y_corregir_mensaje(mensaje, idioma):
+# MOTOR DE ANÁLISIS DE ERRORES Y GENERACIÓN DE PISTAS
+def analizar_y_corregir_mensaje(mensaje, idioma, metodo_writing="gramatica"):
     msg_low = mensaje.strip().lower()
     correccion = None
     explicacion = None
+    texto_subrayado = None
+    pista = None
 
     if idioma == "en":
         if re.search(r'\bi are\b', msg_low):
             correccion = mensaje.replace("i are", "I am").replace("I are", "I am")
             explicacion = "Concordancia de sujeto: Con el pronombre 'I' se debe usar el verbo 'am', no 'are' ('I am great')."
+            texto_subrayado = re.sub(r'\b(i are|I are)\b', r'<u class="text-danger fw-bold">\1</u>', mensaje, flags=re.IGNORECASE)
+            pista = "Fíjate en el verbo auxiliar después de 'I'. ¿Es 'are' la forma correcta del verbo 'to be' para la primera persona?"
+
         elif re.search(r'\bhe have\b', msg_low):
             correccion = mensaje.replace("he have", "he has")
             explicacion = "Tercera persona singular: Se debe usar 'has' con 'he/she/it' ('he has')."
+            texto_subrayado = re.sub(r'\bhe have\b', r'<u class="text-danger fw-bold">he have</u>', mensaje, flags=re.IGNORECASE)
+            pista = "Revisa la conjugación del verbo 'to have' para la tercera persona del singular (he/she/it)."
+
         elif re.search(r'\bshe have\b', msg_low):
             correccion = mensaje.replace("she have", "she has")
             explicacion = "Tercera persona singular: Se debe usar 'has' con 'he/she/it' ('she has')."
-        elif re.search(r'\bi is\b', msg_low):
-            correccion = mensaje.replace("i is", "I am")
-            explicacion = "Concordancia de sujeto: Con 'I' la forma correcta es 'I am'."
+            texto_subrayado = re.sub(r'\bshe have\b', r'<u class="text-danger fw-bold">she have</u>', mensaje, flags=re.IGNORECASE)
+            pista = "Recuerda cómo cambia el verbo 'have' al hablar de 'she'."
 
     elif idioma == "de":
         if "ich bist" in msg_low:
             correccion = mensaje.replace("ich bist", "ich bin")
             explicacion = "Konjugation: Für die erste Person 'ich' verwendet man 'bin' ('ich bin')."
-        elif "du ist" in msg_low:
-            correccion = mensaje.replace("du ist", "du bist")
-            explicacion = "Konjugation: Für die zweite Person 'du' verwendet man 'bist' ('du bist')."
+            texto_subrayado = mensaje.replace("ich bist", '<u class="text-danger fw-bold">ich bist</u>')
+            pista = "Achte auf die Konjugation von 'sein' mit dem Pronomen 'ich'."
 
     elif idioma == "ro":
         if "eu ești" in msg_low:
             correccion = mensaje.replace("eu ești", "eu sunt")
             explicacion = "Acordul verbului: Pentru persoana I singular 'eu' se folosește 'sunt'."
+            texto_subrayado = mensaje.replace("eu ești", '<u class="text-danger fw-bold">eu ești</u>')
+            pista = "Verifică forma verbului 'a fi' pentru prima persoană (eu)."
 
     elif idioma == "es":
         if "yo eres" in msg_low:
             correccion = mensaje.replace("yo eres", "yo soy")
             explicacion = "Conjugación: Para la primera persona 'yo' se utiliza 'soy'."
+            texto_subrayado = mensaje.replace("yo eres", '<u class="text-danger fw-bold">yo eres</u>')
+            pista = "Observa el verbo ser conjugado con el pronombre 'yo'."
 
-    return correccion, explicacion
+    return {
+        "correccion": correccion,
+        "explicacion": explicacion,
+        "texto_subrayado": texto_subrayado,
+        "pista": pista
+    }
 
-def generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, tiene_error):
+def generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, metodo_writing=None, tiene_error=False):
+    if modo == "writing":
+        if metodo_writing == "pistas":
+            if tiene_error:
+                return f"[Modo Desafío - {nivel}]: He detectado uno o más errores en tu escrito. Revisa la sección subrayada e intenta corregirlo tú mismo utilizando la pista."
+            else:
+                return f"[Modo Desafío - {nivel}]: ¡Excelente trabajo! No he encontrado errores gramaticales evidentes en tu texto."
+        else:
+            if tiene_error:
+                return f"[Corrección Directa - {nivel}]: He revisado tu redacción. Abajo encontrarás el análisis detallado con las correcciones necesarias."
+            else:
+                return f"[Corrección Directa - {nivel}]: Tu redacción está bien construida y cumple con las normas sintácticas de nivel {nivel}."
+
     respuestas = {
         "de": {
             "saludo": "Hallo! Mir geht es sehr gut, danke der Nachfrage. Wie kann ich dir heute beim Deutschlernen helfen?",
-            "conversacion": f"Das klingt interessant! Erzähl mir mehr darüber.",
-            "practica": f"Guten Tag! Als {rol_activo} helfe ich Ihnen sehr gerne weiter. Was kann ich heute für Sie tun?",
-            "writing": "Vielen Dank für Ihren Text. Ich habe die Grammatik und den Stil überprüft."
+            "conversacion": "Das klingt interessant! Erzähl mir mehr darüber.",
+            "practica": f"Guten Tag! Als {rol_activo} helfe ich Ihnen sehr gerne weiter. Was kann ich heute für Sie tun?"
         },
         "ro": {
             "saludo": "Salut! Eu sunt foarte bine, mulțumesc! Cum te pot ajuta astăzi să exersezi limba română?",
             "conversacion": f"Sună foarte interesant! La nivelul {nivel}, este important să exersăm fraze fluide.",
-            "practica": f"Bună ziua! În calitate de {rol_activo}, vă stau la dispoziție. Cu ce vă pot ajuta astăzi?",
-            "writing": "Ați trimis textul cu succes. Am analizat structura gramaticală."
+            "practica": f"Bună ziua! În calitate de {rol_activo}, vă stau la dispoziție. Cu ce vă pot ajuta astăzi?"
         },
         "en": {
             "saludo": "Hello! I'm doing great, thank you. How can I help you practice your English today?",
             "conversacion": "That sounds great! Tell me more about that or how your day is going.",
-            "practica": f"Hello! As a {rol_activo}, I'm ready to assist you. How can I help you today?",
-            "writing": "Thank you for sharing your writing. I've reviewed your text for grammar and clarity."
+            "practica": f"Hello! As a {rol_activo}, I'm ready to assist you. How can I help you today?"
         },
         "fr": {
             "saludo": "Bonjour ! Je vais très bien, merci. Comment puis-je vous aider à pratiquer le français aujourd'hui ?",
-            "conversacion": f"C'est très intéressant ! Racontez-moi en un peu plus.",
-            "practica": f"Bonjour ! En tant que {rol_activo}, je suis à votre service. Que puis-je faire pour vous ?",
-            "writing": "Merci pour votre texte. J'ai analysé la structure des phrases."
+            "conversacion": "C'est très intéressant ! Racontez-moi en un peu plus.",
+            "practica": f"Bonjour ! En tant que {rol_activo}, je suis à votre service. Que puis-je faire pour vous ?"
         },
         "es": {
             "saludo": "¡Hola! Estoy muy bien, gracias por preguntar. ¿En qué te gustaría practicar hoy?",
             "conversacion": "¡Qué bien! Cuéntame un poco más sobre eso.",
-            "practica": f"¡Buenos días! Como {rol_activo}, estoy aquí para atenderle. ¿En qué puedo ayudarle hoy?",
-            "writing": "Gracias por enviar tu escrito. He revisado la ortografía y estructura."
+            "practica": f"¡Buenos días! Como {rol_activo}, estoy aquí para atenderle. ¿En qué puedo ayudarle hoy?"
         }
     }
 
@@ -123,8 +145,6 @@ def generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, tiene_er
         return idioma_cfg["saludo"]
     elif modo == "practicas_orales":
         return idioma_cfg["practica"]
-    elif modo == "writing":
-        return idioma_cfg["writing"]
     else:
         return idioma_cfg["conversacion"]
 
@@ -144,6 +164,7 @@ def chat():
             profesion_custom = request.form.get('profesion_custom', '')
             tipo_examen = request.form.get('tipo_examen', '')
             tema = request.form.get('tema') or 'Redacción Genérica'
+            metodo_writing = request.form.get('metodo_writing', 'gramatica')
             
             archivo_adjunto = request.files.get('archivo')
             texto_extraido = ""
@@ -164,18 +185,17 @@ def chat():
             profesion_custom = data.get('profesion_custom', '')
             tipo_examen = data.get('tipo_examen', '')
             tema = data.get('tema') or 'Conversación General'
+            metodo_writing = data.get('metodo_writing', 'gramatica')
 
         rol_activo = profesion_custom if (profesion == 'Otro' and profesion_custom) else profesion
 
-        # Analizar corrección gramatical
-        correccion, explicacion = analizar_y_corregir_mensaje(mensaje, idioma)
+        resultado_analisis = analizar_y_corregir_mensaje(mensaje, idioma, metodo_writing)
+        tiene_error = resultado_analisis["correccion"] is not None
 
-        # Generar respuesta conversational en idioma objetivo
-        respuesta_texto = generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, tiene_error=(correccion is not None))
+        respuesta_texto = generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, metodo_writing, tiene_error)
 
-        # Registro de vocabulario
-        nuevo_vocabulario = [f"palabra_clave ({idioma.upper()})"] if len(mensaje) > 3 else []
-        nueva_gramatica = [f"Corrección aplicada ({nivel})"] if correccion else [f"Estructura comunicativa ({nivel})"]
+        nuevo_vocabulario = [f"término_clave ({idioma.upper()})"] if len(mensaje) > 3 else []
+        nueva_gramatica = [f"Análisis de redacción ({metodo_writing})"] if modo == 'writing' else [f"Estructura comunicativa ({nivel})"]
 
         if idioma not in PERFILES_USUARIO["vocabulario"]:
             PERFILES_USUARIO["vocabulario"][idioma] = {}
@@ -198,8 +218,11 @@ def chat():
         return jsonify({
             "status": "success",
             "respuesta": respuesta_texto,
-            "correccion": correccion,
-            "explicacion": explicacion,
+            "metodo_writing": metodo_writing,
+            "correccion": resultado_analisis["correccion"],
+            "explicacion": resultado_analisis["explicacion"],
+            "texto_subrayado": resultado_analisis["texto_subrayado"],
+            "pista": resultado_analisis["pista"],
             "vocabulario": ", ".join(nuevo_vocabulario) if nuevo_vocabulario else None
         })
 
