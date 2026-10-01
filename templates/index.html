@@ -144,13 +144,15 @@
         }
 
         @keyframes pulse-animation {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.03); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
-        .animate-pulse {
-            animation: pulse-animation 1s infinite;
+        .mic-activo {
+            animation: pulse-animation 1.2s infinite;
+            background-color: #dc2626 !important;
+            border-color: #b91c1c !important;
         }
     </style>
 </head>
@@ -284,13 +286,13 @@
                     </div>
                 </div>
 
-                <!-- CONTENEDOR DE INPUT Y BOTÓN DE MICRÓFONO REFORZADO -->
+                <!-- CONTENEDOR DE INPUT Y BOTÓN DE MICRÓFONO -->
                 <div class="input-group">
                     <button class="btn btn-danger px-3 fw-bold" id="btnMicChat" type="button" onclick="alternarMicrofono('userMsg', 'btnMicChat')" title="Dictar por voz">
-                        <i class="fa-solid fa-microphone me-1"></i> Dictar
+                        <i class="fa-solid fa-microphone me-1"></i> <span id="txtBtnMicChat">Dictar</span>
                     </button>
                     <input type="text" id="userMsg" class="form-control form-control-lg" placeholder="Escribe o dicta tu mensaje..." onkeypress="if(event.key==='Enter') enviarMensaje()">
-                    <button class="btn btn-primary px-4 fw-bold" onclick="enviarMensaje()">
+                    <button class="btn btn-primary px-4 fw-bold" id="btnEnviarMsg" onclick="enviarMensaje()">
                         Enviar <i class="fa-solid fa-paper-plane ms-1"></i>
                     </button>
                 </div>
@@ -325,15 +327,11 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-graduation-cap me-1"></i> Estructuras Gramaticales</h5>
-                <div id="bancoGramaticaList" class="d-flex flex-column gap-2 mt-3">
-                    <!-- Carga dinámica -->
-                </div>
+                <div id="bancoGramaticaList" class="d-flex flex-column gap-2 mt-3"></div>
             </div>
             <div class="col-md-6">
                 <h5 class="fw-bold text-secondary border-bottom pb-2"><i class="fa-solid fa-spell-check me-1"></i> Vocabulario y Expresiones</h5>
-                <div id="bancoVocabularioList" class="d-flex flex-column gap-2 mt-3">
-                    <!-- Carga dinámica -->
-                </div>
+                <div id="bancoVocabularioList" class="d-flex flex-column gap-2 mt-3"></div>
             </div>
         </div>
     </div>
@@ -348,9 +346,8 @@
         <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <label class="control-label mb-0">Texto de la Redacción:</label>
-                <!-- BOTÓN DE MICRÓFONO EN WRITING -->
                 <button class="btn btn-danger btn-sm fw-semibold" id="btnMicWriting" type="button" onclick="alternarMicrofono('writingTexto', 'btnMicWriting')">
-                    <i class="fa-solid fa-microphone me-1"></i> Dictar por Voz
+                    <i class="fa-solid fa-microphone me-1"></i> <span id="txtBtnMicWriting">Dictar por Voz</span>
                 </button>
             </div>
             <textarea id="writingTexto" class="form-control" rows="7" placeholder="Escribe o dicta tu redacción aquí..."></textarea>
@@ -389,12 +386,11 @@
 
 </div>
 
-<!-- JAVASCRIPT CON RECONOCIMIENTO DE VOZ COMPLETO -->
+<!-- JAVASCRIPT CORREGIDO Y MEJORADO -->
 <script>
     let modoActual = 'tutor_original';
     let historialConversacion = [];
 
-    // Mapas BCP 47 para la Web Speech API
     const SPEECH_LANG_MAP = {
         'en': 'en-US',
         'fr': 'fr-FR',
@@ -413,6 +409,7 @@
     let escuchando = false;
     let targetInputId = null;
     let activeBtnId = null;
+    let autoReiniciarMic = false;
 
     document.addEventListener("DOMContentLoaded", function() {
         cargarExamenesOficiales();
@@ -452,11 +449,14 @@
         const idioma = document.getElementById('selIdioma').value;
         try {
             const res = await fetch(`/api/examenes/${idioma}`);
+            if(!res.ok) return;
             const data = await res.json();
             const selExamen = document.getElementById('selExamen');
-            selExamen.innerHTML = data.examenes.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+            if(data.examenes) {
+                selExamen.innerHTML = data.examenes.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+            }
         } catch(e) {
-            console.error("Error al cargar exámenes:", e);
+            console.warn("Aviso al cargar exámenes:", e);
         }
     }
 
@@ -464,34 +464,38 @@
         const nivel = document.getElementById('selNivel').value;
         try {
             const res = await fetch(`/api/banco/${nivel}`);
+            if(!res.ok) return;
             const data = await res.json();
 
             const gramaticaDiv = document.getElementById('bancoGramaticaList');
             const vocabularioDiv = document.getElementById('bancoVocabularioList');
 
-            gramaticaDiv.innerHTML = data.gramatica.map(item => `
-                <div class="card p-3 border banco-item" onclick="cargarTemaEnOralis('${item}')">
-                    <strong class="text-primary"><i class="fa-solid fa-book-open me-2"></i>${item}</strong>
-                    <small class="text-muted">Haz clic para practicar este punto gramatical</small>
-                </div>
-            `).join('');
+            if(data.gramatica) {
+                gramaticaDiv.innerHTML = data.gramatica.map(item => `
+                    <div class="card p-3 border banco-item" onclick="cargarTemaEnOralis('${item}')">
+                        <strong class="text-primary"><i class="fa-solid fa-book-open me-2"></i>${item}</strong>
+                        <small class="text-muted">Haz clic para practicar este punto gramatical</small>
+                    </div>
+                `).join('');
+            }
 
-            vocabularioDiv.innerHTML = data.vocabulario.map(item => `
-                <div class="card p-3 border banco-item" onclick="cargarTemaEnOralis('${item}')">
-                    <strong class="text-success"><i class="fa-solid fa-comments me-2"></i>${item}</strong>
-                    <small class="text-muted">Haz clic para practicar este campo léxico</small>
-                </div>
-            `).join('');
-
+            if(data.vocabulario) {
+                vocabularioDiv.innerHTML = data.vocabulario.map(item => `
+                    <div class="card p-3 border banco-item" onclick="cargarTemaEnOralis('${item}')">
+                        <strong class="text-success"><i class="fa-solid fa-comments me-2"></i>${item}</strong>
+                        <small class="text-muted">Haz clic para practicar este campo léxico</small>
+                    </div>
+                `).join('');
+            }
         } catch(e) {
-            console.error("Error al cargar bancos de recursos:", e);
+            console.warn("Aviso al cargar bancos:", e);
         }
     }
 
     function cargarTemaEnOralis(tema) {
         document.getElementById('inputTema').value = tema;
         seleccionarModo('tutor_original');
-        enviarMensajeConTema(`Hola Oralis, me gustaría practicar el tema: "${tema}".`);
+        enviarMensajeConTexto(`Hola Oralis, me gustaría practicar el tema: "${tema}".`);
     }
 
     function comprobarProfesionCustom(val) {
@@ -506,11 +510,9 @@
         await enviarMensajeConTexto(mensaje);
     }
 
-    async function enviarMensajeConTema(textoInicial) {
-        await enviarMensajeConTexto(textoInicial);
-    }
-
     async function enviarMensajeConTexto(mensaje) {
+        if(escuchando) detenerMicrofono();
+
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML += `
             <div class="msg-bubble msg-user">
@@ -534,20 +536,32 @@
             tema: document.getElementById('inputTema').value
         };
 
+        const btnEnviar = document.getElementById('btnEnviarMsg');
+        btnEnviar.disabled = true;
+
         try {
             const res = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`El servidor devolvió el código ${res.status}: ${errText}`);
+            }
+
             const data = await res.json();
+
+            // Extracción segura de la respuesta
+            const respuestaTexto = data.respuesta || data.mensaje || data.response || "Mensaje recibido correctamente.";
 
             let htmlOralis = `
                 <div class="msg-bubble msg-oralis">
-                    <strong>Oralis:</strong> ${escapeHtml(data.respuesta || '')}<br>
+                    <strong>Oralis:</strong> ${escapeHtml(respuestaTexto)}<br>
             `;
 
-            if (data.correccion && data.correccion !== "Todo correcto") {
+            if (data.correccion && data.correccion !== "Todo correcto" && data.correccion !== "Ninguna") {
                 htmlOralis += `<div class="mt-2 text-danger"><small><strong>Corrección:</strong> ${escapeHtml(data.correccion)}</small></div>`;
             }
             if (data.explicacion) {
@@ -557,7 +571,7 @@
                 htmlOralis += `<div class="mt-1 text-primary"><small><strong>Vocabulario:</strong> ${escapeHtml(data.vocabulario)}</small></div>`;
             }
 
-            const textoAudio = (data.respuesta || '').replace(/'/g, "\\'");
+            const textoAudio = respuestaTexto.replace(/'/g, "\\'").replace(/\n/g, ' ');
             htmlOralis += `
                 <button class="btn-audio mt-2" onclick="reproducirAudio('${textoAudio}')">
                     <i class="fa-solid fa-volume-high me-1"></i> Escuchar Pronunciación
@@ -568,11 +582,19 @@
             chatBox.innerHTML += htmlOralis;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            historialConversacion.push({ usuario: mensaje, oralis: data.respuesta });
+            historialConversacion.push({ usuario: mensaje, oralis: respuestaTexto });
             actualizarHistorialVisual();
 
         } catch (err) {
-            alert("Error al conectar con el servidor.");
+            console.error("Error en la solicitud de chat:", err);
+            chatBox.innerHTML += `
+                <div class="msg-bubble msg-oralis border-danger text-danger">
+                    <strong>Sistema:</strong> No se pudo procesar la respuesta. (${escapeHtml(err.message)})
+                </div>
+            `;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } finally {
+            btnEnviar.disabled = false;
         }
     }
 
@@ -595,34 +617,38 @@
             return;
         }
 
-        const res = await fetch('/evaluar_practica', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                historial: historialConversacion,
-                idioma: document.getElementById('selIdioma').value,
-                nivel: document.getElementById('selNivel').value
-            })
-        });
-        const data = await res.json();
+        try {
+            const res = await fetch('/evaluar_practica', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    historial: historialConversacion,
+                    idioma: document.getElementById('selIdioma').value,
+                    nivel: document.getElementById('selNivel').value
+                })
+            });
+            const data = await res.json();
 
-        const informeDiv = document.getElementById('informeContenido');
-        informeDiv.innerHTML = `
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <h5>Nota General: <span class="badge bg-primary fs-5">${data.puntuacion} / 10</span></h5>
+            const informeDiv = document.getElementById('informeContenido');
+            informeDiv.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h5>Nota General: <span class="badge bg-primary fs-5">${data.puntuacion || 'N/A'} / 10</span></h5>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Nivel Demostrado: <span class="badge bg-success fs-5">${data.nivel_demostrado || 'B1'}</span></h5>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <h5>Nivel Demostrado: <span class="badge bg-success fs-5">${data.nivel_demostrado}</span></h5>
-                </div>
-            </div>
-            <hr>
-            <p><strong>Puntos Fuertes:</strong> ${data.puntos_fuertes}</p>
-            <p><strong>Aspectos a Mejorar:</strong> ${data.errores_principales}</p>
-            <p><strong>Plan Recomendado:</strong> ${data.consejos_mejora}</p>
-        `;
-        document.getElementById('informeModalBox').classList.remove('d-none');
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                <hr>
+                <p><strong>Puntos Fuertes:</strong> ${escapeHtml(data.puntos_fuertes || 'Buena participación')}</p>
+                <p><strong>Aspectos a Mejorar:</strong> ${escapeHtml(data.errores_principales || 'Ninguno detectado')}</p>
+                <p><strong>Plan Recomendado:</strong> ${escapeHtml(data.consejos_mejora || 'Continúa practicando habitualmente')}</p>
+            `;
+            document.getElementById('informeModalBox').classList.remove('d-none');
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        } catch(e) {
+            alert("No se pudo obtener el informe en este momento.");
+        }
     }
 
     function cerrarInforme() {
@@ -640,112 +666,160 @@
             formData.append('archivo', fileInput.files[0]);
         }
 
-        const res = await fetch('/corregir_writing', { method: 'POST', body: formData });
-        const data = await res.json();
+        try {
+            const res = await fetch('/corregir_writing', { method: 'POST', body: formData });
+            const data = await res.json();
 
-        const resDiv = document.getElementById('writingResultado');
-        resDiv.classList.remove('d-none');
+            const resDiv = document.getElementById('writingResultado');
+            resDiv.classList.remove('d-none');
 
-        let html = `<h5 class="text-primary fw-bold">Puntuación: <span class="badge bg-success">${data.puntuacion_writing || 'N/A'}</span></h5>`;
-        if (data.texto_corregido_sugerido) {
-            html += `<p class="mt-3"><strong>Versión Mejorada:</strong><br>${escapeHtml(data.texto_corregido_sugerido)}</p>`;
+            let html = `<h5 class="text-primary fw-bold">Puntuación: <span class="badge bg-success">${data.puntuacion_writing || 'N/A'}</span></h5>`;
+            if (data.texto_corregido_sugerido) {
+                html += `<p class="mt-3"><strong>Versión Mejorada:</strong><br>${escapeHtml(data.texto_corregido_sugerido)}</p>`;
+            }
+            if (data.desglose_errores && data.desglose_errores.length > 0) {
+                html += "<h6 class='mt-3 fw-bold'>Observaciones:</h6><ul class='list-group'>";
+                data.desglose_errores.forEach(e => {
+                    html += `<li class='list-group-item'><strong>${escapeHtml(e.error)}:</strong> ${escapeHtml(e.explicacion)} ${e.pista ? `<br><small class='text-primary'>Pista: ${escapeHtml(e.pista)}</small>` : ''}</li>`;
+                });
+                html += "</ul>";
+            }
+            resDiv.innerHTML = html;
+        } catch(e) {
+            alert("Error al procesar la redacción.");
         }
-        if (data.desglose_errores && data.desglose_errores.length > 0) {
-            html += "<h6 class='mt-3 fw-bold'>Observaciones:</h6><ul class='list-group'>";
-            data.desglose_errores.forEach(e => {
-                html += `<li class='list-group-item'><strong>${escapeHtml(e.error)}:</strong> ${escapeHtml(e.explicacion)} ${e.pista ? `<br><small class='text-primary'>Pista: ${escapeHtml(e.pista)}</small>` : ''}</li>`;
-            });
-            html += "</ul>";
-        }
-        resDiv.innerHTML = html;
     }
 
     async function reproducirAudio(texto) {
-        const res = await fetch('/tts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ texto: texto, idioma: document.getElementById('selIdioma').value })
-        });
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.play();
+        try {
+            const res = await fetch('/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto: texto, idioma: document.getElementById('selIdioma').value })
+            });
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.play();
+        } catch(e) {
+            console.error("Error reproduciendo audio:", e);
+        }
     }
 
-    // FUNCIÓN DEL MICRÓFONO CON WEB SPEECH API
+    // SISTEMA MEJORADO DE RECONOCIMIENTO DE VOZ CONTINUO
     function alternarMicrofono(inputId, btnId) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            alert("Tu navegador no soporta el reconocimiento de voz. Usa Google Chrome o Microsoft Edge.");
+            alert("Tu navegador no soporta dictado por voz. Te recomendamos usar Google Chrome o Microsoft Edge.");
             return;
         }
 
         if (escuchando) {
+            autoReiniciarMic = false;
             detenerMicrofono();
             return;
         }
 
         targetInputId = inputId;
         activeBtnId = btnId;
+        autoReiniciarMic = true;
         
+        iniciarReconocimientoVoz();
+    }
+
+    function iniciarReconocimientoVoz() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognizer = new SpeechRecognition();
         
         const idSel = document.getElementById('selIdioma').value;
         recognizer.lang = SPEECH_LANG_MAP[idSel] || 'en-US';
         
-        recognizer.continuous = false;
-        recognizer.interimResults = false;
+        recognizer.continuous = true;
+        recognizer.interimResults = true;
 
         recognizer.onstart = function() {
             escuchando = true;
-            const btn = document.getElementById(activeBtnId);
-            if (btn) {
-                btn.classList.add('animate-pulse');
-                btn.innerHTML = `<i class="fa-solid fa-microphone-lines me-1"></i> Escuchando...`;
-            }
+            actualizarEstadoBotonMic(true);
         };
 
         recognizer.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            const inputElem = document.getElementById(targetInputId);
-            if (inputElem) {
-                if (inputElem.tagName.toLowerCase() === 'textarea') {
-                    inputElem.value += (inputElem.value ? ' ' : '') + transcript;
-                } else {
-                    inputElem.value = transcript;
+            let textoFinal = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    textoFinal += event.results[i][0].transcript;
+                }
+            }
+
+            if (textoFinal) {
+                const inputElem = document.getElementById(targetInputId);
+                if (inputElem) {
+                    if (inputElem.value && !inputElem.value.endsWith(' ')) {
+                        inputElem.value += ' ';
+                    }
+                    inputElem.value += textoFinal;
                 }
             }
         };
 
         recognizer.onerror = function(event) {
-            console.error("Error en reconocimiento de voz:", event.error);
-            detenerMicrofono();
+            console.warn("Aviso micrófono:", event.error);
+            if (event.error === 'not-allowed') {
+                autoReiniciarMic = false;
+                alert("Por favor, concede permisos de micrófono en la barra de tu navegador para poder dictar.");
+                detenerMicrofono();
+            }
         };
 
         recognizer.onend = function() {
-            detenerMicrofono();
+            if (autoReiniciarMic && escuchando) {
+                // Si se corta por silencio, reiniciar automáticamente
+                try {
+                    recognizer.start();
+                } catch(e) {
+                    detenerMicrofono();
+                }
+            } else {
+                detenerMicrofono();
+            }
         };
 
-        recognizer.start();
+        try {
+            recognizer.start();
+        } catch(e) {
+            console.error("Error al iniciar el micrófono:", e);
+            detenerMicrofono();
+        }
     }
 
     function detenerMicrofono() {
+        autoReiniciarMic = false;
+        escuchando = false;
         if (recognizer) {
-            recognizer.stop();
+            try { recognizer.stop(); } catch(e) {}
             recognizer = null;
         }
-        escuchando = false;
-        
-        if (activeBtnId) {
-            const btn = document.getElementById(activeBtnId);
-            if (btn) {
-                btn.classList.remove('animate-pulse');
-                if (activeBtnId === 'btnMicWriting') {
-                    btn.innerHTML = `<i class="fa-solid fa-microphone me-1"></i> Dictar por Voz`;
-                } else {
-                    btn.innerHTML = `<i class="fa-solid fa-microphone me-1"></i> Dictar`;
-                }
+        actualizarEstadoBotonMic(false);
+    }
+
+    function actualizarEstadoBotonMic(estaActivo) {
+        if (!activeBtnId) return;
+        const btn = document.getElementById(activeBtnId);
+        if (!btn) return;
+
+        if (estaActivo) {
+            btn.classList.add('mic-activo');
+            if (activeBtnId === 'btnMicChat') {
+                document.getElementById('txtBtnMicChat').innerText = 'Escuchando...';
+            } else if (activeBtnId === 'btnMicWriting') {
+                document.getElementById('txtBtnMicWriting').innerText = 'Escuchando...';
+            }
+        } else {
+            btn.classList.remove('mic-activo');
+            if (activeBtnId === 'btnMicChat') {
+                document.getElementById('txtBtnMicChat').innerText = 'Dictar';
+            } else if (activeBtnId === 'btnMicWriting') {
+                document.getElementById('txtBtnMicWriting').innerText = 'Dictar por Voz';
             }
         }
     }
@@ -756,11 +830,16 @@
 
     function escapeHtml(text) {
         if (!text) return '';
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     function abrirGuiaUso() {
-        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma (incluido Neerlandés) y tu nivel (A1-C2).\n2. Haz clic en el botón rojo 'Dictar' o 'Dictar por Voz' para hablar directamente con el micrófono.\n3. Practica en las pestañas de Tutor, Profesor, Prácticas Orales, Exámenes o Bancos de Contenido.");
+        alert("Plataforma de Idiomas — Universidad de Sevilla\n\n1. Selecciona el idioma y nivel.\n2. Haz clic en 'Dictar' para encender el micrófono. Se mantendrá activo mientras hablas.\n3. Presiona 'Enviar' para hablar con Oralis.");
     }
 </script>
 
