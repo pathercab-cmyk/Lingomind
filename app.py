@@ -17,9 +17,9 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_oralis_20
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///oralis.db')
 
 if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
-elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+psycopg2://"):
-    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+psycopg://"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 
