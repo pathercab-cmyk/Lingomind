@@ -109,8 +109,39 @@ Instrucciones generales:
         prompt_base += f"\nModo ACTIVO: Simulación de Rol ({prof_final})."
     elif modo == "examen":
         prompt_base += f"\nModo ACTIVO: Preparación Examen Oficial ({tipo_examen})."
+    elif modo == "writing":
+        if metodo_writing == "gramatica":
+            prompt_base += f"""
+Modo ACTIVO: Evaluador de Writing - Corrección Directa.
+1. Analiza el texto enviado por el usuario.
+2. Reescribe la versión corregida y pulida en {idioma}.
+3. Explica detalladamente en español los errores gramaticales, sintácticos o de vocabulario encontrados.
+"""
+        elif metodo_writing == "socratico":
+            prompt_base += f"""
+Modo ACTIVO: Evaluador de Writing - Método Socrático/Guiado.
+1. NO corrijas el texto directamente ni des la versión final.
+2. Señala en qué párrafo o frase están los errores sin dar la solución.
+3. Haz preguntas al estudiante para ayudarle a darse cuenta de sus propios fallos gramaticales o de vocabulario.
+"""
 
     return prompt_base
+
+# --- RUTA PARA VER LOS COMENTARIOS / FEEDBACK ---
+@app.route('/admin/feedback')
+@login_required
+def ver_feedback():
+    # Puedes restringirlo a tu correo si lo deseas:
+    # if current_user.email != "tu_correo@gmail.com":
+    #     return "Acceso no autorizado", 403
+
+    todos_los_comentarios = Comentario.query.order_by(Comentario.fecha.desc()).all()
+    
+    html = "<h1>Comentarios y Feedback Recibidos</h1><ul>"
+    for c in todos_los_comentarios:
+        html += f"<li><strong>{c.usuario.email}</strong> ({c.puntuacion}/5 estrellas) - {c.fecha.strftime('%d/%m/%Y %H:%M')}<br>'{c.texto}'</li><br>"
+    html += "</ul><br><a href='/'>Volver al Chat</a>"
+    return html
 
 # --- RUTAS DE AUTENTICACIÓN ---
 
