@@ -2,7 +2,7 @@ import os
 import json
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
-import PyPDF2
+import pypdf
 import docx
 
 app = Flask(__name__)
