@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 from groq import Groq
 from gtts import gTTS
 
-# Librerías para lectura de documentos en el módulo Writing
+# Librerías opcionales para lectura de archivos
 try:
     import pypdf
 except ImportError:
@@ -18,7 +18,7 @@ except ImportError:
 
 app = Flask(__name__)
 
-# Inicializar cliente de Groq
+# Cliente de Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 TTS_LANG_MAP = {
@@ -31,7 +31,7 @@ def index():
     return render_template('index.html')
 
 # =======================================================
-# 1. MÓDULO CHAT (Profesor, Tutor / Profesiones, Práctica)
+# 1. CHAT UNIFICADO (PROFESOR, TUTOR/ROLES Y PRÁCTICA)
 # =======================================================
 
 @app.route('/chat', methods=['POST'])
@@ -39,65 +39,65 @@ def chat():
     data = request.json or {}
     mensaje_usuario = data.get('mensaje', '')
     idioma = data.get('idioma', 'en')
-    nivel = data.get('nivel', 'A1')
-    modo = data.get('modo', 'profesor') # 'profesor', 'tutor', 'practica'
+    nivel = data.get('nivel', 'B1')
+    modo = data.get('modo', 'conversacion') # 'profesor', 'tutor', 'conversacion', 'examen'
     profesion = data.get('profesion', 'Profesor de Idiomas')
     tema = data.get('tema', 'General')
+    tipo_examen = data.get('tipo_examen', '')
 
-    # --- MODO PROFESOR (Instrucción Guiada y Explicativa) ---
     if modo == 'profesor':
         system_prompt = f"""
-Eres Oralis, un PROFESOR DE IDIOMAS de la Universidad de Sevilla impartiendo una lección de {idioma.upper()} (Nivel {nivel}).
+Eres Oralis, PROFESOR DE IDIOMAS de la Universidad de Sevilla.
+Estás impartiendo una lección estructurada de {idioma.upper()} (Nivel {nivel}).
 Tema actual: {tema}
 
-Tu función es enseñar el idioma desde cero o reforzar conceptos:
-1. Explica brevemente la regla o vocabulario clave en español.
-2. Da ejemplos claros en {idioma.upper()} con su traducción.
-3. Plantea un ejercicio interactivo o pregunta para que el estudiante aplique lo aprendido.
+Instrucciones pedagógicas:
+1. Explica el concepto de forma clara en español.
+2. Aporta ejemplos claros en {idioma.upper()} con traducción.
+3. Propón un ejercicio práctico corto para verificar comprensión.
 
-Debes responder OBLIGATORIAMENTE en formato JSON estricto:
+Responde OBLIGATORIAMENTE en JSON estricto:
 {{
-  "modo": "profesor",
-  "explicacion": "Explicación teórica pedagógica en español",
-  "ejemplo": "Ejemplo relevante en {idioma.upper()} con traducción",
-  "ejercicio": "Ejercicio o pregunta propuesta para el alumno",
-  "respuesta": "Frase de apoyo docente en {idioma.upper()}"
+  "respuesta": "Explicación clara del tema en español",
+  "correccion": "Todo correcto",
+  "explicacion": "Ejemplos en {idioma.upper()} con traducción",
+  "vocabulario": "Vocabulario clave enseñado",
+  "gramatica": "Ejercicio propuesto para el alumno"
 }}
 """
-
-    # --- MODO TUTOR / PROFESIONES (Simulación de Roles) ---
     elif modo == 'tutor':
         system_prompt = f"""
-Eres Oralis, desempeñando el rol profesional de: {profesion.upper()} en un contexto real de aprendizaje de {idioma.upper()} (Nivel {nivel}).
-Escenario/Tema: {tema}
+Eres Oralis, desempeñando el rol profesional de: {profesion.upper()} en {idioma.upper()} (Nivel {nivel}).
+Escenario: {tema}
 
 Instrucciones:
-1. Actúa como un/a {profesion} interactuando con el usuario de manera realista.
-2. Explica brevemente en español algún término técnico o frase útil para esta situación.
-3. Dirígete al estudiante en {idioma.upper()} manteniendo tu personaje acorde a su nivel {nivel}.
+1. Habla en {idioma.upper()} adaptado a nivel {nivel} en tu papel de {profesion}.
+2. Añade un consejo en español sobre cómo desenvolverse en esta situación profesional.
 
-Debes responder OBLIGATORIAMENTE en formato JSON estricto:
+Responde OBLIGATORIAMENTE en JSON estricto:
 {{
-  "modo": "tutor",
-  "profesion_activa": "{profesion}",
-  "consejo_situacional": "Explicación del vocabulario/frase clave para este rol (en español)",
-  "respuesta": "Tu frase hablada dentro del papel de {profesion} en {idioma.upper()}",
-  "vocabulario_clave": "3 términos clave de este escenario"
+  "respuesta": "Frase de {profesion} en {idioma.upper()}",
+  "correccion": "Consejo de actuación o corrección en español",
+  "explicacion": "Explicación del vocabulario situacional",
+  "vocabulario": "3 términos clave de esta profesión",
+  "gramatica": "Estructura formal/útil para este contexto"
 }}
 """
-
-    # --- MODO PRÁCTICA CONVERSACIONAL (Fluidez Continua) ---
     else:
+        # Modo Conversación Libre o Examen (Estructura Original intacta)
         system_prompt = f"""
-Eres Oralis, un compañero de conversación fluido en {idioma.upper()} (Nivel {nivel}).
-Mantén una charla natural e inmersiva sobre: {tema}.
-No interrumpas constantemente con correcciones gramaticales extensas. Muestra interés y haz preguntas abiertas.
+Eres Oralis, un tutor de idiomas de la Universidad de Sevilla.
+Idioma actual de práctica: {idioma.upper()}
+Nivel MCERL del estudiante: {nivel}
+Modo actual: {modo.upper()}{f' (Examen: {tipo_examen})' if modo == 'examen' else ''}
 
-Debes responder OBLIGATORIAMENTE en formato JSON estricto:
+Debes responder OBLIGATORIAMENTE en formato JSON estricto sin bloques de markdown:
 {{
-  "modo": "practica",
-  "respuesta": "Tu respuesta fluida e inmersiva en {idioma.upper()} adaptada al nivel {nivel}",
-  "correccion_rapida": "Nota muy breve de corrección si cometió un error grave, o 'Todo claro'"
+  "respuesta": "Tu respuesta en el idioma objetivo ({idioma.upper()}) adaptada al nivel {nivel}",
+  "correccion": "Corrección puntual del mensaje del usuario (en español) si cometió errores, o 'Todo correcto'",
+  "explicacion": "Explicación clara en español de la corrección o consejos pedagógicos",
+  "vocabulario": "Contexto: palabra1, palabra2 (vocabulario clave usado en tu respuesta)",
+  "gramatica": "Tema: Regla o estructura gramatical relevante destacada"
 }}
 """
 
@@ -105,18 +105,24 @@ Debes responder OBLIGATORIAMENTE en formato JSON estricto:
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Intervención del estudiante: {mensaje_usuario}"}
+                {"role": "user", "content": f"Mensaje del estudiante: {mensaje_usuario}"}
             ],
             model="qwen/qwen3.8-27b",
             response_format={"type": "json_object"}
         )
         return jsonify(json.loads(chat_completion.choices[0].message.content))
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "respuesta": "I received your message! Let's continue practicing.",
+            "correccion": "Ocurrió un detalle al procesar la evaluación.",
+            "explicacion": str(e),
+            "vocabulario": "General: practice, conversation",
+            "gramatica": "General: Present Continuous"
+        }), 500
 
 
 # =======================================================
-# 2. EVALUACIÓN Y INFORME FINAL (Modo Práctica)
+# 2. EVALUACIÓN Y INFORME DE PRÁCTICA (Historial)
 # =======================================================
 
 @app.route('/evaluar_practica', methods=['POST'])
@@ -124,33 +130,26 @@ def evaluar_practica():
     data = request.json or {}
     historial = data.get('historial', [])
     idioma = data.get('idioma', 'en')
-    nivel = data.get('nivel', 'A1')
+    nivel = data.get('nivel', 'B1')
 
     system_prompt = f"""
-Eres un evaluador lingüístico de la Universidad de Sevilla.
-Analiza la siguiente conversación completa mantenida por el estudiante en {idioma.upper()} (Nivel objetivo: {nivel}).
+Eres un evaluador lingüístico experto de la Universidad de Sevilla.
+Analiza el siguiente historial de conversación en {idioma.upper()} (Nivel objetivo: {nivel}).
 
-Genera un informe final con rúbrica MCERL:
-1. Puntuación general (0 a 10).
-2. Fortalezas demostradas.
-3. Errores recurrentes (gramática, vocabulario, sintaxis).
-4. Recomendaciones específicas para mejorar.
-
-Debes responder OBLIGATORIAMENTE en formato JSON estricto:
+Genera un informe pedagógico con formato JSON estricto:
 {{
-  "puntuacion": "Nota de 0 a 10",
+  "puntuacion": "Puntuación de 0 a 10",
   "nivel_demostrado": "A1, A2, B1, B2, C1 o C2",
-  "puntos_fuertes": ["Punto 1", "Punto 2"],
-  "errores_principales": ["Error 1 con sugerencia", "Error 2 con sugerencia"],
-  "consejos_mejora": "Resumen pedagógico para el estudiante"
+  "puntos_fuertes": "Aspectos destacados de la conversación",
+  "errores_principales": "Errores de gramática o vocabulario cometidos",
+  "consejos_mejora": "Recomendaciones prácticas para avanzar"
 }}
 """
-
     try:
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Historial de la sesión: {json.dumps(historial)}"}
+                {"role": "user", "content": f"Historial de conversación: {json.dumps(historial)}"}
             ],
             model="qwen/qwen3.8-27b",
             response_format={"type": "json_object"}
@@ -161,7 +160,7 @@ Debes responder OBLIGATORIAMENTE en formato JSON estricto:
 
 
 # =======================================================
-# 3. MÓDULO CORRECCIÓN DE WRITING (Archivos / Texto)
+# 3. CORRECCIÓN DE WRITING (Texto y Archivos)
 # =======================================================
 
 def extraer_texto_archivo(file):
@@ -170,69 +169,49 @@ def extraer_texto_archivo(file):
         return file.read().decode('utf-8')
     elif filename.endswith('.pdf') and pypdf:
         reader = pypdf.PdfReader(file)
-        texto = ""
-        for page in reader.pages:
-            texto += page.extract_text() or ""
-        return texto
+        return "".join([p.extract_text() or "" for p in reader.pages])
     elif filename.endswith('.docx') and docx:
         doc = docx.Document(file)
         return "\n".join([p.text for p in doc.paragraphs])
-    else:
-        return None
+    return None
 
 @app.route('/corregir_writing', methods=['POST'])
 def corregir_writing():
-    texto_escribir = request.form.get('texto', '')
+    texto = request.form.get('texto', '')
     idioma = request.form.get('idioma', 'en')
-    tipo_correccion = request.form.get('tipo_correccion', 'explicativa') # 'explicativa', 'senalar', 'descubrimiento'
+    tipo_correccion = request.form.get('tipo_correccion', 'explicativa')
 
-    # Procesamiento si se sube un archivo
     if 'archivo' in request.files and request.files['archivo'].filename != '':
         archivo = request.files['archivo']
         texto_extraido = extraer_texto_archivo(archivo)
         if texto_extraido:
-            texto_escribir = texto_extraido
+            texto = texto_extraido
 
-    if not texto_escribir.strip():
-        return jsonify({"error": "No se recibió ningún texto ni archivo válido."}), 400
-
-    if tipo_correccion == 'explicativa':
-        instrucciones_modo = """
-Proporciona una corrección exhaustiva palabra por palabra y de estructuras. Muestra el texto corregido, los errores identificados con explicaciones gramaticales en español y consejos de estilo.
-"""
-    elif tipo_correccion == 'senalar':
-        instrucciones_modo = """
-Señala los errores resaltando la ubicación o frase incorrecta y nombrando la categoría del error (ej. Gramática, Conjugación, Vocabulario), pero sin dar la solución directamente.
-"""
-    else: # Modo Autodescubrimiento
-        instrucciones_modo = """
-Modo Autodescubrimiento: Señala en qué parte de la redacción existe un error, explica brevemente de qué trata la falla y genera una 'pista' pedagógica sin revelar la respuesta completa para que el alumno intente corregirlo solo.
-"""
+    if not texto.strip():
+        return jsonify({"error": "No se recibió texto ni archivo válido."}), 400
 
     system_prompt = f"""
-Eres un profesor experto corrector de redacciones (Writing) en la Universidad de Sevilla para el idioma {idioma.upper()}.
-{instrucciones_modo}
+Eres un profesor corrector de redacciones (Writing) de la Universidad de Sevilla para {idioma.upper()}.
+Modo de corrección: {tipo_correccion} (explicativa = palabra por palabra, senalar = señalar tipo de error, descubrimiento = dar pistas pedagógicas sin revelar todo).
 
-Debes responder OBLIGATORIAMENTE en formato JSON estricto:
+Responde OBLIGATORIAMENTE en formato JSON estricto:
 {{
-  "texto_original": "Texto analizado",
-  "texto_corregido_sugerido": "Versión corregida (si aplica según el modo)",
+  "puntuacion_writing": "Nota de 0 a 10",
+  "texto_corregido_sugerido": "Propuesta de versión corregida",
   "desglose_errores": [
     {{
-      "error": "Palabra o frase con fallo",
-      "explicacion": "Explicación del error en español",
-      "pista": "Pista para que el alumno lo intente descubrir (relevante si es modo descubrimiento)"
+      "error": "Palabra/frase con error",
+      "explicacion": "Explicación en español del fallo",
+      "pista": "Pista para que el alumno lo descubra solo"
     }}
-  ],
-  "puntuacion_writing": "Nota sobre 10 con feedback general de coherencia y gramática"
+  ]
 }}
 """
-
     try:
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Writing del estudiante: {texto_escribir}"}
+                {"role": "user", "content": f"Texto de redacción: {texto}"}
             ],
             model="qwen/qwen3.8-27b",
             response_format={"type": "json_object"}
@@ -259,6 +238,50 @@ def text_to_speech():
         tts.write_to_fp(fp)
         fp.seek(0)
         return send_file(fp, mimetype='audio/mpeg')
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# =======================================================
+# 5. RUTAS DE ANIMIND (Recomendador de Anime)
+# =======================================================
+
+@app.route('/animind')
+def animind():
+    return render_template('animind.html')
+
+@app.route('/animind/recomendar', methods=['POST'])
+def recomendar_anime():
+    data = request.json or {}
+    mensaje_voz = data.get('mensaje_voz', '')
+
+    system_prompt = """
+Eres AniMind, una IA experta recomendadora de anime.
+Analiza la petición por voz del usuario y recomienda el anime ideal.
+Debes responder OBLIGATORIAMENTE en formato JSON estricto:
+{
+  "titulo": "Nombre del anime",
+  "sinopsis_corta": "Resumen rápido de 2 frases",
+  "razon_recomendacion": "Por qué encaja con la petición",
+  "plataformas": [
+    {
+      "nombre": "Crunchyroll",
+      "audios": ["Japonés", "Español"],
+      "subtitulos": ["Español", "Inglés"]
+    }
+  ]
+}
+"""
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Petición por voz: {mensaje_voz}"}
+            ],
+            model="qwen/qwen3.8-27b",
+            response_format={"type": "json_object"}
+        )
+        return jsonify(json.loads(chat_completion.choices[0].message.content))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
