@@ -1,5 +1,8 @@
-flask
+Flask
 groq
-gunicorn
-pypdf
+PyPDF2
 python-docx
+flask-sqlalchemy
+flask-login
+flask-bcrypt
+gunicorn
