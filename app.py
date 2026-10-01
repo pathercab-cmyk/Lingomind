@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 
@@ -14,7 +15,7 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Máximo 16MB
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -41,38 +42,77 @@ def extraer_texto_archivo(filepath):
         contenido = f"[Archivo {ext.upper()} adjuntado correctamente]"
     return contenido.strip()
 
-# Generador de respuestas naturales e inmersivas en el idioma estudiado
-def generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje):
+# MÓDULO MEJORADO DE CORRECCIÓN GRAMATICAL Y DETECCIÓN DE ERRORES
+def analizar_y_corregir_mensaje(mensaje, idioma):
+    msg_low = mensaje.strip().lower()
+    correccion = None
+    explicacion = None
+
+    if idioma == "en":
+        if re.search(r'\bi are\b', msg_low):
+            correccion = mensaje.replace("i are", "I am").replace("I are", "I am")
+            explicacion = "Concordancia de sujeto: Con el pronombre 'I' se debe usar el verbo 'am', no 'are' ('I am great')."
+        elif re.search(r'\bhe have\b', msg_low):
+            correccion = mensaje.replace("he have", "he has")
+            explicacion = "Tercera persona singular: Se debe usar 'has' con 'he/she/it' ('he has')."
+        elif re.search(r'\bshe have\b', msg_low):
+            correccion = mensaje.replace("she have", "she has")
+            explicacion = "Tercera persona singular: Se debe usar 'has' con 'he/she/it' ('she has')."
+        elif re.search(r'\bi is\b', msg_low):
+            correccion = mensaje.replace("i is", "I am")
+            explicacion = "Concordancia de sujeto: Con 'I' la forma correcta es 'I am'."
+
+    elif idioma == "de":
+        if "ich bist" in msg_low:
+            correccion = mensaje.replace("ich bist", "ich bin")
+            explicacion = "Konjugation: Für die erste Person 'ich' verwendet man 'bin' ('ich bin')."
+        elif "du ist" in msg_low:
+            correccion = mensaje.replace("du ist", "du bist")
+            explicacion = "Konjugation: Für die zweite Person 'du' verwendet man 'bist' ('du bist')."
+
+    elif idioma == "ro":
+        if "eu ești" in msg_low:
+            correccion = mensaje.replace("eu ești", "eu sunt")
+            explicacion = "Acordul verbului: Pentru persoana I singular 'eu' se folosește 'sunt'."
+
+    elif idioma == "es":
+        if "yo eres" in msg_low:
+            correccion = mensaje.replace("yo eres", "yo soy")
+            explicacion = "Conjugación: Para la primera persona 'yo' se utiliza 'soy'."
+
+    return correccion, explicacion
+
+def generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, tiene_error):
     respuestas = {
         "de": {
             "saludo": "Hallo! Mir geht es sehr gut, danke der Nachfrage. Wie kann ich dir heute beim Deutschlernen helfen?",
-            "conversacion": f"Das klingt sehr interessant! Auf {nivel}-Niveau ist es wichtig, den Satzbau genau zu beachten. Erzähl mir mehr darüber.",
+            "conversacion": f"Das klingt interessant! Erzähl mir mehr darüber.",
             "practica": f"Guten Tag! Als {rol_activo} helfe ich Ihnen sehr gerne weiter. Was kann ich heute für Sie tun?",
-            "writing": "Vielen Dank für Ihren Text. Ich habe die Grammatik und den Stil auf B1/B2-Niveau überprüft."
+            "writing": "Vielen Dank für Ihren Text. Ich habe die Grammatik und den Stil überprüft."
         },
         "ro": {
             "saludo": "Salut! Eu sunt foarte bine, mulțumesc! Cum te pot ajuta astăzi să exersezi limba română?",
-            "conversacion": f"Sună foarte interesant! La nivelul {nivel}, este important să folosim corect diacriticele și structura frazei.",
+            "conversacion": f"Sună foarte interesant! La nivelul {nivel}, este important să exersăm fraze fluide.",
             "practica": f"Bună ziua! În calitate de {rol_activo}, vă stau la dispoziție. Cu ce vă pot ajuta astăzi?",
-            "writing": "Ați trimis textul cu succes. Am analizat structura gramaticală și vocabularul folosit."
+            "writing": "Ați trimis textul cu succes. Am analizat structura gramaticală."
         },
         "en": {
             "saludo": "Hello! I'm doing great, thank you. How can I help you practice your English today?",
-            "conversacion": f"That's really interesting! At the {nivel} level, focusing on natural phrasing will help you sound more fluent.",
-            "practica": f"Hello! As a {rol_activo}, I'm ready to assist you. What can I do for you today?",
-            "writing": "Thank you for sharing your writing. I've reviewed your text for grammar, vocabulary, and coherence."
+            "conversacion": "That sounds great! Tell me more about that or how your day is going.",
+            "practica": f"Hello! As a {rol_activo}, I'm ready to assist you. How can I help you today?",
+            "writing": "Thank you for sharing your writing. I've reviewed your text for grammar and clarity."
         },
         "fr": {
             "saludo": "Bonjour ! Je vais très bien, merci. Comment puis-je vous aider à pratiquer le français aujourd'hui ?",
-            "conversacion": f"C'est très intéressant ! Au niveau {nivel}, il est important de prêter attention aux accords et aux temps du passé.",
+            "conversacion": f"C'est très intéressant ! Racontez-moi en un peu plus.",
             "practica": f"Bonjour ! En tant que {rol_activo}, je suis à votre service. Que puis-je faire pour vous ?",
-            "writing": "Merci pour votre texte. J'ai analysé la structure des phrases et la richesse du vocabulaire."
+            "writing": "Merci pour votre texte. J'ai analysé la structure des phrases."
         },
         "es": {
             "saludo": "¡Hola! Estoy muy bien, gracias por preguntar. ¿En qué te gustaría practicar hoy?",
-            "conversacion": f"¡Qué interesante! En el nivel {nivel} es fundamental cuidar la fluidez y el uso de conectores.",
+            "conversacion": "¡Qué bien! Cuéntame un poco más sobre eso.",
             "practica": f"¡Buenos días! Como {rol_activo}, estoy aquí para atenderle. ¿En qué puedo ayudarle hoy?",
-            "writing": "Gracias por enviar tu escrito. He revisado la ortografía, cohesión y estructura general."
+            "writing": "Gracias por enviar tu escrito. He revisado la ortografía y estructura."
         }
     }
 
@@ -127,20 +167,15 @@ def chat():
 
         rol_activo = profesion_custom if (profesion == 'Otro' and profesion_custom) else profesion
 
-        # Respuesta en lenguaje natural en el idioma de estudio
-        respuesta_texto = generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje)
-        correccion = "Ajuste fluido y corrección de coherencia aplicada."
+        # Analizar corrección gramatical
+        correccion, explicacion = analizar_y_corregir_mensaje(mensaje, idioma)
 
-        # Extracción contextual de vocabulario y gramática
-        palabras_extraidas = {
-            "de": ["wie geht's (¿cómo estás?)", "gut (bien)", "danke (gracias)"],
-            "ro": ["cum ești (¿cómo estás?)", "bine (bien)", "mulțumesc (gracias)"],
-            "en": ["how are you (¿cómo estás?)", "great (genial)", "thanks (gracias)"],
-            "fr": ["comment ça va (¿cómo estás?)", "très bien (muy bien)", "merci (gracias)"]
-        }
-        
-        nuevo_vocabulario = palabras_extraidas.get(idioma, ["palabra_clave (traducción)"])
-        nueva_gramatica = [f"Estructura comunicativa ({nivel})"]
+        # Generar respuesta conversational en idioma objetivo
+        respuesta_texto = generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, tiene_error=(correccion is not None))
+
+        # Registro de vocabulario
+        nuevo_vocabulario = [f"palabra_clave ({idioma.upper()})"] if len(mensaje) > 3 else []
+        nueva_gramatica = [f"Corrección aplicada ({nivel})"] if correccion else [f"Estructura comunicativa ({nivel})"]
 
         if idioma not in PERFILES_USUARIO["vocabulario"]:
             PERFILES_USUARIO["vocabulario"][idioma] = {}
@@ -164,6 +199,7 @@ def chat():
             "status": "success",
             "respuesta": respuesta_texto,
             "correccion": correccion,
+            "explicacion": explicacion,
             "vocabulario": ", ".join(nuevo_vocabulario) if nuevo_vocabulario else None
         })
 
