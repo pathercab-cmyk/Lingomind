@@ -3,235 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oralis AI - Tu Tutor Inteligente de Idiomas</title>
+    <title>Oralis AI - Tutor en Tiempo Real</title>
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f4f6f9; color: #333; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 320px; background-color: #ffffff; border-right: 1px solid #e1e8ed; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .sidebar h2 { color: #1e40af; font-size: 1.5rem; margin-bottom: 5px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+        .form-group select, .form-group input { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+        
+        .feedback-section { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-top: auto; }
+        .feedback-section h3 { font-size: 0.9rem; color: #1e293b; margin-bottom: 8px; }
+        .feedback-form { display: flex; flex-direction: column; gap: 8px; }
+        .feedback-form select, .feedback-form input { padding: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px; }
+        .feedback-form button { background-color: #10b981; color: white; border: none; padding: 6px; border-radius: 4px; font-weight: 600; cursor: pointer; }
+        
+        .user-info { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; }
+        .btn-logout { color: #ef4444; text-decoration: none; font-weight: 600; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
+        /* MAIN CHAT AREA */
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; }
+        .chat-header { background-color: #ffffff; padding: 15px 20px; border-bottom: 1px solid #e1e8ed; font-weight: 600; color: #1e293b; }
+        
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #f8fafc; }
+        .mensaje { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; }
+        .mensaje-usuario { align-self: flex-end; background-color: #2563eb; color: white; border-bottom-right-radius: 2px; }
+        .mensaje-oralis { align-self: flex-start; background-color: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        .btn-audio { margin-top: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .btn-audio:hover { background: #e2e8f0; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* --- Panel Lateral (Configuración) --- */
-        .sidebar {
-            width: 320px;
-            background: var(--card-bg);
-            border-right: 1px solid var(--border-color);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .sidebar h2 {
-            font-size: 1.25rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        select, input[type="text"], textarea {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        select:focus, input[type="text"]:focus, textarea:focus {
-            border-color: var(--primary);
-        }
-
-        .user-info {
-            margin-top: auto;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-            font-size: 0.85rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .btn-logout {
-            color: #ef4444;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        /* --- Contenedor Principal (Chat) --- */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        .chat-header {
-            padding: 15px 25px;
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 600;
-        }
-
-        .chat-box {
-            flex: 1;
-            padding: 20px 25px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .mensaje {
-            max-width: 75%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .mensaje.usuario {
-            align-self: flex-end;
-            background-color: var(--primary);
-            color: white;
-            border-bottom-right-radius: 2px;
-        }
-
-        .mensaje.ia {
-            align-self: flex-start;
-            background-color: #f1f5f9;
-            color: var(--text-main);
-            border-bottom-left-radius: 2px;
-            border: 1px solid var(--border-color);
-        }
-
-        .mensaje.cargando {
-            font-style: italic;
-            color: var(--text-muted);
-        }
-
-        /* --- Área de Entrada --- */
-        .chat-input-area {
-            padding: 15px 25px;
-            background: var(--card-bg);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .chat-form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .file-upload-label {
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 6px;
-            background: #f1f5f9;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .file-upload-label:hover {
-            background: #e2e8f0;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .chat-form input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-        }
-
-        .btn-send {
-            padding: 12px 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-send:hover {
-            background: var(--primary-hover);
-        }
-
-        .file-indicator {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* --- Modal / Sección Feedback --- */
-        .feedback-section {
-            padding: 15px;
-            background: #f8fafc;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .feedback-section h3 {
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-        }
-
-        .feedback-form {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .feedback-form button {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 6px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
+        /* INPUT AREA */
+        .chat-input-area { background-color: #ffffff; padding: 15px 20px; border-top: 1px solid #e1e8ed; display: flex; flex-direction: column; gap: 5px; }
+        .chat-form { display: flex; align-items: center; gap: 10px; }
+        
+        .btn-icon { background: none; border: 1px solid #cbd5e1; font-size: 1.2rem; cursor: pointer; padding: 8px 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { background-color: #f1f5f9; }
+        
+        #input-mensaje { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; outline: none; }
+        #input-mensaje:focus { border-color: #2563eb; }
+        
+        .btn-send { background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-send:hover { background-color: #1d4ed8; }
+        
+        .file-indicator { font-size: 0.8rem; color: #64748b; margin-left: 50px; }
     </style>
 </head>
 <body>
@@ -280,6 +98,7 @@
             </select>
         </div>
 
+        <!-- Opción Dinámica: Método de Writing -->
         <div class="form-group" id="group-writing" style="display: none;">
             <label for="metodo_writing">Método de Corrección:</label>
             <select id="metodo_writing" name="metodo_writing">
@@ -305,7 +124,7 @@
         <div class="form-group" id="group-examen" style="display: none;">
             <label for="tipo_examen">Examen Oficial:</label>
             <select id="tipo_examen" name="tipo_examen">
-                <!-- Se llena dinámicamente con JS -->
+                <!-- Se llena dinámicamente -->
             </select>
         </div>
 
@@ -346,21 +165,26 @@
         </div>
 
         <div id="chat-box" class="chat-box">
-            <div class="mensaje ia">
-                ¡Hola! Soy Oralis. Selecciona tu idioma y nivel en el menú de la izquierda y escríbeme para comenzar a practicar.
+            <div class="mensaje mensaje-oralis">
+                <div class="contenido-texto">¡Hola! Soy Oralis. Selecciona tu idioma y nivel en el menú de la izquierda y escríbeme para comenzar a practicar.</div>
             </div>
         </div>
 
         <div class="chat-input-area">
             <form id="form-chat" class="chat-form" onsubmit="enviarMensaje(event)">
-                <!-- Selector de archivo -->
-                <label for="archivo" class="file-upload-label" title="Adjuntar PDF, DOCX o TXT">
+                <!-- Adjuntar Archivo (SOLO EN WRITING) -->
+                <button type="button" id="btn-attach" class="btn-icon" title="Adjuntar PDF, DOCX o TXT" style="display: none;" onclick="document.getElementById('archivo').click();">
                     📎
-                </label>
-                <input type="file" id="archivo" name="archivo" accept=".pdf,.docx,.txt" onchange="mostrarNombreArchivo()">
+                </button>
+                <input type="file" id="archivo" name="archivo" accept=".pdf,.docx,.txt" style="display: none;" onchange="mostrarNombreArchivo()">
 
-                <!-- Campo de mensaje -->
-                <input type="text" id="input-mensaje" name="mensaje" placeholder="Escribe tu mensaje aquí..." autocomplete="off" required>
+                <!-- Micrófono (EN TODOS LOS DEMÁS MODOS) -->
+                <button type="button" id="btn-mic" class="btn-icon" title="Hablar por micrófono" onclick="toggleMicrofono()">
+                    🎤
+                </button>
+
+                <!-- Campo de texto -->
+                <input type="text" id="input-mensaje" name="mensaje" placeholder="Escribe tu mensaje aquí..." autocomplete="off">
 
                 <!-- Botón de Envío -->
                 <button type="submit" class="btn-send">Enviar</button>
@@ -371,192 +195,239 @@
 
     <!-- JAVASCRIPT DE LA APLICACIÓN -->
     <script>
-        // Cargar exámenes al iniciar
-        document.addEventListener("DOMContentLoaded", () => {
-            actualizarExamenes();
-        });
+        let rec;
+        let escuchando = false;
 
-        // Alternar visibilidad de configuraciones según el modo
-       function toggleModos() {
-    const modo = document.getElementById('modo').value;
-    
-    // Muestra u oculta según el modo seleccionado
-    if (document.getElementById('group-profesion')) {
-        document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
-    }
-    if (document.getElementById('group-examen')) {
-        document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
-    }
-    if (document.getElementById('group-writing')) {
-        document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
-    }
-}
+        // Configuración de Reconocimiento de Voz
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            rec = new SpeechRecognition();
+            rec.continuous = false;
+            rec.interimResults = false;
 
-// Asegúrate de llamar a toggleModos al cambiar el select de modo
-document.getElementById('modo').addEventListener('change', toggleModos);
+            rec.onresult = function(event) {
+                document.getElementById('input-mensaje').value = event.results[0][0].transcript;
+                detenerMicrofono();
+            };
 
-        function toggleCustomProfesion() {
-            const profesion = document.getElementById('profesion').value;
-            document.getElementById('profesion_custom').style.display = (profesion === 'Otro') ? 'block' : 'none';
+            rec.onerror = function() { detenerMicrofono(); };
+            rec.onend = function() { detenerMicrofono(); };
         }
 
-        // Obtener la lista de exámenes desde la API de Flask
+        function toggleMicrofono() {
+            if (!rec) {
+                alert("Tu navegador no soporta entrada de voz por micrófono.");
+                return;
+            }
+            const btnMic = document.getElementById('btn-mic');
+            if (!escuchando) {
+                const idioma = document.getElementById('idioma').value;
+                if (idioma === 'en') rec.lang = 'en-US';
+                else if (idioma === 'fr') rec.lang = 'fr-FR';
+                else if (idioma === 'de') rec.lang = 'de-DE';
+                else if (idioma === 'it') rec.lang = 'it-IT';
+                else if (idioma === 'pt') rec.lang = 'pt-PT';
+                else rec.lang = 'es-ES';
+
+                rec.start();
+                escuchando = true;
+                btnMic.style.backgroundColor = '#fee2e2';
+                btnMic.innerText = '🔴';
+            } else {
+                detenerMicrofono();
+            }
+        }
+
+        function detenerMicrofono() {
+            if (rec && escuchando) rec.stop();
+            escuchando = false;
+            const btnMic = document.getElementById('btn-mic');
+            if (btnMic) {
+                btnMic.style.backgroundColor = 'transparent';
+                btnMic.innerText = '🎤';
+            }
+        }
+
+        // Reproducción de voz para las respuestas de Oralis
+        function reproducirTexto(texto) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(texto);
+                const idioma = document.getElementById('idioma').value;
+
+                if (idioma === 'en') utterance.lang = 'en-US';
+                else if (idioma === 'fr') utterance.lang = 'fr-FR';
+                else if (idioma === 'de') utterance.lang = 'de-DE';
+                else if (idioma === 'it') utterance.lang = 'it-IT';
+                else if (idioma === 'pt') utterance.lang = 'pt-PT';
+                else utterance.lang = 'es-ES';
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Alternar visualización entre Clip y Micrófono según el Modo
+        function toggleModos() {
+            const modo = document.getElementById('modo').value;
+
+            document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
+            document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
+            document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
+
+            const btnAttach = document.getElementById('btn-attach');
+            const btnMic = document.getElementById('btn-mic');
+
+            if (modo === 'writing') {
+                btnAttach.style.display = 'inline-flex';
+                btnMic.style.display = 'none';
+            } else {
+                btnAttach.style.display = 'none';
+                btnMic.style.display = 'inline-flex';
+            }
+        }
+
+        function toggleCustomProfesion() {
+            const val = document.getElementById('profesion').value;
+            document.getElementById('profesion_custom').style.display = (val === 'Otro') ? 'block' : 'none';
+        }
+
         async function actualizarExamenes() {
             const idioma = document.getElementById('idioma').value;
             const selectExamen = document.getElementById('tipo_examen');
             selectExamen.innerHTML = '';
-
+            
             try {
-                const res = await fetch(`/api/examenes/${idioma}`);
+                const res = await fetch('/api/examenes/' + idioma);
                 const data = await res.json();
-
                 data.examenes.forEach(ex => {
                     const opt = document.createElement('option');
                     opt.value = ex;
-                    opt.innerText = ex;
+                    opt.textContent = ex;
                     selectExamen.appendChild(opt);
                 });
             } catch (e) {
-                console.error("Error al cargar exámenes:", e);
+                console.error("Error al obtener exámenes:", e);
             }
         }
 
-        // Mostrar nombre del archivo seleccionado
         function mostrarNombreArchivo() {
             const input = document.getElementById('archivo');
             const indicator = document.getElementById('file-indicator');
-            if (input.files.length > 0) {
-                indicator.innerText = `📄 Archivo listo: ${input.files[0].name}`;
+            if (input.files && input.files[0]) {
+                indicator.innerText = '📄 Archivo cargado: ' + input.files[0].name;
             } else {
                 indicator.innerText = '';
             }
         }
 
-        // LÓGICA DE ENVÍO DE MENSAJES Y STREAMING
-        async function enviarMensaje(event) {
-            event.preventDefault();
-
-            const inputMensaje = document.getElementById('input-mensaje');
+        function agregarMensaje(emisor, texto) {
             const chatBox = document.getElementById('chat-box');
-            const mensajeTexto = inputMensaje.value.trim();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'mensaje ' + (emisor === 'user' ? 'mensaje-usuario' : 'mensaje-oralis');
 
-            if (!mensajeTexto) return;
+            if (emisor === 'oralis') {
+                const idTexto = 'msg-' + Date.now();
+                msgDiv.innerHTML = `
+                    <div class="contenido-texto" id="${idTexto}"></div>
+                    <button type="button" class="btn-audio" onclick="reproducirTexto(document.getElementById('${idTexto}').innerText)">🔊 Escuchar</button>
+                `;
+                chatBox.appendChild(msgDiv);
+                return document.getElementById(idTexto);
+            } else {
+                msgDiv.innerText = texto;
+                chatBox.appendChild(msgDiv);
+            }
 
-            // 1. Mostrar de inmediato el mensaje del usuario en pantalla
-            const divUsuario = document.createElement('div');
-            divUsuario.className = 'mensaje usuario';
-            divUsuario.innerText = mensajeTexto;
-            chatBox.appendChild(divUsuario);
-
-            // Limpiar inputs
-            inputMensaje.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
-            // 2. Crear indicador de carga para la respuesta de la IA
-            const divIA = document.createElement('div');
-            divIA.className = 'mensaje ia cargando';
-            divIA.innerText = 'Oralis está escribiendo...';
-            chatBox.appendChild(divIA);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        async function enviarMensaje(e) {
+            e.preventDefault();
+            const input = document.getElementById('input-mensaje');
+            const mensaje = input.value.trim();
+            const archivoInput = document.getElementById('archivo');
 
-            // 3. Empaquetar todo el formulario (Mensaje + Archivo + Ajustes del Sidebar)
-            const formData = new FormData();
-            formData.append('mensaje', mensajeTexto);
+            if (!mensaje && (!archivoInput.files || archivoInput.files.length === 0)) return;
+
+            // Renderizar mensaje del usuario en pantalla
+            let textoUsuario = mensaje;
+            if (archivoInput.files && archivoInput.files[0]) {
+                textoUsuario += ` (📄 Archivo: ${archivoInput.files[0].name})`;
+            }
+            agregarMensaje('user', textoUsuario);
+
+            // Preparar envío
+            const formData = new FormData(document.getElementById('form-chat'));
             formData.append('idioma', document.getElementById('idioma').value);
             formData.append('nivel', document.getElementById('nivel').value);
             formData.append('modo', document.getElementById('modo').value);
+            formData.append('metodo_writing', document.getElementById('metodo_writing').value);
             formData.append('profesion', document.getElementById('profesion').value);
             formData.append('profesion_custom', document.getElementById('profesion_custom').value);
             formData.append('tipo_examen', document.getElementById('tipo_examen').value);
             formData.append('tema', document.getElementById('tema').value);
 
-            // Añade este valor a las variables que envías en FormData:
-            formData.append('metodo_writing', document.getElementById('metodo_writing').value);
-
-            const archivoInput = document.getElementById('archivo');
-            if (archivoInput.files.length > 0) {
-                formData.append('archivo', archivoInput.files[0]);
-            }
-
-            // Resetear indicador de archivo
+            // Limpiar formulario
+            input.value = '';
             archivoInput.value = '';
             document.getElementById('file-indicator').innerText = '';
 
-            // 4. Enviar Petición Stream al Backend
+            // Contenedor de la respuesta de Oralis
+            const elemOralis = agregarMensaje('oralis', '');
+
             try {
                 const response = await fetch('/chat', {
                     method: 'POST',
                     body: formData
                 });
 
-                if (!response.ok) {
-                    throw new Error("Error en la conexión con el servidor.");
-                }
-
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let esPrimerChunk = true;
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
 
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lineas = chunk.split('\n');
-
-                    for (const linea of lineas) {
-                        if (linea.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(linea.replace('data: ', ''));
-
-                                if (data.error) {
-                                    divIA.innerText = 'Error: ' + data.error;
-                                    break;
-                                }
-
-                                if (data.content) {
-                                    if (esPrimerChunk) {
-                                        divIA.innerText = '';
-                                        divIA.classList.remove('cargando');
-                                        esPrimerChunk = false;
-                                    }
-                                    divIA.innerText += data.content;
-                                    chatBox.scrollTop = chatBox.scrollHeight;
-                                }
-                            } catch (e) {
-                                // Ignorar errores de parseo en JSONs fragmentados
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = JSON.parse(line.substring(6));
+                            if (data.content) {
+                                elemOralis.innerText += data.content;
+                                const chatBox = document.getElementById('chat-box');
+                                chatBox.scrollTop = chatBox.scrollHeight;
                             }
                         }
                     }
                 }
-            } catch (error) {
-                console.error(error);
-                divIA.innerText = 'Error al recibir respuesta del servidor.';
-                divIA.classList.remove('cargando');
+            } catch (err) {
+                console.error("Error al enviar el mensaje:", err);
+                elemOralis.innerText = "Lo siento, ha ocurrido un error de conexión.";
             }
         }
 
-        // LÓGICA DE FEEDBACK
-        async function enviarFeedback(event) {
-            event.preventDefault();
-            const formData = new FormData(document.getElementById('form-feedback'));
-            const msgEl = document.getElementById('msg-feedback');
+        async function enviarFeedback(e) {
+            e.preventDefault();
+            const form = document.getElementById('form-feedback');
+            const formData = new FormData(form);
 
             try {
-                const response = await fetch('/api/feedback', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-
-                msgEl.innerText = data.mensaje;
-                if (response.ok) {
-                    document.getElementById('form-feedback').reset();
-                }
-            } catch (e) {
-                msgEl.innerText = "Error al enviar comentario.";
+                const res = await fetch('/api/feedback', { method: 'POST', body: formData });
+                const data = await res.json();
+                document.getElementById('msg-feedback').innerText = data.mensaje;
+                form.reset();
+            } catch (err) {
+                console.error("Error al enviar feedback:", err);
             }
         }
+
+        // Inicialización al cargar la página
+        window.onload = function() {
+            actualizarExamenes();
+            toggleModos();
+        };
     </script>
 </body>
 </html>
