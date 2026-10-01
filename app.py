@@ -42,8 +42,8 @@ def extraer_texto_archivo(filepath):
         contenido = f"[Archivo {ext.upper()} adjuntado correctamente]"
     return contenido.strip()
 
-# MOTOR DE ANÁLISIS DE ERRORES Y GENERACIÓN DE PISTAS
-def analizar_y_corregir_mensaje(mensaje, idioma, metodo_writing="gramatica"):
+# MOTOR DE ANÁLISIS DE ERRORES, CORRECCIÓN Y GENERACIÓN DE PISTAS
+def analizar_y_corregir_mensaje(mensaje, idioma):
     msg_low = mensaje.strip().lower()
     correccion = None
     explicacion = None
@@ -101,14 +101,14 @@ def generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, metodo_w
     if modo == "writing":
         if metodo_writing == "pistas":
             if tiene_error:
-                return f"[Modo Desafío - {nivel}]: He detectado uno o más errores en tu escrito. Revisa la sección subrayada e intenta corregirlo tú mismo utilizando la pista."
+                return f"[Modo Writing - Desafío con Pistas ({nivel})]: He detectado un error en tu escrito. Revisa la zona subrayada e intenta corregirlo con la pista."
             else:
-                return f"[Modo Desafío - {nivel}]: ¡Excelente trabajo! No he encontrado errores gramaticales evidentes en tu texto."
+                return f"[Modo Writing - Desafío con Pistas ({nivel})]: ¡Excelente! Tu redacción no presenta errores gramaticales evidentes."
         else:
             if tiene_error:
-                return f"[Corrección Directa - {nivel}]: He revisado tu redacción. Abajo encontrarás el análisis detallado con las correcciones necesarias."
+                return f"[Modo Writing - Corrección Directa ({nivel})]: He analizado tu texto. Abajo tienes el detalle del error y su corrección."
             else:
-                return f"[Corrección Directa - {nivel}]: Tu redacción está bien construida y cumple con las normas sintácticas de nivel {nivel}."
+                return f"[Modo Writing - Corrección Directa ({nivel})]: Tu escrito cumple con la sintaxis requerida para el nivel {nivel}."
 
     respuestas = {
         "de": {
@@ -189,13 +189,13 @@ def chat():
 
         rol_activo = profesion_custom if (profesion == 'Otro' and profesion_custom) else profesion
 
-        resultado_analisis = analizar_y_corregir_mensaje(mensaje, idioma, metodo_writing)
+        resultado_analisis = analizar_y_corregir_mensaje(mensaje, idioma)
         tiene_error = resultado_analisis["correccion"] is not None
 
         respuesta_texto = generar_respuesta_natural(idioma, nivel, modo, rol_activo, mensaje, metodo_writing, tiene_error)
 
         nuevo_vocabulario = [f"término_clave ({idioma.upper()})"] if len(mensaje) > 3 else []
-        nueva_gramatica = [f"Análisis de redacción ({metodo_writing})"] if modo == 'writing' else [f"Estructura comunicativa ({nivel})"]
+        nueva_gramatica = [f"Revisión de nivel ({nivel})"]
 
         if idioma not in PERFILES_USUARIO["vocabulario"]:
             PERFILES_USUARIO["vocabulario"][idioma] = {}
@@ -218,6 +218,7 @@ def chat():
         return jsonify({
             "status": "success",
             "respuesta": respuesta_texto,
+            "modo": modo,
             "metodo_writing": metodo_writing,
             "correccion": resultado_analisis["correccion"],
             "explicacion": resultado_analisis["explicacion"],
