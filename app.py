@@ -2,7 +2,7 @@ import os
 import json
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
-import pypdf
+import PyPDF2
 import docx
 
 app = Flask(__name__)
@@ -10,8 +10,8 @@ app = Flask(__name__)
 # Configuración del cliente oficial de Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Modelo exacto de Groq que estás utilizando
-MODELO_GROQ = "qwen/qwen3.8-27b"
+# Modelo compatible de Groq (se corrigió el identificador del modelo)
+MODELO_GROQ = "qwen-2.5-32b"
 
 # Base de datos simulada en memoria
 PERFILES_USUARIO = {
@@ -84,7 +84,7 @@ def extraer_texto_archivo(file):
     texto = ""
     try:
         if filename.endswith('.pdf'):
-            reader = pypdf.PdfReader(file)
+            reader = PyPDF2.PdfReader(file)
             for page in reader.pages:
                 t = page.extract_text()
                 if t:
@@ -112,21 +112,8 @@ Instrucciones generales de tono e interacción:
 1. Responde siempre de forma pedagógica, motivadora y adaptable.
 2. Tu respuesta principal debe ser en el idioma objetivo ({idioma}), adaptando la complejidad sintáctica al nivel {nivel}.
 3. Si el usuario te hace una pregunta teórica en español o pide una explicación gramatical, explica la regla detalladamente en español y proporciona ejemplos prácticos en {idioma}.
-"""
-    def construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing):
-    prof_final = profesion_custom if profesion == "Otro" else profesion
-
-    prompt_base = f"""Eres Oralis, una plataforma de inteligencia artificial especializada en la enseñanza de idiomas.
-Estás interactuando con un estudiante que aprende el idioma con código ISO '{idioma}' en un nivel MCERL '{nivel}'.
-Tema o contexto general de la sesión: {tema}.
-
-Instrucciones generales de tono e interacción:
-1. Responde siempre de forma pedagógica, motivadora y adaptable.
-2. Tu respuesta principal debe ser en el idioma objetivo ({idioma}), adaptando la complejidad sintáctica al nivel {nivel}.
-3. Si el usuario te hace una pregunta teórica en español o pide una explicación gramatical, explica la regla detalladamente en español y proporciona ejemplos prácticos en {idioma}.
 4. FORMATO OBLIGATORIO: NO utilices ningún tipo de formato Markdown en tu respuesta. Está PROHIBIDO usar asteriscos (*), dobles asteriscos (**), almohadillas (#), guiones bajos (_) o tablas en Markdown. Presenta la respuesta en texto plano limpio usando saltos de línea normales y viñetas simples con guiones (-).
 """
-    # ... resto del código sin cambios ...
 
     if modo == "tutor_original":
         prompt_base += """
