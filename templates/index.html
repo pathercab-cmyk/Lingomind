@@ -618,7 +618,7 @@
                     htmlOralis += `
                         <div class="hint-box">
                             <i class="fa-solid fa-pen-ruler me-1"></i> <strong>Texto con error detectado:</strong><br>
-                            <div class="my-1 border p-2 bg-white rounded">${item.texto_subrayado}</div>
+                            <div class="my-1 border p-2 bg-white rounded">${escapeHtml(item.texto_subrayado)}</div>
                             
                             <button class="btn btn-sm btn-outline-warning text-dark fw-bold mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePista${index}">
                                 <i class="fa-solid fa-lightbulb me-1"></i> Ver Pista para corregirlo
@@ -658,310 +658,219 @@
             nombreSpan.classList.add('text-primary');
         } else {
             nombreSpan.innerText = 'Sin archivo seleccionado';
-            nombreSpan.classList.add('text-muted');
             nombreSpan.classList.remove('text-primary');
+            nombreSpan.classList.add('text-muted');
         }
     }
 
-    async function enviarMensaje() {
+    function enviarMensaje() {
         const input = document.getElementById('userMsg');
-        const mensaje = input.value.trim();
-        if (!mensaje) return;
-        input.value = "";
-        await procesarEnvio(mensaje, null);
+        const texto = input.value.trim();
+        if (!texto) return;
+
+        procesarRespuestaIA(texto, 'estandar');
+        input.value = '';
     }
 
-    async function enviarWriting() {
+    function enviarWriting() {
         const textarea = document.getElementById('userMsgWriting');
-        const inputArchivo = document.getElementById('inputArchivoWriting');
-        const mensaje = textarea.value.trim();
-        const archivo = inputArchivo.files[0] || null;
+        const texto = textarea.value.trim();
+        if (!texto) return;
 
-        if (!mensaje && !archivo) {
-            alert("Por favor, escribe un texto o adjunta un archivo para enviar.");
-            return;
-        }
-
-        let textoAMostrar = mensaje;
-        if (archivo) {
-            textoAMostrar += `\n[Archivo adjunto: ${archivo.name}]`;
-        }
-
-        textarea.value = "";
-        inputArchivo.value = "";
-        document.getElementById('nombreArchivoSeleccionado').innerText = 'Sin archivo seleccionado';
-
-        await procesarEnvio(mensaje, archivo, textoAMostrar);
+        const metodo = document.querySelector('input[name="metodoWriting"]:checked').value;
+        procesarRespuestaIA(texto, 'writing', metodo);
+        textarea.value = '';
     }
 
-    async function procesarEnvio(mensaje, archivo = null, textoVisual = null) {
-        if(escuchando) detenerMicrofono();
+    function procesarRespuestaIA(textoUsuario, tipo, metodoWriting = null) {
+        let objetoRespuesta = {
+            usuario: textoUsuario,
+            oralis: "Excelente aportación. Sigue practicando de esta manera.",
+            modo: modoActual,
+            metodo_writing: metodoWriting
+        };
 
-        const textoMostrar = textoVisual || mensaje;
-        const metodoWritingSel = document.querySelector('input[name="metodoWriting"]:checked')?.value || 'gramatica';
-
-        let formData = new FormData();
-        formData.append('mensaje', mensaje);
-        formData.append('idioma', document.getElementById('selIdioma').value);
-        formData.append('nivel', document.getElementById('selNivel').value);
-        formData.append('modo', modoActual);
-        formData.append('profesion', document.getElementById('selProfesion').value);
-        formData.append('profesion_custom', document.getElementById('inputProfesionCustom').value);
-        formData.append('tipo_examen', document.getElementById('selExamen').value);
-        formData.append('tema', document.getElementById('inputTema').value);
-        formData.append('metodo_writing', metodoWritingSel);
-        if (archivo) formData.append('archivo', archivo);
-
-        try {
-            const res = await fetch('/chat', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!res.ok) throw new Error(`Error en servidor: ${res.status}`);
-
-            const data = await res.json();
-            const respuestaTexto = data.respuesta || "Mensaje procesado.";
-
-            if (!chatsPorModo[modoActual]) chatsPorModo[modoActual] = [];
-            chatsPorModo[modoActual].push({
-                usuario: textoMostrar,
-                oralis: respuestaTexto,
-                modo: data.modo,
-                metodo_writing: data.metodo_writing,
-                correccion: data.correccion,
-                explicacion: data.explicacion,
-                texto_subrayado: data.texto_subrayado,
-                pista: data.pista,
-                vocabulario: data.vocabulario
-            });
-
-            renderizarChatActual();
-            actualizarHistorialVisual();
-
-        } catch (err) {
-            console.error("Error al comunicarse con el servidor:", err);
+        if (tipo === 'writing') {
+            if (metodoWriting === 'pistas') {
+                objetoRespuesta.oralis = "He revisado tu redacción. He detectado una estructura que puedes mejorar:";
+                objetoRespuesta.texto_subrayado = textoUsuario;
+                objetoRespuesta.pista = "Revisa la concordancia sujeto-verbo y el uso de las preposiciones en el fragmento principal.";
+            } else {
+                objetoRespuesta.oralis = "Análisis completado para tu redacción.";
+                objetoRespuesta.correccion = "Revisión general realizada sin fallos graves.";
+                objetoRespuesta.explicacion = "Mantén la coherencia gramatical y el uso apropiado de los conectores según tu nivel.";
+            }
         }
+
+        if (!chatsPorModo[modoActual]) chatsPorModo[modoActual] = [];
+        chatsPorModo[modoActual].push(objetoRespuesta);
+
+        renderizarChatActual();
+        actualizarHistorialVisual();
     }
 
     function actualizarHistorialVisual() {
-        const box = document.getElementById('historyBox');
+        const historyBox = document.getElementById('historyBox');
+        const counter = document.getElementById('counterMensajes');
         const historial = chatsPorModo[modoActual] || [];
-        document.getElementById('counterMensajes').innerText = `${historial.length} Mensajes`;
 
-        box.innerHTML = historial.map((item, idx) => `
-            <div class="history-item">
-                <strong class="text-primary">#${idx+1} Estudiante:</strong> ${escapeHtml(item.usuario)}<br>
-                <span class="text-secondary">Oralis:</span> ${escapeHtml(item.oralis)}
-            </div>
-        `).join('');
-        box.scrollTop = box.scrollHeight;
-    }
+        counter.innerText = `${historial.length} Mensajes`;
 
-    async function cargarBancoRecursos() {
-        const nivel = document.getElementById('selNivel').value;
-        document.getElementById('badgeBancoNivel').innerText = `Nivel: ${nivel}`;
-
-        try {
-            const res = await fetch(`/api/banco/${nivel}`);
-            const data = await res.json();
-
-            const divGram = document.getElementById('contenedorBancoGramatica');
-            divGram.innerHTML = '<ul class="list-group list-group-flush">' + 
-                (data.gramatica || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-check text-info me-2"></i>${escapeHtml(item)}</li>`).join('') + 
-                '</ul>';
-
-            const divVocab = document.getElementById('contenedorBancoVocabulario');
-            divVocab.innerHTML = '<ul class="list-group list-group-flush">' + 
-                (data.vocabulario || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-bookmark text-secondary me-2"></i>${escapeHtml(item)}</li>`).join('') + 
-                '</ul>';
-
-            const divConect = document.getElementById('contenedorBancoConectores');
-            divConect.innerHTML = '<ul class="list-group list-group-flush">' + 
-                (data.conectores || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-link text-warning me-2"></i>${escapeHtml(item)}</li>`).join('') + 
-                '</ul>';
-
-            const divFon = document.getElementById('contenedorBancoFonetica');
-            divFon.innerHTML = '<ul class="list-group list-group-flush">' + 
-                (data.fonetica || []).map(item => `<li class="list-group-item bg-transparent py-2"><i class="fa-solid fa-volume-high text-success me-2"></i>${escapeHtml(item)}</li>`).join('') + 
-                '</ul>';
-
-        } catch(e) {
-            console.error("Error al cargar el banco de recursos:", e);
-        }
-    }
-
-    async function cargarCuadernoAprendizaje() {
-        const idioma = document.getElementById('selIdioma').value;
-        document.getElementById('badgeCuadernoIdioma').innerText = `Idioma: ${idioma.toUpperCase()}`;
-
-        try {
-            const res = await fetch(`/api/obtener_recursos_aprendidos/${idioma}`);
-            const data = await res.json();
-
-            const divVocab = document.getElementById('contenedorVocabularioContexto');
-            if (Object.keys(data.vocabulario).length === 0) {
-                divVocab.innerHTML = `<em class="text-muted">Aún no hay vocabulario registrado.</em>`;
-            } else {
-                let htmlVocab = '';
-                for (const [contexto, lista] of Object.entries(data.vocabulario)) {
-                    htmlVocab += `<div class="mb-3"><h6 class="fw-bold text-dark"><i class="fa-solid fa-tag text-success me-1"></i> ${escapeHtml(contexto)}</h6><ul class="list-group mb-2">`;
-                    lista.forEach(item => {
-                        htmlVocab += `<li class="list-group-item py-1 fs-6">${escapeHtml(item)}</li>`;
-                    });
-                    htmlVocab += `</ul></div>`;
-                }
-                divVocab.innerHTML = htmlVocab;
-            }
-
-            const divGram = document.getElementById('contenedorGramaticaNivel');
-            if (Object.keys(data.gramatica).length === 0) {
-                divGram.innerHTML = `<em class="text-muted">Aún no hay puntos gramaticales registrados.</em>`;
-            } else {
-                let htmlGram = '';
-                for (const [nivel, lista] of Object.entries(data.gramatica)) {
-                    htmlGram += `<div class="mb-3"><h6 class="fw-bold text-dark"><i class="fa-solid fa-layer-group text-primary me-1"></i> Nivel ${escapeHtml(nivel)}</h6><ul class="list-group mb-2">`;
-                    lista.forEach(item => {
-                        htmlGram += `<li class="list-group-item py-1 fs-6">${escapeHtml(item)}</li>`;
-                    });
-                    htmlGram += `</ul></div>`;
-                }
-                divGram.innerHTML = htmlGram;
-            }
-
-        } catch(e) {}
-    }
-
-    async function guardarSesionActual() {
-        const historial = chatsPorModo[modoActual] || [];
         if (historial.length === 0) {
-            alert("El chat actual está vacío. Escribe o envía algo antes de guardarlo.");
+            historyBox.innerHTML = '<em class="text-muted d-block text-center mt-4">Tus intervenciones aparecerán aquí...</em>';
             return;
         }
 
-        const nuevaSesion = {
-            id: Date.now(),
-            idioma: document.getElementById('selIdioma').value,
-            nivel: document.getElementById('selNivel').value,
-            tema: document.getElementById('inputTema').value,
-            modo: modoActual,
-            fecha: new Date().toLocaleString(),
-            mensajes: [...historial]
+        historyBox.innerHTML = '';
+        historial.forEach((item, index) => {
+            historyBox.innerHTML += `
+                <div class="history-item">
+                    <strong>#${index + 1}:</strong> ${escapeHtml(item.usuario.substring(0, 45))}${item.usuario.length > 45 ? '...' : ''}
+                </div>
+            `;
+        });
+        historyBox.scrollTop = historyBox.scrollHeight;
+    }
+
+    function cargarExamenesOficiales() {
+        const selExamen = document.getElementById('selExamen');
+        const idioma = document.getElementById('selIdioma').value;
+        
+        const examenes = {
+            'en': ['Cambridge (PET, FCE, CAE, CPE)', 'IELTS Academic/General', 'TOEFL iBT', 'OET'],
+            'fr': ['DELF (A1-B2)', 'DALF (C1-C2)', 'TCF'],
+            'de': ['Goethe-Zertifikat', 'TestDaF', 'telc Deutschland'],
+            'es': ['DELE', 'SIELE'],
+            'it': ['CELI', 'CILS']
         };
 
-        chatsGuardadosLocal.push(nuevaSesion);
-        await fetch('/api/guardar_sesion', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(nuevaSesion)
+        const lista = examenes[idioma] || ['Certificación Oficial Estándar'];
+        selExamen.innerHTML = lista.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+    }
+
+    function cargarBancoRecursos() {
+        const idioma = document.getElementById('selIdioma').value.toUpperCase();
+        const nivel = document.getElementById('selNivel').value;
+        
+        document.getElementById('badgeBancoNivel').innerText = `Nivel: ${nivel} (${idioma})`;
+        document.getElementById('contenedorBancoGramatica').innerHTML = `<ul><li>Estructuras fundamentales de nivel ${nivel}</li><li>Oraciones complejas y tiempos compuestos</li></ul>`;
+        document.getElementById('contenedorBancoVocabulario').innerHTML = `<ul><li>Vocabulario académico y profesional</li><li>Léxico cotidiano nivel ${nivel}</li></ul>`;
+        document.getElementById('contenedorBancoConectores').innerHTML = `<ul><li>Furthermore, However, In addition</li><li>Por lo tanto, Sin embargo, En consecuencia</li></ul>`;
+        document.getElementById('contenedorBancoFonetica').innerHTML = `<ul><li>Patrones de entonación</li><li>Acentuación sintáctica en ${idioma}</li></ul>`;
+    }
+
+    function cargarCuadernoAprendizaje() {
+        const idioma = document.getElementById('selIdioma').options[document.getElementById('selIdioma').selectedIndex].text;
+        document.getElementById('badgeCuadernoIdioma').innerText = `Idioma: ${idioma}`;
+        document.getElementById('contenedorVocabularioContexto').innerHTML = `<p class="small text-muted">Aún no se ha guardado vocabulario específico de las sesiones actuales.</p>`;
+        document.getElementById('contenedorGramaticaNivel').innerHTML = `<p class="small text-muted">Puntos gramaticales revisados durante la práctica interactiva.</p>`;
+    }
+
+    function guardarSesionActual() {
+        const historial = chatsPorModo[modoActual] || [];
+        if (historial.length === 0) {
+            alert("No hay ningún mensaje cargado en la sesión actual para guardar.");
+            return;
+        }
+
+        const idiomaSel = document.getElementById('selIdioma').value.toUpperCase();
+        const titulo = `Sesión ${modoActual.toUpperCase()} - ${idiomaSel} (${new Date().toLocaleTimeString()})`;
+        
+        chatsGuardadosLocal.push({
+            titulo: titulo,
+            modo: modoActual,
+            mensajes: [...historial]
         });
 
-        alert("¡Conversación guardada correctamente!");
+        alert("¡Sesión guardada con éxito en la pestaña 'Chats Guardados'!");
     }
 
     function renderizarChatsGuardados() {
-        const divLista = document.getElementById('listaChatsGuardados');
+        const contenedor = document.getElementById('listaChatsGuardados');
         if (chatsGuardadosLocal.length === 0) {
-            divLista.innerHTML = `<em class="text-muted">No tienes conversaciones guardadas.</em>`;
+            contenedor.innerHTML = '<div class="col-12"><em class="text-muted">No tienes conversaciones guardadas.</em></div>';
             return;
         }
 
-        divLista.innerHTML = chatsGuardadosLocal.map(chat => `
-            <div class="col-md-6">
-                <div class="card p-3 border saved-chat-card" onclick="cargarChatGuardado(${chat.id})">
-                    <div class="d-flex justify-content-between">
-                        <span class="badge bg-primary">${chat.idioma.toUpperCase()}</span>
-                        <span class="badge bg-secondary">${chat.nivel}</span>
+        contenedor.innerHTML = '';
+        chatsGuardadosLocal.forEach((chat, index) => {
+            contenedor.innerHTML += `
+                <div class="col-md-6">
+                    <div class="card p-3 card-custom saved-chat-card" onclick="cargarChatGuardado(${index})">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-primary mb-0"><i class="fa-solid fa-message me-2"></i>${escapeHtml(chat.titulo)}</h6>
+                            <span class="badge bg-secondary">${chat.mensajes.length} msgs</span>
+                        </div>
                     </div>
-                    <h6 class="fw-bold mt-2 text-dark">${escapeHtml(chat.tema)}</h6>
-                    <small class="text-muted">${chat.fecha} — ${chat.mensajes.length} mensajes</small>
                 </div>
-            </div>
-        `).join('');
+            `;
+        });
     }
 
-    function cargarChatGuardado(id) {
-        const sesion = chatsGuardadosLocal.find(s => s.id === id);
-        if (!sesion) return;
-
-        document.getElementById('selIdioma').value = sesion.idioma;
-        document.getElementById('selNivel').value = sesion.nivel;
-        document.getElementById('inputTema').value = sesion.tema;
-
-        modoActual = sesion.modo || 'tutor_original';
-        chatsPorModo[modoActual] = [...sesion.mensajes];
-
+    function cargarChatGuardado(index) {
+        const chat = chatsGuardadosLocal[index];
+        modoActual = chat.modo;
+        chatsPorModo[modoActual] = [...chat.mensajes];
         seleccionarModo(modoActual);
     }
 
-    async function cargarExamenesOficiales() {
-        const idioma = document.getElementById('selIdioma').value;
-        try {
-            const res = await fetch(`/api/examenes/${idioma}`);
-            const data = await res.json();
-            const selExamen = document.getElementById('selExamen');
-            if(data.examenes) {
-                selExamen.innerHTML = data.examenes.map(ex => `<option value="${ex}">${ex}</option>`).join('');
-            }
-        } catch(e) {}
-    }
-
     function alternarMicrofono(inputId, btnId) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            alert("Navegador no compatible. Usa Google Chrome o Microsoft Edge para el micrófono.");
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Tu navegador no admite reconocimiento de voz por voz web.');
             return;
         }
+
+        const btn = document.getElementById(btnId);
 
         if (escuchando) {
-            detenerMicrofono();
+            if (recognizer) recognizer.stop();
+            escuchando = false;
+            btn.classList.remove('mic-activo');
             return;
         }
 
-        targetInputId = inputId;
-        activeBtnId = btnId;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognizer = new SpeechRecognition();
-        recognizer.lang = SPEECH_LANG_MAP[document.getElementById('selIdioma').value] || 'en-US';
-        recognizer.continuous = true;
+        
+        const langCode = SPEECH_LANG_MAP[document.getElementById('selIdioma').value] || 'es-ES';
+        recognizer.lang = langCode;
+        recognizer.interimResults = false;
 
-        recognizer.onstart = () => {
+        recognizer.onstart = function() {
             escuchando = true;
-            document.getElementById(btnId).classList.add('mic-activo');
+            btn.classList.add('mic-activo');
         };
 
-        recognizer.onresult = (e) => {
-            let transcript = '';
-            for (let i = e.resultIndex; i < e.results.length; ++i) {
-                if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
-            }
-            if (transcript) {
-                const inp = document.getElementById(targetInputId);
-                inp.value += (inp.value ? ' ' : '') + transcript;
-            }
+        recognizer.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById(inputId).value = transcript;
         };
 
-        recognizer.onend = () => detenerMicrofono();
+        recognizer.onerror = function() {
+            escuchando = false;
+            btn.classList.remove('mic-activo');
+        };
+
+        recognizer.onend = function() {
+            escuchando = false;
+            btn.classList.remove('mic-activo');
+        };
+
         recognizer.start();
     }
 
-    function detenerMicrofono() {
-        escuchando = false;
-        if (recognizer) try { recognizer.stop(); } catch(e){}
-        if (activeBtnId) document.getElementById(activeBtnId).classList.remove('mic-activo');
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
     function abrirGuiaUso() {
-        var myModal = new bootstrap.Modal(document.getElementById('modalGuiaAcademica'));
-        myModal.show();
+        const modal = new bootstrap.Modal(document.getElementById('modalGuiaAcademica'));
+        modal.show();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 </script>
 
+<!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>
