@@ -154,6 +154,16 @@
             background-color: #dc2626 !important;
             border-color: #b91c1c !important;
         }
+
+        .saved-chat-card {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .saved-chat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
     </style>
 </head>
 <body class="py-4">
@@ -323,7 +333,7 @@
 
                     <div class="d-flex justify-content-between align-items-center bg-light p-2 border rounded">
                         <div class="d-flex align-items-center gap-2">
-                            <label for="inputArchivoWriting" class="btn btn-outline-secondary btn-sm fw-bold">
+                            <label for="inputArchivoWriting" class="btn btn-outline-secondary btn-sm fw-bold mb-0">
                                 <i class="fa-solid fa-paperclip me-1"></i> Adjuntar Archivo (.pdf, .docx, .txt)
                             </label>
                             <input type="file" id="inputArchivoWriting" class="d-none" onchange="mostrarNombreArchivo(this)">
@@ -457,30 +467,28 @@
                 
                 <div class="list-group list-group-flush">
                     <div class="list-group-item py-3">
-                        <h6 class="fw-bold text-primary"><i class="fa-solid fa-user-graduate me-2"></i> Modo Tutor (Práctica Conversacional)</h6>
-                        <p class="mb-0 small text-dark">Tu compañero de conversación interactiva. Mantiene charlas fluidas e interactivas señalando al instante cualquier error de concordancia o léxico.</p>
-                    </div>
-
-                    <div class="list-group-item py-3">
-                        <h6 class="fw-bold text-dark"><i class="fa-solid fa-chalkboard-user me-2"></i> Modo Profesor (Explicación Teórica)</h6>
-                        <p class="mb-0 small text-dark">Diseñado para pedir explicaciones detalladas sobre gramática, reglas, sintaxis o dudas específicas. Responde con explicaciones claras y ejemplos adaptados a tu nivel.</p>
+                        <h6 class="fw-bold text-primary"><i class="fa-solid fa-chalkboard-user me-2"></i> Modo Tutor / Profesor (Modo Dual)</h6>
+                        <p class="mb-0 small text-dark">
+                            • <strong>Como Tutor:</strong> Tu compañero para charla interactiva fluida. Mantiene conversaciones adaptadas a tu nivel y corrige suavemente tus errores de concordancia o léxico.<br>
+                            • <strong>Como Profesor:</strong> Diseñado para resolver tus dudas gramaticales. Pídele explicaciones detalladas sobre sintaxis o reglas teóricas y te responderá en español con explicaciones claras y ejemplos prácticos.
+                        </p>
                     </div>
 
                     <div class="list-group-item py-3">
                         <h6 class="fw-bold text-success"><i class="fa-solid fa-comments me-2"></i> Modo Prácticas Orales (Simulación de Roles)</h6>
-                        <p class="mb-0 small text-dark">Permite simular situaciones reales con roles específicos (entrevista laboral, atención médica, hotel, etc.) o personalizar tu propio rol.</p>
+                        <p class="mb-0 small text-dark">Permite simular situaciones del mundo real asumiendo roles específicos (entrevista de trabajo, consulta médica, recepción de hotel, etc.) o configurando tu propio rol personalizado.</p>
                     </div>
 
                     <div class="list-group-item py-3">
                         <h6 class="fw-bold text-warning text-dark"><i class="fa-solid fa-award me-2"></i> Modo Exámenes Oficiales</h6>
-                        <p class="mb-0 small text-dark">Preparación para pruebas acreditadas oficiales (Cambridge, IELTS, TOEFL, Goethe, DELF, etc.).</p>
+                        <p class="mb-0 small text-dark">Especializado en la preparación interactiva para pruebas acreditadas oficiales (Cambridge, IELTS, TOEFL, Goethe, DELF, DELE, etc.).</p>
                     </div>
 
                     <div class="list-group-item py-3">
                         <h6 class="fw-bold text-danger"><i class="fa-solid fa-file-pen me-2"></i> Modo Writing (Evaluación de Redacciones)</h6>
-                        <p class="mb-0 small text-dark">Modo exclusivo para revisión de escritos. Ofrece dos alternativas:
-                            <br>• <strong>Método 1 (Corrección Directa):</strong> Muestra inmediatamente el error, la versión correcta y la explicación gramatical.
-                            <br>• <strong>Método 2 (Subrayado + Pistas):</strong> Destaca la zona errónea y ofrece pistas pedagógicas desplegables para que el estudiante resuelva el fallo por sí mismo.
+                        <p class="mb-0 small text-dark">Entorno de revisión profunda de escritos con dos métodos de corrección a elegir:
+                            <br>• <strong>Método 1 (Corrección Directa):</strong> Analiza la redacción y expone directamente los fallos sintácticos, la versión corregida y su explicación gramatical.
+                            <br>• <strong>Método 2 (Subrayado + Pistas):</strong> Resalta la zona con error y propone una pista inductiva desplegable para que deduzcas y corrijas el fallo por ti mismo.
                         </p>
                     </div>
                 </div>
@@ -492,7 +500,7 @@
     </div>
 </div>
 
-<!-- JAVASCRIPT LÓGICO -->
+<!-- JAVASCRIPT LÓGICO DE LA APLICACIÓN -->
 <script>
     let modoActual = 'tutor_original';
     
@@ -593,7 +601,7 @@
 
         if (historial.length === 0) {
             let nombreModoDisplay = (modoActual === 'tutor_original') ? 'TUTOR / PROFESOR' : modoActual.replace('_', ' ').toUpperCase();
-            let mensajeInicio = `Bienvenido al modo ${nombreModoDisplay} (${idiomaSel}). Puedes chatear para practicar o pedir explicaciones gramaticales.`;
+            let mensajeInicio = `Bienvenido al modo ${nombreModoDisplay} (${idiomaSel}). Puedes chatear libremente o pedir explicaciones gramaticales detalladas.`;
             if (modoActual === 'writing') {
                 mensajeInicio = `Modo Writing activo (${idiomaSel}). Elige arriba entre Corrección Directa o Modo Desafío con Pistas.`;
             }
@@ -900,7 +908,7 @@
     function alternarMicrofono(inputId, btnId) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert("Usa Google Chrome o Microsoft Edge para el micrófono.");
+            alert("Navegador no compatible. Usa Google Chrome o Microsoft Edge para el micrófono.");
             return;
         }
 
