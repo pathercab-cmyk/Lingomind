@@ -229,7 +229,9 @@ def chat():
                 if chunk.choices and len(chunk.choices) > 0:
                     content = chunk.choices[0].delta.content
                     if content:
-                        yield f"data: {json.dumps({'content': content})}\n\n"
+                        # 🧹 Filtrado directo para eliminar asteriscos y guiones bajos de Markdown
+                        content_limpio = content.replace('*', '').replace('_', '')
+                        yield f"data: {json.dumps({'content': content_limpio})}\n\n"
 
         except Exception as e:
             yield f"data: {json.dumps({'content': f'Error al conectar con la IA: {str(e)}'})}\n\n"
@@ -290,6 +292,3 @@ def ver_feedback():
         html += f"<li><strong>{c.usuario.email}</strong> ({c.puntuacion}/5 estrellas) - {c.fecha.strftime('%d/%m/%Y %H:%M')}<br>'{c.texto}'</li><br>"
     html += "</ul><br><a href='/'>Volver al Chat</a>"
     return html
-    
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
