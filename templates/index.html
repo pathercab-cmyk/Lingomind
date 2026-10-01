@@ -156,14 +156,6 @@
                         <div class="details-content">
                             <div class="tree-node"><strong>• Sustantivos:</strong> Flight, Boarding Pass, Luggage</div>
                             <div class="tree-node"><strong>• Verbos:</strong> To book, To check in, To depart</div>
-                            <div class="tree-node"><strong>• Adjetivos:</strong> Crowded, Delayed, Scenic</div>
-                        </div>
-                    </details>
-                    <details>
-                        <summary>📌 Trabajo y Negocios</summary>
-                        <div class="details-content">
-                            <div class="tree-node"><strong>• Sustantivos:</strong> Meeting, Deadline, Budget</div>
-                            <div class="tree-node"><strong>• Verbos:</strong> To schedule, To negotiate, To achieve</div>
                         </div>
                     </details>
                 </div>
@@ -186,9 +178,7 @@
         <!-- BANCO DE RECOMENDACIONES POR NIVEL -->
         <div class="section-box">
             <div class="section-title">💡 Banco Recomendado</div>
-            <div id="banco-recomendado" style="font-size: 0.85rem;">
-                <!-- Generado dinámicamente -->
-            </div>
+            <div id="banco-recomendado" style="font-size: 0.85rem;"></div>
         </div>
 
         <!-- FEEDBACK -->
@@ -199,8 +189,6 @@
                     <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
                     <option value="4">⭐⭐⭐⭐ (4/5)</option>
                     <option value="3">⭐⭐⭐ (3/5)</option>
-                    <option value="2">⭐⭐ (2/5)</option>
-                    <option value="1">⭐ (1/5)</option>
                 </select>
                 <input type="text" name="comentario" placeholder="Tu opinión..." required style="margin-top: 5px;">
                 <button type="submit" class="btn-action btn-secondary">Enviar Opinión</button>
@@ -210,7 +198,7 @@
 
         <!-- USUARIO -->
         <div class="user-info">
-            <span>👤 {{ usuario.email }}</span>
+            <span>👤 {{ usuario.email if usuario else 'Usuario' }}</span>
             <a href="/logout" class="btn-logout">Salir</a>
         </div>
     </div>
@@ -225,9 +213,7 @@
             </div>
         </div>
 
-        <div id="chat-box" class="chat-box">
-            <!-- Los mensajes del chat se colocan aquí dinámicamente -->
-        </div>
+        <div id="chat-box" class="chat-box"></div>
 
         <div class="chat-input-area">
             <form id="form-chat" class="chat-form" onsubmit="enviarMensaje(event)">
@@ -259,16 +245,12 @@
                 document.getElementById('input-mensaje').value = event.results[0][0].transcript;
                 detenerMicrofono();
             };
-
-            rec.onerror = function() { detenerMicrofono(); };
-            rec.onend = function() { detenerMicrofono(); };
+            rec.onerror = detenerMicrofono;
+            rec.onend = detenerMicrofono;
         }
 
         function toggleMicrofono() {
-            if (!rec) {
-                alert("Tu navegador no soporta entrada de voz.");
-                return;
-            }
+            if (!rec) return alert("Tu navegador no soporta entrada de voz.");
             const btnMic = document.getElementById('btn-mic');
             if (!escuchando) {
                 const idioma = document.getElementById('idioma').value;
@@ -292,7 +274,6 @@
             }
         }
 
-        // Reproducción de Voz
         function reproducirTexto(texto) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -313,37 +294,13 @@
             document.getElementById('btn-mic').style.display = (modo === 'writing') ? 'none' : 'inline-flex';
         }
 
-        function toggleCustomProfesion() {
-            const val = document.getElementById('profesion').value;
-            document.getElementById('profesion_custom').style.display = (val === 'Otro') ? 'block' : 'none';
-        }
-
-        // RECOMENDACIONES POR NIVEL
         const recomendacionNiveles = {
-            'A1': {
-                vocab: "Presentaciones personales, Familia, Rutina diaria, Números, Horarios y Colores.",
-                gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the), Pronombres personales y Adjetivos posesivos."
-            },
-            'A2': {
-                vocab: "Comida, Compras, Ropa, Tiempo meteorológico, Transporte, Lugares de la ciudad y Hobbies.",
-                gram: "Pasado simple, Presente continuo, Comparativos y superlativos, Expresión de planes (Going to), Preposiciones de lugar/tiempo."
-            },
-            'B1': {
-                vocab: "Viajes, Experiencias personales, Trabajo/Profesiones, Sentimientos, Tecnología y Medios de comunicación.",
-                gram: "Present Perfect, Pasado continuo, Condicionales (Tipo 1 y 2), Voz pasiva básica, Modal Verbs (Can, Must, Should)."
-            },
-            'B2': {
-                vocab: "Educación, Medio ambiente, Salud y bienestar, Sociedad, Términos de negocios y Expresiones modismáticas.",
-                gram: "Past Perfect, Condicional 3 y Mixto, Tiempos continuos perfectos, Discurso indirecto (Reported Speech), Verbos frasales (Phrasal verbs)."
-            },
-            'C1': {
-                vocab: "Política, Economía, Ciencia y tecnología avanzada, Arte, Filosofía, Modismos complejas y Sinónimos académicos.",
-                gram: "Inversiones gramaticales, Estructuras enfáticas (Cleft sentences), Subjuntivo / Formas avanzadas, Tiempos de futuro perfecto continuo."
-            },
-            'C2': {
-                vocab: "Registros literarios, Modismos regionales, Humor/Sarcasmo, Jerga profesional especializada y Matices de significado.",
-                gram: "Estructuras sintácticas complejas, Variaciones estilísticas avanzadas, Control total de registros y Cohesión textual superior."
-            }
+            'A1': { vocab: "Saludos, Familia, Rutina diaria, Números y Colores.", gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the)." },
+            'A2': { vocab: "Comida, Compras, Ropa, Tiempo meteorológico, Hobbies.", gram: "Pasado simple, Presente continuo, Comparativos y superlativos." },
+            'B1': { vocab: "Viajes, Experiencias personales, Trabajo, Tecnología.", gram: "Present Perfect, Pasado continuo, Condicionales (Tipo 1 y 2)." },
+            'B2': { vocab: "Educación, Medio ambiente, Salud, Términos de negocios.", gram: "Past Perfect, Condicional 3, Discurso indirecto, Phrasal verbs." },
+            'C1': { vocab: "Política, Economía, Ciencia avanzada, Modismos complejos.", gram: "Inversiones gramaticales, Estructuras enfáticas, Subjuntivo." },
+            'C2': { vocab: "Registros literarios, Jerga especializada, Matices sutiles.", gram: "Variaciones estilísticas avanzadas, Control total de registros." }
         };
 
         function cambiarConfiguracion() {
@@ -358,42 +315,36 @@
             document.getElementById('lbl-idioma').innerText = idioma.toUpperCase();
             document.getElementById('lbl-nivel').innerText = nivel;
             
-            // Cargar recomendaciones según el nivel seleccionado
             const recs = recomendacionNiveles[nivel] || recomendacionNiveles['B1'];
-            const bancoBox = document.getElementById('banco-recomendado');
-            bancoBox.innerHTML = `
+            document.getElementById('banco-recomendado').innerHTML = `
                 <details open>
-                    <summary>📚 Vocabulario Recomendado (${nivel})</summary>
+                    <summary>📚 Vocabulario (${nivel})</summary>
                     <div class="details-content">
                         <div>${recs.vocab}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame y dame ejemplos de vocabulario de nivel ${nivel} en ${idioma.toUpperCase()} sobre: ${recs.vocab}')">💡 Explicar Vocabulario</button>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame y dame ejemplos de vocabulario nivel ${nivel} en ${idioma.toUpperCase()} sobre: ${recs.vocab}')">💡 Explicar Vocabulario</button>
                     </div>
                 </details>
                 <details open>
-                    <summary>✍️ Gramática Recomendada (${nivel})</summary>
+                    <summary>✍️ Gramática (${nivel})</summary>
                     <div class="details-content">
                         <div>${recs.gram}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame detenidamente con reglas y ejemplos los temas de gramática de nivel ${nivel} en ${idioma.toUpperCase()}: ${recs.gram}')">💡 Explicar Gramática</button>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame con reglas y ejemplos la gramática de nivel ${nivel} en ${idioma.toUpperCase()}: ${recs.gram}')">💡 Explicar Gramática</button>
                     </div>
                 </details>
             `;
-
             actualizarExamenes();
         }
 
         function iniciarNuevoChat() {
-            const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML = '';
+            document.getElementById('chat-box').innerHTML = '';
             const idioma = document.getElementById('idioma').value.toUpperCase();
             const nivel = document.getElementById('nivel').value;
-
-            const bienvenida = `¡Hola! He iniciado una nueva sesión para practicar en **${idioma}** (Nivel **${nivel}**). Siempre corregiré tus errores gramaticales y de vocabulario. ¡Escríbeme cuando quieras!`;
-            agregarMensaje('oralis', bienvenida);
+            agregarMensaje('oralis', `¡Hola! He iniciado una nueva sesión para practicar en **${idioma}** (Nivel **${nivel}**). ¡Escríbeme cuando quieras!`);
         }
 
         function pedirExplicacion(consulta) {
             document.getElementById('input-mensaje').value = consulta;
-            document.getElementById('form-chat').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            enviarMensaje(new Event('submit'));
         }
 
         async function actualizarExamenes() {
@@ -415,8 +366,7 @@
 
         function mostrarNombreArchivo() {
             const input = document.getElementById('archivo');
-            const indicator = document.getElementById('file-indicator');
-            indicator.innerText = (input.files && input.files[0]) ? '📄 Archivo cargado: ' + input.files[0].name : '';
+            document.getElementById('file-indicator').innerText = (input.files && input.files[0]) ? '📄 ' + input.files[0].name : '';
         }
 
         function agregarMensaje(emisor, texto) {
@@ -433,14 +383,11 @@
                 audioBtn.type = 'button';
                 audioBtn.className = 'btn-audio';
                 audioBtn.innerHTML = '🔊 Escuchar';
-                audioBtn.onclick = function() {
-                    reproducirTexto(textContainer.innerText);
-                };
+                audioBtn.onclick = function() { reproducirTexto(textContainer.innerText); };
 
                 msgDiv.appendChild(textContainer);
                 msgDiv.appendChild(audioBtn);
                 chatBox.appendChild(msgDiv);
-                
                 chatBox.scrollTop = chatBox.scrollHeight;
                 return textContainer;
             } else {
@@ -450,8 +397,9 @@
             }
         }
 
+        // LÓGICA DE ENVÍO Y RECEPCIÓ N MEJORADA
         async function enviarMensaje(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             const input = document.getElementById('input-mensaje');
             const mensaje = input.value.trim();
             const archivoInput = document.getElementById('archivo');
@@ -460,7 +408,7 @@
 
             let textoUsuario = mensaje;
             if (archivoInput.files && archivoInput.files[0]) {
-                textoUsuario += ` (📄 Archivo: ${archivoInput.files[0].name})`;
+                textoUsuario += ` (📄 ${archivoInput.files[0].name})`;
             }
             agregarMensaje('user', textoUsuario);
 
@@ -469,14 +417,9 @@
             formData.append('idioma', document.getElementById('idioma').value);
             formData.append('nivel', document.getElementById('nivel').value);
             formData.append('modo', document.getElementById('modo').value);
-            formData.append('metodo_writing', document.getElementById('metodo_writing').value);
-            formData.append('profesion', document.getElementById('profesion').value);
-            formData.append('profesion_custom', document.getElementById('profesion_custom').value);
-            formData.append('tipo_examen', document.getElementById('tipo_examen').value);
-            formData.append('tema', document.getElementById('tema').value);
 
             input.value = '';
-            archivoInput.value = '';
+            if (archivoInput) archivoInput.value = '';
             document.getElementById('file-indicator').innerText = '';
 
             const elemTextoOralis = agregarMensaje('oralis', '');
@@ -485,61 +428,49 @@
                 const response = await fetch('/chat', { method: 'POST', body: formData });
 
                 if (!response.ok) {
-                    elemTextoOralis.innerText = "Error en el servidor al procesar tu solicitud.";
+                    elemTextoOralis.innerText = "Error de respuesta del servidor (" + response.status + ").";
                     return;
                 }
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder("utf-8");
-                let buffer = '';
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop(); // Mantener la línea incompleta para el siguiente ciclo
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
 
                     for (const line of lines) {
                         const trimmedLine = line.trim();
                         if (trimmedLine.startsWith('data: ')) {
-                            const dataStr = trimmedLine.substring(6).trim();
-                            if (dataStr) {
-                                try {
-                                    const data = JSON.parse(dataStr);
-                                    if (data.content) {
-                                        elemTextoOralis.innerText += data.content;
-                                        const chatBox = document.getElementById('chat-box');
-                                        chatBox.scrollTop = chatBox.scrollHeight;
-                                    }
-                                } catch (jsonErr) {
-                                    // Si no es JSON, mostrarlo directamente
-                                    elemTextoOralis.innerText += dataStr;
-                                }
+                            const rawData = trimmedLine.substring(6);
+                            try {
+                                const parsed = JSON.parse(rawData);
+                                if (parsed.content) elemTextoOralis.innerText += parsed.content;
+                            } catch (err) {
+                                elemTextoOralis.innerText += rawData;
                             }
                         } else if (trimmedLine && !trimmedLine.startsWith(':')) {
                             elemTextoOralis.innerText += line;
                         }
                     }
+                    document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
                 }
             } catch (err) {
-                console.error("Error en comunicación:", err);
-                elemTextoOralis.innerText = "Lo siento, ha ocurrido un error de conexión con Oralis.";
+                console.error("Error en petición:", err);
+                elemTextoOralis.innerText = "Error de conexión. Inténtalo de nuevo.";
             }
         }
 
         function guardarChat() {
-            const chatBox = document.getElementById('chat-box');
-            let textoGuardado = "--- HISTORIAL DE CONVERSACIÓN ORALIS AI ---\n\n";
-            const mensajes = chatBox.querySelectorAll('.mensaje');
-            
-            mensajes.forEach(msg => {
+            let textoGuardado = "--- HISTORIAL ORALIS AI ---\n\n";
+            document.querySelectorAll('.mensaje').forEach(msg => {
                 const emisor = msg.classList.contains('mensaje-usuario') ? "Usuario" : "Oralis AI";
                 const texto = msg.querySelector('.contenido-texto') ? msg.querySelector('.contenido-texto').innerText : msg.innerText;
                 textoGuardado += `${emisor}: ${texto}\n\n`;
             });
-
             const blob = new Blob([textoGuardado], { type: 'text/plain;charset=utf-8' });
             const enlace = document.createElement('a');
             enlace.href = URL.createObjectURL(blob);
@@ -550,16 +481,12 @@
         async function enviarFeedback(e) {
             e.preventDefault();
             const form = document.getElementById('form-feedback');
-            const formData = new FormData(form);
-
             try {
-                const res = await fetch('/api/feedback', { method: 'POST', body: formData });
+                const res = await fetch('/api/feedback', { method: 'POST', body: new FormData(form) });
                 const data = await res.json();
                 document.getElementById('msg-feedback').innerText = data.mensaje;
                 form.reset();
-            } catch (err) {
-                console.error("Error al enviar feedback:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         window.onload = function() {
