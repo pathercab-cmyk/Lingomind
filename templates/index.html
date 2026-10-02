@@ -40,7 +40,8 @@
         details { margin-bottom: 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; }
         summary { font-weight: 600; font-size: 0.85rem; cursor: pointer; color: #1e293b; outline: none; }
         .details-content { padding-top: 6px; font-size: 0.8rem; color: #475569; display: flex; flex-direction: column; gap: 6px; }
-        .tree-node { margin-left: 10px; }
+        .tree-node { margin-left: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .btn-del-item { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 0.8rem; margin-left: 6px; }
 
         .feedback-section { margin-top: auto; }
         .user-info { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; }
@@ -57,41 +58,11 @@
         
         .contenido-texto { min-height: 20px; font-size: 0.95rem; color: #1e293b; margin-bottom: 8px; white-space: pre-wrap; }
         
-        .box-traduccion {
-            background-color: #fff7ed;
-            border-left: 4px solid #f97316;
-            border-radius: 6px;
-            padding: 10px 14px;
-            margin-top: 10px;
-            color: #9a3412;
-            font-size: 0.9rem;
-        }
-        .box-traduccion-titulo {
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-            color: #c2410c;
-        }
+        .box-traduccion { background-color: #fff7ed; border-left: 4px solid #f97316; border-radius: 6px; padding: 10px 14px; margin-top: 10px; color: #9a3412; font-size: 0.9rem; }
+        .box-traduccion-titulo { font-weight: bold; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 4px; color: #c2410c; }
 
-        .box-correccion {
-            background-color: #fef2f2;
-            border-left: 4px solid #ef4444;
-            border-radius: 6px;
-            padding: 10px 14px;
-            margin-top: 10px;
-            color: #991b1b;
-            font-size: 0.9rem;
-        }
-        .box-correccion-titulo {
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-            color: #b91c1c;
-        }
+        .box-correccion { background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px; padding: 10px 14px; margin-top: 10px; color: #991b1b; font-size: 0.9rem; }
+        .box-correccion-titulo { font-weight: bold; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 4px; color: #b91c1c; }
 
         .btn-audio { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; margin-top: 5px; }
 
@@ -127,7 +98,7 @@
             <div class="section-title">Configuración</div>
             <div class="form-group">
                <label for="idioma">Idioma Objetivo:</label>
-                    <select name="idioma" id="idioma" class="form-select" onchange="cambiarConfiguracion()">
+                    <select name="idioma" id="idioma" class="form-select" onchange="poblarExamenes(); cambiarConfiguracion();">
                         <option value="en" {% if usuario and usuario.idioma == 'en' %}selected{% endif %}>Inglés</option>
                         <option value="de" {% if usuario and usuario.idioma == 'de' %}selected{% endif %}>Alemán</option>
                         <option value="fr" {% if usuario and usuario.idioma == 'fr' %}selected{% endif %}>Francés</option>
@@ -193,7 +164,7 @@
             </div>
         </div>
 
-        <!-- SECCIÓN MI CUADERNO DINÁMICO AUTOMÁTICO -->
+        <!-- SECCIÓN MI CUADERNO DINÁMICO CON PERSISTENCIA NUBE -->
         <div class="section-box">
             <div class="section-title">
                 <span>📖 Mi Cuaderno</span>
@@ -314,6 +285,19 @@
             'zh': ['HSK (HSK 1 - HSK 6)']
         };
 
+        let reconociendoAudio = false;
+        let esuchandoVoz = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            poblarExamenes();
+            cambiarConfiguracion();
+            inicializarVoz();
+        });
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
         function poblarExamenes() {
             const idioma = document.getElementById('idioma').value;
             const selectExamen = document.getElementById('tipo_examen');
@@ -328,8 +312,15 @@
             });
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
+        function cambiarConfiguracion() {
+            const selIdioma = document.getElementById('idioma');
+            const selNivel = document.getElementById('nivel');
+            
+            document.getElementById('lbl-idioma').innerText = selIdioma.options[selIdioma.selectedIndex].text;
+            document.getElementById('lbl-nivel').innerText = selNivel.value;
+
+            renderizarCuaderno();
+            actualizarBancoRecomendado();
         }
 
         function checkEnterSend(event) {
@@ -373,7 +364,84 @@
             }
         }
 
-        /* --- FORMATO VISUAL CON RENDERIZADO MARKDOWN DE NEGRITAS --- */
+        function mostrarNombreArchivo() {
+            const fileInput = document.getElementById('archivo');
+            const fileIndicator = document.getElementById('file-indicator');
+            if (fileInput.files.length > 0) {
+                fileIndicator.innerText = "📎 Archivo: " + fileInput.files[0].name;
+            } else {
+                fileIndicator.innerText = "";
+            }
+        }
+
+        /* --- SINTESIS Y RECONOCIMIENTO DE VOZ --- */
+        function inicializarVoz() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                esuchandoVoz = new SpeechRecognition();
+                esuchandoVoz.continuous = false;
+                esuchandoVoz.interimResults = false;
+
+                esuchandoVoz.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('input-mensaje').value = transcript;
+                    detenerMicrofono();
+                };
+
+                esuchandoVoz.onerror = () => detenerMicrofono();
+                esuchandoVoz.onend = () => detenerMicrofono();
+            }
+        }
+
+        function toggleMicrofono() {
+            if (!esuchandoVoz) {
+                alert("Tu navegador no soporta reconocimiento de voz.");
+                return;
+            }
+            if (!reconociendoAudio) {
+                const idioma = document.getElementById('idioma').value;
+                esuchandoVoz.lang = idioma;
+                esuchandoVoz.start();
+                reconociendoAudio = true;
+                document.getElementById('btn-mic').style.backgroundColor = '#ef4444';
+                document.getElementById('btn-mic').style.color = 'white';
+            } else {
+                detenerMicrofono();
+            }
+        }
+
+        function detenerMicrofono() {
+            if (esuchandoVoz && reconociendoAudio) {
+                esuchandoVoz.stop();
+            }
+            reconociendoAudio = false;
+            document.getElementById('btn-mic').style.backgroundColor = '';
+            document.getElementById('btn-mic').style.color = '';
+        }
+
+        function reproducirTexto(texto) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let limpio = texto.replace(/\[VOCABULARIO:[\s\S]*?\]/gi, '')
+                                 .replace(/\[GRAMATICA:[\s\S]*?\]/gi, '')
+                                 .replace(/---(?:CORRECCION|CORRECCIÓN|ERRORES|TRADUCCION|TRADUCCIÓN)---[\s\S]*/gi, '');
+                
+                const utterance = new SpeechSynthesisUtterance(limpio);
+                utterance.lang = document.getElementById('idioma').value;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        /* --- MENSAJES Y CHAT --- */
+        function agregarMensajeUsuario(texto) {
+            const chatBox = document.getElementById('chat-box');
+            const msg = document.createElement('div');
+            msg.className = 'mensaje mensaje-usuario';
+            msg.textContent = texto;
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
         function formatearRespuestaOralis(texto) {
             let textoLimpio = texto.replace(/^¡Hola!\s*Soja\s+/i, '¡Hola! Soy ');
 
@@ -408,7 +476,6 @@
             return `<div>${partePrincipal.trim()}</div>${htmlCorreccion}${htmlTraduccion}`;
         }
 
-        /* --- MUESTRA MENSAJE DE ORALIS EN EL CHAT --- */
         function agregarMensajeOralis(texto) {
             const chatBox = document.getElementById('chat-box');
             const msgOralis = document.createElement('div');
@@ -429,9 +496,104 @@
             msgOralis.appendChild(btnEscuchar);
             chatBox.appendChild(msgOralis);
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Extraer dinámicamente e impactar en Backend
+            extraerYGuardarEnCuaderno(texto);
         }
 
-        /* --- SISTEMA DEL CUADERNO (SINCRONIZADO EN BACKEND POR USUARIO/CORREO) --- */
+        async function enviarMensaje(event) {
+            if (event) event.preventDefault();
+
+            const inputMensaje = document.getElementById('input-mensaje');
+            const mensaje = inputMensaje.value.trim();
+            const fileInput = document.getElementById('archivo');
+
+            if (!mensaje && fileInput.files.length === 0) return;
+
+            if (mensaje) agregarMensajeUsuario(mensaje);
+            inputMensaje.value = '';
+
+            const formData = new FormData();
+            formData.append('mensaje', mensaje);
+            formData.append('idioma', document.getElementById('idioma').value);
+            formData.append('nivel', document.getElementById('nivel').value);
+            formData.append('modo', document.getElementById('modo').value);
+            formData.append('tema', document.getElementById('tema').value);
+
+            let prof = document.getElementById('profesion').value;
+            if (prof === 'Otro') prof = document.getElementById('profesion_custom').value;
+            formData.append('profesion', prof);
+
+            formData.append('tipo_examen', document.getElementById('tipo_examen').value);
+            formData.append('metodo_writing', document.getElementById('metodo_writing').value);
+
+            if (fileInput.files.length > 0) {
+                formData.append('archivo', fileInput.files[0]);
+                fileInput.value = '';
+                document.getElementById('file-indicator').innerText = '';
+            }
+
+            try {
+                const response = await fetch('/chat', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.respuesta) {
+                    agregarMensajeOralis(data.respuesta);
+                } else if (data.error) {
+                    agregarMensajeOralis("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                agregarMensajeOralis("Error al comunicar con la IA.");
+            }
+        }
+
+        function iniciarNuevoChat() {
+            document.getElementById('chat-box').innerHTML = '';
+            agregarMensajeOralis("¡Hola! He reiniciado nuestra sesión. ¿En qué te puedo ayudar hoy?");
+        }
+
+        function guardarChat() {
+            const chatBox = document.getElementById('chat-box');
+            const texto = chatBox.innerText;
+            const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Conversacion_Oralis_${new Date().toISOString().slice(0,10)}.txt`;
+            link.click();
+        }
+
+        async function enviarFeedback(event) {
+            event.preventDefault();
+            const form = document.getElementById('form-feedback');
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch('/feedback', { method: 'POST', body: formData });
+                if (res.ok) {
+                    document.getElementById('msg-feedback').innerText = "¡Gracias por tu opinión!";
+                    form.reset();
+                }
+            } catch (err) {
+                console.error("Error al enviar opinión", err);
+            }
+        }
+
+        /* --- BANCO RECOMENDADO --- */
+        function actualizarBancoRecomendado() {
+            const banco = document.getElementById('banco-recomendado');
+            const idioma = document.getElementById('idioma').value;
+
+            const recomendaciones = {
+                'en': '💡 <i>Tip:</i> Utiliza conectores como "Furthermore", "However" o "On the other hand" para subir de nivel.',
+                'de': '💡 <i>Tip:</i> Recuerda la posición del verbo en frases secundarias (al final con "weil", "dass").',
+                'fr': '💡 <i>Tip:</i> Pon atención al uso de la subjunción con "bien que" o "pour que".',
+                'es': '💡 <i>Tip:</i> Practica el uso del subjuntivo para expresar deseos u opiniones negativas.'
+            };
+
+            banco.innerHTML = recomendaciones[idioma] || '💡 <i>Tip:</i> Intenta formar frases completas para recibir mejores correcciones.';
+        }
+
+        /* --- SISTEMA DE CUADERNO VINCULADO AL USUARIO EN EL BACKEND --- */
         async function obtenerCuaderno() {
             try {
                 const response = await fetch('/api/cuaderno');
@@ -440,7 +602,7 @@
                     return datos || {};
                 }
             } catch (err) {
-                console.error("Error obteniendo el cuaderno desde el servidor:", err);
+                console.error("Error al sincronizar con la nube:", err);
             }
             return {};
         }
@@ -454,7 +616,7 @@
                 });
                 await renderizarCuaderno();
             } catch (err) {
-                console.error("Error guardando el cuaderno en el servidor:", err);
+                console.error("Error al guardar en el servidor:", err);
             }
         }
 
@@ -468,7 +630,7 @@
             const temas = Object.keys(datosIdioma.vocabulario || {});
 
             if (temas.length === 0) {
-                contVocab.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay vocabulario guardado en este idioma.</div>';
+                contVocab.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay vocabulario guardado.</div>';
             } else {
                 temas.forEach(tema => {
                     const detailsTema = document.createElement('details');
@@ -478,7 +640,10 @@
                     const tipos = datosIdioma.vocabulario[tema];
                     for (const tipo in tipos) {
                         if (Array.isArray(tipos[tipo]) && tipos[tipo].length > 0) {
-                            htmlTipos += `<div class="tree-node"><strong>• ${tipo}:</strong> ${tipos[tipo].join(', ')}</div>`;
+                            const palabrasHtml = tipos[tipo].map((palabra, idx) => 
+                                `<span>${palabra} <button class="btn-del-item" onclick="eliminarItem('vocabulario', '${tema}', '${tipo}', ${idx})">✕</button></span>`
+                            ).join(', ');
+                            htmlTipos += `<div class="tree-node"><div><strong>• ${tipo}:</strong> ${palabrasHtml}</div></div>`;
                         }
                     }
 
@@ -495,10 +660,10 @@
             if (!datosIdioma.gramatica || datosIdioma.gramatica.length === 0) {
                 contGram.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay reglas gramaticales guardadas.</div>';
             } else {
-                datosIdioma.gramatica.forEach(item => {
+                datosIdioma.gramatica.forEach((item, index) => {
                     const divGram = document.createElement('div');
                     divGram.className = 'tree-node';
-                    divGram.innerHTML = `• ${item}`;
+                    divGram.innerHTML = `<span>• ${item}</span> <button class="btn-del-item" onclick="eliminarItem('gramatica', null, null, ${index})">✕</button>`;
                     contGram.appendChild(divGram);
                 });
             }
@@ -516,7 +681,7 @@
 
             let huboCambios = false;
 
-            // REGEX MEJORADA: Tolera saltos de línea y múltiples formatos de separador (- o :)
+            // EXTRACCIÓN AUTOMÁTICA DE VOCABULARIO
             const regexVocab = /\[VOCABULARIO:\s*([\s\S]*?)\]/gi;
             let matchVocab;
 
@@ -538,10 +703,10 @@
                 const palabras = palabrasTexto.split(',').map(p => p.trim()).filter(p => p.length > 0);
 
                 if (!cuaderno[idiomaActual].vocabulario[categoria]) {
-                    cuaderno[idiomaActual].vocabulario[categoria] = { "Expresiones / Palabras": [] };
+                    cuaderno[idiomaActual].vocabulario[categoria] = { "Frases / Expresiones": [] };
                 }
                 
-                const subCatKey = Object.keys(cuaderno[idiomaActual].vocabulario[categoria])[0] || "Expresiones / Palabras";
+                const subCatKey = Object.keys(cuaderno[idiomaActual].vocabulario[categoria])[0] || "Frases / Expresiones";
 
                 palabras.forEach(palabra => {
                     if (!cuaderno[idiomaActual].vocabulario[categoria][subCatKey].includes(palabra)) {
@@ -551,7 +716,7 @@
                 });
             }
 
-            // REGEX MEJORADA PARA GRAMÁTICA
+            // EXTRACCIÓN AUTOMÁTICA DE GRAMÁTICA
             const regexGram = /\[GRAMATICA:\s*([\s\S]*?)\]/gi;
             let matchGram;
 
@@ -566,6 +731,27 @@
             if (huboCambios) {
                 await guardarDatosCuaderno(cuaderno);
             }
+        }
+
+        async function eliminarItem(tipo, tema, subtipo, index) {
+            const idiomaActual = document.getElementById('idioma').value;
+            const cuaderno = await obtenerCuaderno();
+
+            if (!cuaderno[idiomaActual]) return;
+
+            if (tipo === 'vocabulario' && cuaderno[idiomaActual].vocabulario[tema]) {
+                cuaderno[idiomaActual].vocabulario[tema][subtipo].splice(index, 1);
+                if (cuaderno[idiomaActual].vocabulario[tema][subtipo].length === 0) {
+                    delete cuaderno[idiomaActual].vocabulario[tema][subtipo];
+                }
+                if (Object.keys(cuaderno[idiomaActual].vocabulario[tema]).length === 0) {
+                    delete cuaderno[idiomaActual].vocabulario[tema];
+                }
+            } else if (tipo === 'gramatica' && cuaderno[idiomaActual].gramatica) {
+                cuaderno[idiomaActual].gramatica.splice(index, 1);
+            }
+
+            await guardarDatosCuaderno(cuaderno);
         }
 
         function abrirModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'flex'; }
@@ -593,319 +779,30 @@
                 if (!palabra) return alert('Escribe una palabra o expresión.');
 
                 if (!cuaderno[idiomaActual].vocabulario[tema]) {
-                    cuaderno[idiomaActual].vocabulario[tema] = { Sustantivos: [], Verbos: [], Adjetivos: [], "Frases / Expresiones": [] };
+                    cuaderno[idiomaActual].vocabulario[tema] = {};
                 }
 
                 if (!cuaderno[idiomaActual].vocabulario[tema][tipoPalabra]) {
                     cuaderno[idiomaActual].vocabulario[tema][tipoPalabra] = [];
                 }
 
-                cuaderno[idiomaActual].vocabulario[tema][tipoPalabra].push(palabra);
+                if (!cuaderno[idiomaActual].vocabulario[tema][tipoPalabra].includes(palabra)) {
+                    cuaderno[idiomaActual].vocabulario[tema][tipoPalabra].push(palabra);
+                }
             } else {
                 const regla = document.getElementById('add-regla').value.trim();
-                if (!regla) return alert('Escribe la regla o apunte gramatical.');
-                cuaderno[idiomaActual].gramatica.push(regla);
+                if (!regla) return alert('Escribe una regla gramatical.');
+                if (!cuaderno[idiomaActual].gramatica.includes(regla)) {
+                    cuaderno[idiomaActual].gramatica.push(regla);
+                }
             }
 
             await guardarDatosCuaderno(cuaderno);
             cerrarModalAgregar();
+            
             document.getElementById('add-palabra').value = '';
             document.getElementById('add-regla').value = '';
         }
-
-        /* --- AUDIO Y RECONOCIMIENTO DE VOZ --- */
-        let rec;
-        let escuchando = false;
-
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            rec = new SpeechRecognition();
-            rec.continuous = false;
-            rec.interimResults = false;
-
-            rec.onresult = function(event) {
-                document.getElementById('input-mensaje').value = event.results[0][0].transcript;
-                detenerMicrofono();
-            };
-            rec.onerror = detenerMicrofono;
-            rec.onend = detenerMicrofono;
-        }
-
-        function toggleMicrofono() {
-            if (!rec) return alert("Tu navegador no soporta entrada de voz.");
-            const btnMic = document.getElementById('btn-mic');
-            if (!escuchando) {
-                const idioma = document.getElementById('idioma').value;
-                rec.lang = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
-                rec.start();
-                escuchando = true;
-                btnMic.style.backgroundColor = '#fee2e2';
-                btnMic.innerText = '🔴';
-            } else {
-                detenerMicrofono();
-            }
-        }
-
-        function detenerMicrofono() {
-            if (rec && escuchando) rec.stop();
-            escuchando = false;
-            const btnMic = document.getElementById('btn-mic');
-            if (btnMic) {
-                btnMic.style.backgroundColor = 'transparent';
-                btnMic.innerText = '🎤';
-            }
-        }
-
-        function hablar(texto, idioma = 'es-ES') {
-            const utterance = new SpeechSynthesisUtterance(texto);
-            utterance.lang = idioma;
-            
-            const voices = window.speechSynthesis.getVoices();
-            const vozMejorada = voices.find(v => 
-                v.lang.startsWith(idioma.slice(0, 2)) && 
-                (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Enhanced") || v.name.includes("Online"))
-            );
-
-            if (vozMejorada) {
-                utterance.voice = vozMejorada;
-            }
-
-            utterance.rate = 0.95;
-            utterance.pitch = 1.0;
-
-            window.speechSynthesis.speak(utterance);
-        }
-
-        window.speechSynthesis.onvoiceschanged = () => {
-            window.speechSynthesis.getVoices();
-        };
-
-        function reproducirTexto(texto) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const textoLimpio = texto.replace(/<[^>]*>/g, '')
-                                         .replace(/\*\*/g, '')
-                                         .replace(/\[VOCABULARIO:[\s\S]*?\]/gi, '')
-                                         .replace(/\[GRAMATICA:[\s\S]*?\]/gi, '')
-                                         .split('---')[0];
-                const idioma = document.getElementById('idioma').value;
-                const codigoIdioma = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
-                
-                hablar(textoLimpio, codigoIdioma);
-            }
-        }
-
-        const recomendacionNiveles = {
-            'A1': { vocab: "Saludos, Familia, Rutina diaria, Números y Colores.", gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the)." },
-            'A2': { vocab: "Comida, Compras, Ropa, Tiempo meteorológico, Hobbies.", gram: "Pasado simple, Presente continuo, Comparativos y superlativos." },
-            'B1': { vocab: "Viajes, Experiencias personales, Trabajo, Tecnología.", gram: "Present Perfect, Pasado continuo, Condicionales (Tipo 1 y 2)." },
-            'B2': { vocab: "Educación, Medio ambiente, Salud, Términos de negocios.", gram: "Past Perfect, Condicional 3, Discurso indirecto, Phrasal verbs." },
-            'C1': { vocab: "Política, Economía, Ciencia avanzada, Modismos complejos.", gram: "Inversiones gramaticales, Estructuras enfáticas, Subjuntivo." },
-            'C2': { vocab: "Registros literarios, Jerga especializada, Matices sutiles.", gram: "Variaciones estilísticas avanzadas, Control total de registros." }
-        };
-
-        function cambiarConfiguracion() {
-            poblarExamenes();
-            actualizarTodo();
-            cargarChatPorIdioma();
-        }
-
-        function actualizarTodo() {
-            const selectIdioma = document.getElementById('idioma');
-            const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
-            const nivel = document.getElementById('nivel').value;
-            
-            document.getElementById('lbl-idioma').innerText = textoIdioma;
-            document.getElementById('lbl-nivel').innerText = nivel;
-
-            const recInfo = recomendacionNiveles[nivel];
-            if (recInfo) {
-                document.getElementById('banco-recomendado').innerHTML = `
-                    <div style="margin-bottom: 6px;"><strong>Vocabulario:</strong> ${recInfo.vocab}</div>
-                    <div><strong>Gramática:</strong> ${recInfo.gram}</div>
-                `;
-            }
-
-            renderizarCuaderno();
-        }
-
-        async function cargarChatPorIdioma() {
-            const selectIdioma = document.getElementById('idioma');
-            const idioma = selectIdioma.value;
-            const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
-            const nivel = document.getElementById('nivel').value;
-            const modo = document.getElementById('modo').value;
-
-            const profesionSelect = document.getElementById('profesion').value;
-            const profesionCustom = document.getElementById('profesion_custom').value.trim();
-            const profesionFinal = (profesionSelect === 'Otro' && profesionCustom) ? profesionCustom : profesionSelect;
-            
-            const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML = '';
-
-            try {
-                const res = await fetch(`/api/chat/historial/${idioma}`);
-                const data = await res.json();
-                
-                if (data.historial && data.historial.length > 0) {
-                    data.historial.forEach(m => {
-                        if (m.emisor === 'user') {
-                            const msgUser = document.createElement('div');
-                            msgUser.className = 'mensaje mensaje-usuario';
-                            msgUser.innerText = m.texto;
-                            chatBox.appendChild(msgUser);
-                        } else {
-                            agregarMensajeOralis(m.texto);
-                        }
-                    });
-                } else {
-                    let mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
-                    
-                    if (modo === 'practicas_orales') {
-                        mensajeBienvenida = `¡Hola! Soy Oralis AI. Iniciando simulación de **${profesionFinal}** en **${textoIdioma}** (Nivel **${nivel}**). ¿Empezamos?`;
-                    } else if (modo === 'examen') {
-                        const tipoExamen = document.getElementById('tipo_examen').value || 'Examen Oficial';
-                        mensajeBienvenida = `¡Hola! Soy Oralis AI. Iniciando módulo de preparación para **${tipoExamen}** en **${textoIdioma}** (Nivel **${nivel}**).`;
-                    } else if (modo === 'writing') {
-                        mensajeBienvenida = `¡Hola! Soy Oralis AI. Envía tu texto o redacción en **${textoIdioma}** (Nivel **${nivel}**) para evaluarlo.`;
-                    }
-
-                    agregarMensajeOralis(mensajeBienvenida);
-                }
-            } catch (err) {
-                console.error("Error al obtener historial:", err);
-                let mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
-                if (modo === 'practicas_orales') {
-                    mensajeBienvenida = `¡Hola! Soy Oralis AI. Iniciando simulación de **${profesionFinal}** en **${textoIdioma}** (Nivel **${nivel}**). ¿Empezamos?`;
-                }
-                agregarMensajeOralis(mensajeBienvenida);
-            }
-
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        async function guardarChat() {
-            const chatBox = document.getElementById('chat-box');
-            if (!chatBox || chatBox.children.length === 0) return;
-            alert("¡Chat e historial sincronizados correctamente con tu cuenta!");
-        }
-
-        async function iniciarNuevoChat() {
-            const idioma = document.getElementById('idioma').value;
-            if (confirm("¿Estás seguro de que deseas limpiar esta conversación?")) {
-                try {
-                    await fetch(`/api/chat/limpiar/${idioma}`, { method: 'POST' });
-                } catch (e) {
-                    console.error(e);
-                }
-                cargarChatPorIdioma();
-            }
-        }
-
-        async function enviarMensaje(event) {
-            if (event) event.preventDefault();
-            const input = document.getElementById('input-mensaje');
-            const mensaje = input.value.trim();
-            if (!mensaje) return;
-
-            const chatBox = document.getElementById('chat-box');
-            
-            const msgUser = document.createElement('div');
-            msgUser.className = 'mensaje mensaje-usuario';
-            msgUser.innerText = mensaje;
-            chatBox.appendChild(msgUser);
-
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            const msgOralis = document.createElement('div');
-            msgOralis.className = 'mensaje mensaje-oralis';
-            const contenidoDiv = document.createElement('div');
-            contenidoDiv.className = 'contenido-texto';
-            msgOralis.appendChild(contenidoDiv);
-            chatBox.appendChild(msgOralis);
-
-            const profesionSelect = document.getElementById('profesion').value;
-            const profesionCustom = document.getElementById('profesion_custom').value.trim();
-            const profesionFinal = (profesionSelect === 'Otro' && profesionCustom) ? profesionCustom : profesionSelect;
-
-            const formConfig = new FormData();
-            formConfig.append('mensaje', mensaje);
-            formConfig.append('idioma', document.getElementById('idioma').value);
-            formConfig.append('nivel', document.getElementById('nivel').value);
-            formConfig.append('modo', document.getElementById('modo').value);
-            formConfig.append('metodo_writing', document.getElementById('metodo_writing').value);
-            formConfig.append('profesion', profesionFinal);
-            formConfig.append('profesion_custom', profesionCustom);
-            formConfig.append('tipo_examen', document.getElementById('tipo_examen').value);
-            formConfig.append('tema', document.getElementById('tema').value);
-
-            let textoAcumulado = '';
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    body: formConfig
-                });
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lineas = chunk.split('\n');
-
-                    for (const linea of lineas) {
-                        if (linea.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(linea.replace('data: ', ''));
-                                if (data.content) {
-                                    textoAcumulado += data.content;
-                                    contenidoDiv.innerHTML = formatearRespuestaOralis(textoAcumulado);
-                                    chatBox.scrollTop = chatBox.scrollHeight;
-                                }
-                            } catch (e) {}
-                        }
-                    }
-                }
-
-                const btnEscuchar = document.createElement('button');
-                btnEscuchar.className = 'btn-audio';
-                btnEscuchar.innerHTML = '🔊 Escuchar';
-                btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
-                msgOralis.appendChild(btnEscuchar);
-
-                await extraerYGuardarEnCuaderno(textoAcumulado);
-
-            } catch (err) {
-                contenidoDiv.innerText = "Error al conectar con el servidor.";
-            }
-        }
-
-        function enviarFeedback(event) {
-            event.preventDefault();
-            document.getElementById('msg-feedback').innerText = '¡Gracias por tus comentarios!';
-        }
-
-        function mostrarNombreArchivo() {
-            const archivoInput = document.getElementById('archivo');
-            const indicador = document.getElementById('file-indicator');
-            if (archivoInput.files.length > 0) {
-                indicador.innerText = `📎 ${archivoInput.files[0].name}`;
-            } else {
-                indicador.innerText = '';
-            }
-        }
-
-        window.onload = function() {
-            poblarExamenes();
-            toggleModos();
-            actualizarTodo();
-            cargarChatPorIdioma();
-        };
     </script>
 </body>
 </html>
