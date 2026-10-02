@@ -153,15 +153,28 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="modo">Modo de Aprendizaje:</label>
-                <select id="modo" name="modo" onchange="toggleModos()">
-                    <option value="tutor_original">Tutor General (Corrección Siempre)</option>
-                    <option value="practicas_orales">Simulación / Práctica Oral</option>
-                    <option value="examen">Preparación Examen Oficial</option>
-                    <option value="writing">Evaluador de Textos / Writing</option>
-                </select>
-            </div>
+          <div class="form-group">
+    <label for="modo">Modo de Aprendizaje:</label>
+    <!-- Se agrega onchange para toggleModos -->
+    <select id="modo" name="modo" onchange="toggleModos()">
+        <option value="tutor_original">Tutor General (Corrección Siempre)</option>
+        <option value="practicas_orales">Simulación / Práctica Oral</option>
+        <option value="examen">Preparación Examen Oficial</option>
+        <option value="writing">Evaluador de Textos / Writing</option>
+    </select>
+</div>
+
+<!-- Asegúrate de que tenga display: none por defecto -->
+<div class="form-group" id="group-profesion" style="display: none;">
+    <label for="profesion">Perfil de Simulación:</label>
+    <select id="profesion" name="profesion" onchange="toggleCustomProfesion()">
+        <option value="Entrevista de Trabajo">Entrevista de Trabajo</option>
+        <option value="Atención al Cliente">Atención al Cliente</option>
+        <option value="Médico / Salud">Consulta Médica</option>
+        <option value="Otro">Otro (Personalizado)</option>
+    </select>
+    <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;" onkeydown="checkEnterSend(event)">
+</div>
 
             <div class="form-group" id="group-writing" style="display: none;">
                 <label for="metodo_writing">Método de Corrección:</label>
@@ -595,15 +608,32 @@
             }
         }
 
-        function toggleModos() {
-            const modo = document.getElementById('modo').value;
-            document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
-            document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
-            document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
+      function toggleModos() {
+    const modo = document.getElementById('modo').value;
+    
+    // Contenedores
+    const groupProfesion = document.getElementById('group-profesion');
+    const groupExamen = document.getElementById('group-examen');
+    const groupWriting = document.getElementById('group-writing');
 
-            document.getElementById('btn-attach').style.display = (modo === 'writing') ? 'inline-flex' : 'none';
-            document.getElementById('btn-mic').style.display = (modo === 'writing') ? 'none' : 'inline-flex';
-        }
+    // Botones de la entrada
+    const btnAttach = document.getElementById('btn-attach');
+    const btnMic = document.getElementById('btn-mic');
+
+    // Mostrar / Ocultar campos del menú según el modo
+    groupProfesion.style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
+    groupExamen.style.display = (modo === 'examen') ? 'flex' : 'none';
+    groupWriting.style.display = (modo === 'writing') ? 'flex' : 'none';
+
+    // Ajustes de botones
+    if (btnAttach) btnAttach.style.display = (modo === 'writing') ? 'inline-flex' : 'none';
+    if (btnMic) btnMic.style.display = (modo === 'writing') ? 'none' : 'inline-flex';
+
+    // Verificar si dentro de "Práctica Oral" se seleccionó "Otro"
+    if (modo === 'practicas_orales') {
+        toggleCustomProfesion();
+    }
+}
 
         const recomendacionNiveles = {
             'A1': { vocab: "Saludos, Familia, Rutina diaria, Números y Colores.", gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the)." },
