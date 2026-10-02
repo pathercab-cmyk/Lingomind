@@ -648,24 +648,90 @@
             // Lógica para guardar el chat
         }
 
-        function enviarMensaje(event) {
-            if (event) event.preventDefault();
-            const input = document.getElementById('input-mensaje');
-            const mensaje = input.value.trim();
-            if (!mensaje) return;
+       async function enviarMensaje(event) {
+    if (event) event.preventDefault();
+    const input = document.getElementById('input-mensaje');
+    const mensaje = input.value.trim();
+    if (!mensaje) return;
 
-            const chatBox = document.getElementById('chat-box');
-            
-            // Renderizar mensaje usuario
-            const msgUser = document.createElement('div');
-            msgUser.className = 'mensaje mensaje-usuario';
-            msgUser.innerText = mensaje;
-            chatBox.appendChild(msgUser);
+    const chatBox = document.getElementById('chat-box');
+    
+    // 1. Mostrar mensaje del usuario
+    const msgUser = document.createElement('div');
+    msgUser.className = 'mensaje mensaje-usuario';
+    msgUser.innerText = mensaje;
+    chatBox.appendChild(msgUser);
 
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
+    input.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // 2. Crear contenedor para la respuesta progresiva de Oralis
+    const msgOralis = document.createElement('div');
+    msgOralis.className = 'mensaje mensaje-oralis';
+    const contenidoDiv = document.createElement('div');
+    contenidoDiv.className = 'contenido-texto';
+    msgOralis.appendChild(contenidoDiv);
+    chatBox.appendChild(msgOralis);
+
+    // Prepare datos del formulario (incluye idioma, nivel, modo, etc.)
+    const formConfig = new FormData();
+    formConfig.append('mensaje', mensaje);
+    formConfig.append('idioma', document.getElementById('idioma').value);
+    formConfig.append('nivel', document.getElementById('nivel').value);
+    formConfig.append('modo', document.getElementById('modo').value);
+    formConfig.append('metodo_writing', document.getElementById('metodo_writing').value);
+    formConfig.append('profesion', document.getElementById('profesion').value);
+    formConfig.append('profesion_custom', document.getElementById('profesion_custom').value);
+    formConfig.append('tipo_examen', document.getElementById('tipo_examen').value);
+    formConfig.append('tema', document.getElementById('tema').value);
+
+    let textoAcumulado = '';
+
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            body: formConfig
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lineas = chunk.split('\n');
+
+            for (const linea of lineas) {
+                if (linea.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(linea.replace('data: ', ''));
+                        if (data.content) {
+                            textoAcumulado += data.content;
+                            contenidoDiv.innerHTML = formatearRespuestaOralis(textoAcumulado);
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        }
+                    } catch (e) {
+                        console.error("Error parseando SSE:", e);
+                    }
+                }
+            }
         }
 
+        // Al finalizar el stream, añadir botón de audio y guardar en cuaderno
+        const btnEscuchar = document.createElement('button');
+        btnEscuchar.className = 'btn-audio';
+        btnEscuchar.innerHTML = '🔊 Escuchar';
+        btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
+        msgOralis.appendChild(btnEscuchar);
+
+        extraerYGuardarEnCuaderno(textoAcumulado);
+
+    } catch (err) {
+        contenidoDiv.innerText = "Error al conectar con el servidor.";
+    }
+}
         function enviarFeedback(event) {
             event.preventDefault();
             document.getElementById('msg-feedback').innerText = '¡Gracias por tus comentarios!';
