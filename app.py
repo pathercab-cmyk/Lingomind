@@ -248,9 +248,9 @@ def chat():
 
     def streamer():
         try:
-            # Llamada en tiempo real a Groq (Llama 3.3 70B)
+            # Reemplaza la línea del modelo aquí:
             completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="qwen/qwen3.8-27b",  # <-- AQUÍ PONES TU MODELO
                 messages=mensajes_for_api,
                 temperature=0.7,
                 stream=True
