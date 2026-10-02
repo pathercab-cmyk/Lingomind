@@ -6,6 +6,7 @@ import json
 import os
 import time
 from groq import Groq
+
 client = Groq(api_key=os.environ.get("GROQ_API_KEY", "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"))
 
 app = Flask(__name__)
@@ -28,6 +29,16 @@ class Usuario(UserMixin, db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     idioma = db.Column(db.String(10), default='de')
+    # Relación con las notas del cuaderno
+    cuaderno_items = db.relationship('Cuaderno', backref='usuario', lazy=True, cascade="all, delete-orphan")
+
+class Cuaderno(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    idioma = db.Column(db.String(10), nullable=False)
+    tipo = db.Column(db.String(20), nullable=False)  # 'vocabulario' o 'gramatica'
+    categoria = db.Column(db.String(100), default='General')
+    contenido = db.Column(db.Text, nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -221,7 +232,6 @@ def chat():
     tema = request.form.get('tema', '')
 
     prof_final = profesion_custom if profesion == 'Otro' and profesion_custom else profesion
-    nombre_idioma = IDIOMAS_NOMBRES.get(idioma, 'Alemán')
 
     system_prompt = construir_prompt_base(
         idioma_code=idioma,
@@ -248,12 +258,11 @@ def chat():
 
     def streamer():
         try:
-            # Reemplaza la línea del modelo aquí:
             completion = client.chat.completions.create(
                 model="qwen/qwen3.8-27b",
                 messages=mensajes_for_api,
                 temperature=0.7,
-                max_tokens=1200,  # Aumentado para evitar que la respuesta se corte
+                max_tokens=1200,
                 stream=True
             )
             respuesta_completa = ""
@@ -290,29 +299,96 @@ def obtener_examenes(idioma):
     }
     return jsonify({'examenes': examenes.get(idioma, ['Examen Estándar'])})
 
-from flask import jsonify, request, session
+
+# --- RUTAS DE MI CUADERNO PERSISTENTE POR USUARIO Y CORREO ---
+
+@app.route('/api/cuaderno', methods=['GET'])
+@login_required
+def obtener_cuaderno():
+    items = Cuaderno.query.filter_by(user_id=current_user.id).all()
+    resultado = {}
+
+    for item in items:
+        if item.idioma not in resultado:
+            resultado[item.idioma] = {"vocabulario": {}, "gramatica": []}
+        
+        if item.tipo == 'vocabulario':
+            if item.categoria not in resultado[item.idioma]["vocabulario"]:
+                resultado[item.idioma]["vocabulario"][item.categoria] = {"Expresiones / Palabras": []}
+            
+            subcat = list(resultado[item.idioma]["vocabulario"][item.categoria].keys())[0]
+            if item.contenido not in resultado[item.idioma]["vocabulario"][item.categoria][subcat]:
+                resultado[item.idioma]["vocabulario"][item.categoria][subcat].append(item.contenido)
+                
+        elif item.tipo == 'gramatica':
+            if item.contenido not in resultado[item.idioma]["gramatica"]:
+                resultado[item.idioma]["gramatica"].append(item.contenido)
+
+    return jsonify(resultado)
+
 
 @app.route('/api/cuaderno/guardar_vocabulario', methods=['POST'])
+@login_required
 def guardar_vocabulario():
-    data = request.get_json()
-    categoria = data.get('categoria')
+    data = request.get_json() or {}
+    categoria = data.get('categoria', 'General')
     palabra = data.get('palabra')
-    idioma = data.get('idioma')
+    idioma = data.get('idioma', 'de')
     
-    # Aquí puedes guardar en la base de datos o en la sesión del usuario
-    # Ejemplo con session:
-    # ...
-    return jsonify({"status": "success", "message": "Vocabulario guardado"}), 200
+    if not palabra:
+        return jsonify({"status": "error", "message": "Falta la palabra"}), 400
+
+    existe = Cuaderno.query.filter_by(
+        user_id=current_user.id,
+        idioma=idioma,
+        tipo='vocabulario',
+        categoria=categoria,
+        contenido=palabra
+    ).first()
+
+    if not existe:
+        nuevo = Cuaderno(
+            user_id=current_user.id,
+            idioma=idioma,
+            tipo='vocabulario',
+            categoria=categoria,
+            contenido=palabra
+        )
+        db.session.add(nuevo)
+        db.session.commit()
+    
+    return jsonify({"status": "success", "message": "Vocabulario guardado en tu cuenta"}), 200
+
 
 @app.route('/api/cuaderno/guardar_gramatica', methods=['POST'])
+@login_required
 def guardar_gramatica():
-    data = request.get_json()
+    data = request.get_json() or {}
     regla = data.get('regla')
-    idioma = data.get('idioma')
+    idioma = data.get('idioma', 'de')
     
-    # Lógica para guardar la regla gramatical
-    # ...
-    return jsonify({"status": "success", "message": "Gramática guardada"}), 200
+    if not regla:
+        return jsonify({"status": "error", "message": "Falta la regla"}), 400
+
+    existe = Cuaderno.query.filter_by(
+        user_id=current_user.id,
+        idioma=idioma,
+        tipo='gramatica',
+        contenido=regla
+    ).first()
+
+    if not existe:
+        nuevo = Cuaderno(
+            user_id=current_user.id,
+            idioma=idioma,
+            tipo='gramatica',
+            categoria='General',
+            contenido=regla
+        )
+        db.session.add(nuevo)
+        db.session.commit()
+    
+    return jsonify({"status": "success", "message": "Gramática guardada en tu cuenta"}), 200
 
 
 if __name__ == '__main__':
