@@ -439,48 +439,58 @@
             }
         }
 
-        function extraerYGuardarEnCuaderno(texto) {
-            if (!texto) return;
+      function extraerYGuardarEnCuaderno(texto) {
+    if (!texto) return;
 
-            const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
-            let matchVocab;
+    const idiomaActual = document.getElementById('idioma').value;
+    const cuaderno = obtenerCuaderno();
 
-            while ((matchVocab = regexVocab.exec(texto)) !== null) {
-                const categoria = matchVocab[1].trim();
-                const palabras = matchVocab[2].split(',').map(p => p.trim());
+    if (!cuaderno[idiomaActual]) {
+        cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
+    }
 
-                palabras.forEach(palabra => {
-                    if (palabra) {
-                        fetch('/api/cuaderno/guardar_vocabulario', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                categoria: categoria,
-                                palabra: palabra,
-                                idioma: document.getElementById('idioma').value
-                            })
-                        }).catch(err => console.error("Error al auto-guardar vocabulario:", err));
-                    }
-                });
-            }
+    let huboCambios = false;
 
-            const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
-            let matchGram;
+    // 1. Extraer Vocabulario
+    const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
+    let matchVocab;
 
-            while ((matchGram = regexGram.exec(texto)) !== null) {
-                const regla = matchGram[1].trim();
-                if (regla) {
-                    fetch('/api/cuaderno/guardar_gramatica', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            regla: regla,
-                            idioma: document.getElementById('idioma').value
-                        })
-                    }).catch(err => console.error("Error al auto-guardar gramática:", err));
-                }
-            }
+    while ((matchVocab = regexVocab.exec(texto)) !== null) {
+        const categoria = matchVocab[1].trim();
+        const palabras = matchVocab[2].split(',').map(p => p.trim());
+
+        if (!cuaderno[idiomaActual].vocabulario['General']) {
+            cuaderno[idiomaActual].vocabulario['General'] = {};
         }
+        if (!cuaderno[idiomaActual].vocabulario['General'][categoria]) {
+            cuaderno[idiomaActual].vocabulario['General'][categoria] = [];
+        }
+
+        palabras.forEach(palabra => {
+            if (palabra && !cuaderno[idiomaActual].vocabulario['General'][categoria].includes(palabra)) {
+                cuaderno[idiomaActual].vocabulario['General'][categoria].push(palabra);
+                huboCambios = true;
+            }
+        });
+    }
+
+    // 2. Extraer Gramática
+    const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
+    let matchGram;
+
+    while ((matchGram = regexGram.exec(texto)) !== null) {
+        const regla = matchGram[1].trim();
+        if (regla && !cuaderno[idiomaActual].gramatica.includes(regla)) {
+            cuaderno[idiomaActual].gramatica.push(regla);
+            huboCambios = true;
+        }
+    }
+
+    // Guardar y refrescar la vista si se encontraron datos
+    if (huboCambios) {
+        guardarDatosCuaderno(cuaderno);
+    }
+}
 
         function abrirModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'flex'; }
         function cerrarModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'none'; }
