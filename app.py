@@ -85,12 +85,18 @@ def extraer_texto_archivo(file):
         print(f"Error procesando archivo: {e}")
     return texto.strip()
 
-def construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing="gramatica"):
-    prof_final = profesion_custom if profesion == "Otro" else profesion
+ddef construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing="gramatica"):
+    # Determinar el nombre de la profesión o rol
+    if profesion == "Otro" and profesion_custom.strip():
+        prof_final = profesion_custom.strip()
+    elif profesion:
+        prof_final = profesion
+    else:
+        prof_final = "Entrevista de Trabajo"
 
-    prompt_base = f"""Eres Oralis, una plataforma de inteligencia artificial especializada en la enseñanza interactiva de idiomas.
-Estás interactuando con un estudiante del idioma '{idioma}' en nivel '{nivel}'.
-Tema/Contexto actual: {tema}.
+    prompt_base = f"""Eres Oralis, un tutor de inteligencia artificial en conversación interactiva.
+Estás practicando con un estudiante del idioma '{idioma}' en nivel '{nivel}'.
+Tema o contexto actual: {tema if tema else 'Conversación general'}.
 
 REGLA DE CORRECCIÓN OBLIGATORIA EN CADA RESPUESTA:
 - Antes de responder al tema de conversación, analiza la intervención del usuario.
@@ -105,7 +111,7 @@ FORMATO Y ESTILO STRICTO:
 """
 
     if modo == "practicas_orales":
-        prompt_base += f"\nModo ACTIVO: Simulación de Rol Profesional/Situacional ({prof_final}). Mantén la conversación fluida en ese rol."
+        prompt_base += f"\nModo ACTIVO: Simulación de Rol o Práctica Oral. Debes adoptar el papel de: '{prof_final}'. Dirígete al usuario en ese rol desde el primer momento."
     elif modo == "examen":
         prompt_base += f"\nModo ACTIVO: Preparación de Examen Oficial ({tipo_examen}). Plantea preguntas tipo examen y evalúa las respuestas."
     elif modo == "writing":
