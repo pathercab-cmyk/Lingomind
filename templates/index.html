@@ -300,7 +300,7 @@
         </div>
     </div>
 
-    <script>
+  <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
         }
@@ -326,22 +326,18 @@
 
         /* --- FORMATO VISUAL CON RENDERIZADO MARKDOWN DE NEGRITAS --- */
         function formatearRespuestaOralis(texto) {
-            // Corrección de errata de texto si viniera fija desde backend
             let textoLimpio = texto.replace(/^¡Hola!\s*Soja\s+/i, '¡Hola! Soy ');
 
-            // Limpieza de tags internos
             textoLimpio = textoLimpio.replace(/\[VOCABULARIO:[^\]]+\]/gi, '')
                                      .replace(/\[GRAMATICA:[^\]]+\]/gi, '')
                                      .trim();
 
-            // Convertir sintaxis Markdown **texto** a HTML <b>texto</b>
             textoLimpio = textoLimpio.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
 
             let partePrincipal = textoLimpio;
             let htmlTraduccion = '';
             let htmlCorreccion = '';
 
-            // Detectar bloque de correcciones / errores
             if (textoLimpio.includes('---CORRECCION---') || textoLimpio.includes('---CORRECCIÓN---') || textoLimpio.includes('---ERRORES---')) {
                 const partesCorr = textoLimpio.split(/---(?:CORRECCION|CORRECCIÓN|ERRORES)---/i);
                 partePrincipal = partesCorr[0];
@@ -443,53 +439,48 @@
             }
         }
 
-       function extraerYGuardarEnCuaderno(texto) {
-    if (!texto) return;
+        function extraerYGuardarEnCuaderno(texto) {
+            if (!texto) return;
 
-    // 1. Expresión regular para detectar tags de VOCABULARIO
-    // Ejemplo: [VOCABULARIO: Sustantivos - Das Buch, Der Lehrer]
-    const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
-    let matchVocab;
+            const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
+            let matchVocab;
 
-    while ((matchVocab = regexVocab.exec(texto)) !== null) {
-        const categoria = matchVocab[1].trim(); // ej: Sustantivos
-        const palabras = matchVocab[2].split(',').map(p => p.trim());
+            while ((matchVocab = regexVocab.exec(texto)) !== null) {
+                const categoria = matchVocab[1].trim();
+                const palabras = matchVocab[2].split(',').map(p => p.trim());
 
-        palabras.forEach(palabra => {
-            if (palabra) {
-                // Lógica de guardado (Ajusta la URL si tienes un endpoint específico de guardar cuaderno)
-                fetch('/api/cuaderno/guardar_vocabulario', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        categoria: categoria,
-                        palabra: palabra,
-                        idioma: document.getElementById('idioma').value
-                    })
-                }).catch(err => console.error("Error al auto-guardar vocabulario:", err));
+                palabras.forEach(palabra => {
+                    if (palabra) {
+                        fetch('/api/cuaderno/guardar_vocabulario', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                categoria: categoria,
+                                palabra: palabra,
+                                idioma: document.getElementById('idioma').value
+                            })
+                        }).catch(err => console.error("Error al auto-guardar vocabulario:", err));
+                    }
+                });
             }
-        });
-    }
 
-    // 2. Expresión regular para detectar tags de GRAMÁTICA
-    // Ejemplo: [GRAMATICA: Uso de conectores para expresar causa]
-    const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
-    let matchGram;
+            const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
+            let matchGram;
 
-    while ((matchGram = regexGram.exec(texto)) !== null) {
-        const regla = matchGram[1].trim();
-        if (regla) {
-            fetch('/api/cuaderno/guardar_gramatica', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    regla: regla,
-                    idioma: document.getElementById('idioma').value
-                })
-            }).catch(err => console.error("Error al auto-guardar gramática:", err));
+            while ((matchGram = regexGram.exec(texto)) !== null) {
+                const regla = matchGram[1].trim();
+                if (regla) {
+                    fetch('/api/cuaderno/guardar_gramatica', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            regla: regla,
+                            idioma: document.getElementById('idioma').value
+                        })
+                    }).catch(err => console.error("Error al auto-guardar gramática:", err));
+                }
+            }
         }
-    }
-}
 
         function abrirModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'flex'; }
         function cerrarModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'none'; }
@@ -582,7 +573,6 @@
         function reproducirTexto(texto) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                // Limpiar etiquetas HTML y marcas de Markdown antes de hablar
                 const textoLimpio = texto.replace(/<[^>]*>/g, '')
                                          .replace(/\*\*/g, '')
                                          .replace(/\[VOCABULARIO:[^\]]+\]/gi, '')
@@ -645,7 +635,6 @@
             
             document.getElementById('chat-box').innerHTML = '';
             
-            // Mensaje inicial corregido sin 'Soja' y formateado correctamente
             const mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
             agregarMensajeOralis(mensajeBienvenida);
         }
@@ -658,104 +647,91 @@
             // Lógica para guardar el chat
         }
 
-      async function enviarMensaje(event) {
-    if (event) event.preventDefault();
-    const input = document.getElementById('input-mensaje');
-    const mensaje = input.value.trim();
-    if (!mensaje) return;
+        async function enviarMensaje(event) {
+            if (event) event.preventDefault();
+            const input = document.getElementById('input-mensaje');
+            const mensaje = input.value.trim();
+            if (!mensaje) return;
 
-    const chatBox = document.getElementById('chat-box');
-    
-    // 1. Mostrar mensaje del usuario
-    const msgUser = document.createElement('div');
-    msgUser.className = 'mensaje mensaje-usuario';
-    msgUser.innerText = mensaje;
-    chatBox.appendChild(msgUser);
+            const chatBox = document.getElementById('chat-box');
+            
+            // 1. Mostrar mensaje del usuario
+            const msgUser = document.createElement('div');
+            msgUser.className = 'mensaje mensaje-usuario';
+            msgUser.innerText = mensaje;
+            chatBox.appendChild(msgUser);
 
-    input.value = '';
-    chatBox.scrollTop = chatBox.scrollHeight;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-    // 2. Crear contenedor para la respuesta progresiva de Oralis
-    const msgOralis = document.createElement('div');
-    msgOralis.className = 'mensaje mensaje-oralis';
-    const contenidoDiv = document.createElement('div');
-    contenidoDiv.className = 'contenido-texto';
-    msgOralis.appendChild(contenidoDiv);
-    chatBox.appendChild(msgOralis);
+            // 2. Crear contenedor para la respuesta progresiva de Oralis
+            const msgOralis = document.createElement('div');
+            msgOralis.className = 'mensaje mensaje-oralis';
+            const contenidoDiv = document.createElement('div');
+            contenidoDiv.className = 'contenido-texto';
+            msgOralis.appendChild(contenidoDiv);
+            chatBox.appendChild(msgOralis);
 
-    // Preparar datos del formulario
-    const formConfig = new FormData();
-    formConfig.append('mensaje', mensaje);
-    formConfig.append('idioma', document.getElementById('idioma').value);
-    formConfig.append('nivel', document.getElementById('nivel').value);
-    formConfig.append('modo', document.getElementById('modo').value);
-    formConfig.append('metodo_writing', document.getElementById('metodo_writing').value);
-    formConfig.append('profesion', document.getElementById('profesion').value);
-    formConfig.append('profesion_custom', document.getElementById('profesion_custom').value);
-    formConfig.append('tipo_examen', document.getElementById('tipo_examen').value);
-    formConfig.append('tema', document.getElementById('tema').value);
+            // Preparar datos del formulario
+            const formConfig = new FormData();
+            formConfig.append('mensaje', mensaje);
+            formConfig.append('idioma', document.getElementById('idioma').value);
+            formConfig.append('nivel', document.getElementById('nivel').value);
+            formConfig.append('modo', document.getElementById('modo').value);
+            formConfig.append('metodo_writing', document.getElementById('metodo_writing').value);
+            formConfig.append('profesion', document.getElementById('profesion').value);
+            formConfig.append('profesion_custom', document.getElementById('profesion_custom').value);
+            formConfig.append('tipo_examen', document.getElementById('tipo_examen').value);
+            formConfig.append('tema', document.getElementById('tema').value);
 
-    let textoAcumulado = '';
+            let textoAcumulado = '';
 
-    try {
-        const response = await fetch('/chat', {
-            method: 'POST',
-            body: formConfig
-        });
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    body: formConfig
+                });
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lineas = chunk.split('\n');
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lineas = chunk.split('\n');
 
-            for (const linea of lineas) {
-                if (linea.startsWith('data: ')) {
-                    try {
-                        const data = JSON.parse(linea.replace('data: ', ''));
-                        if (data.content) {
-                            textoAcumulado += data.content;
-                            contenidoDiv.innerHTML = formatearRespuestaOralis(textoAcumulado);
-                            chatBox.scrollTop = chatBox.scrollHeight;
+                    for (const linea of lineas) {
+                        if (linea.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(linea.replace('data: ', ''));
+                                if (data.content) {
+                                    textoAcumulado += data.content;
+                                    contenidoDiv.innerHTML = formatearRespuestaOralis(textoAcumulado);
+                                    chatBox.scrollTop = chatBox.scrollHeight;
+                                }
+                            } catch (e) {}
                         }
-                    } catch (e) {}
+                    }
                 }
+
+                // 3. Al finalizar la respuesta de Oralis:
+                // A) Añadir el botón de audio
+                const btnEscuchar = document.createElement('button');
+                btnEscuchar.className = 'btn-audio';
+                btnEscuchar.innerHTML = '🔊 Escuchar';
+                btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
+                msgOralis.appendChild(btnEscuchar);
+
+                // B) Extraer y auto-guardar en cuaderno
+                extraerYGuardarEnCuaderno(textoAcumulado);
+
+            } catch (err) {
+                contenidoDiv.innerText = "Error al conectar con el servidor.";
             }
         }
 
-        // 3. Al finalizar la respuesta de Oralis:
-        // A) Añadir el botón de audio
-        const btnEscuchar = document.createElement('button');
-        btnEscuchar.className = 'btn-audio';
-        btnEscuchar.innerHTML = '🔊 Escuchar';
-        btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
-        msgOralis.appendChild(btnEscuchar);
-
-        // B) Extraer y auto-guardar en cuaderno
-        extraerYGuardarEnCuaderno(textoAcumulado);
-
-    } catch (err) {
-        contenidoDiv.innerText = "Error al conectar con el servidor.";
-    }
-}
-    
-        // Al finalizar el stream, añadir botón de audio y guardar en cuaderno
-        const btnEscuchar = document.createElement('button'); // <--- CÓDIGO SUELTO QUE DA ERROR
-        btnEscuchar.className = 'btn-audio';
-        btnEscuchar.innerHTML = '🔊 Escuchar';
-        btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
-        msgOralis.appendChild(btnEscuchar);
-
-        extraerYGuardarEnCuaderno(textoAcumulado);
-
-    } catch (err) {
-        contenidoDiv.innerText = "Error al conectar con el servidor.";
-    }
-}
         function enviarFeedback(event) {
             event.preventDefault();
             document.getElementById('msg-feedback').innerText = '¡Gracias por tus comentarios!';
@@ -777,5 +753,7 @@
             cargarChatPorIdioma();
         };
     </script>
+</body>
+</html>
 </body>
 </html>
