@@ -171,12 +171,12 @@
                     <option value="Médico / Salud">Consulta Médica</option>
                     <option value="Otro">Otro (Personalizado)</option>
                 </select>
-                <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;" onkeydown="checkEnterSend(event)">
+                <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;" onchange="cambiarConfiguracion()" onkeydown="checkEnterSend(event)">
             </div>
 
             <div class="form-group" id="group-writing" style="display: none;">
                 <label for="metodo_writing">Método de Corrección:</label>
-                <select id="metodo_writing" name="metodo_writing">
+                <select id="metodo_writing" name="metodo_writing" onchange="cambiarConfiguracion()">
                     <option value="gramatica" selected>Corrección Gramatical Directa</option>
                     <option value="socratico">Método Socrático (Guiado)</option>
                 </select>
@@ -184,12 +184,12 @@
 
             <div class="form-group" id="group-examen" style="display: none;">
                 <label for="tipo_examen">Examen Oficial:</label>
-                <select id="tipo_examen" name="tipo_examen"></select>
+                <select id="tipo_examen" name="tipo_examen" onchange="cambiarConfiguracion()"></select>
             </div>
 
             <div class="form-group">
                 <label for="tema">Tema / Contexto:</label>
-                <input type="text" id="tema" name="tema" placeholder="Ej. Vocabulario de viajes..." onkeydown="checkEnterSend(event)">
+                <input type="text" id="tema" name="tema" placeholder="Ej. Vocabulario de viajes..." onchange="cambiarConfiguracion()" onkeydown="checkEnterSend(event)">
             </div>
         </div>
 
@@ -242,7 +242,7 @@
     <!-- MAIN CONTENT -->
     <div class="main-content">
         <div class="chat-header">
-            <button class="btn-toggle-sidebar" onclick="toggleSidebar()">⚙️ Opciones</button>
+            <button class="btn-toggle-sidebar" onclick="toggleSidebar()">⚙️️ Opciones</button>
             <span id="chat-header-title">Oralis AI</span>
             <div>
                 <button class="btn-action btn-secondary" onclick="iniciarNuevoChat()" style="width: auto; display: inline-block; margin-right: 5px;">➕ Nuevo Chat</button>
@@ -676,6 +676,12 @@
             const idioma = selectIdioma.value;
             const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
             const nivel = document.getElementById('nivel').value;
+            const modo = document.getElementById('modo').value;
+
+            // Obtener el perfil de profesión activo
+            const profesionSelect = document.getElementById('profesion').value;
+            const profesionCustom = document.getElementById('profesion_custom').value.trim();
+            const profesionFinal = (profesionSelect === 'Otro' && profesionCustom) ? profesionCustom : profesionSelect;
             
             const chatBox = document.getElementById('chat-box');
             chatBox.innerHTML = '';
@@ -696,12 +702,25 @@
                         }
                     });
                 } else {
-                    const mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
+                    let mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
+                    
+                    if (modo === 'practicas_orales') {
+                        mensajeBienvenida = `¡Hola! Soy Oralis AI. Iniciando simulación de **${profesionFinal}** en **${textoIdioma}** (Nivel **${nivel}**). ¿Empezamos?`;
+                    } else if (modo === 'examen') {
+                        const tipoExamen = document.getElementById('tipo_examen').value || 'Examen Oficial';
+                        mensajeBienvenida = `¡Hola! Soy Oralis AI. Iniciando módulo de preparación para **${tipoExamen}** en **${textoIdioma}** (Nivel **${nivel}**).`;
+                    } else if (modo === 'writing') {
+                        mensajeBienvenida = `¡Hola! Soy Oralis AI. Envía tu texto o redacción en **${textoIdioma}** (Nivel **${nivel}**) para evaluarlo.`;
+                    }
+
                     agregarMensajeOralis(mensajeBienvenida);
                 }
             } catch (err) {
                 console.error("Error al obtener historial:", err);
-                const mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
+                let mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
+                if (modo === 'practicas_orales') {
+                    mensajeBienvenida = `¡Hola! Soy Oralis AI. Iniciando simulación de **${profesionFinal}** en **${textoIdioma}** (Nivel **${nivel}**). ¿Empezamos?`;
+                }
                 agregarMensajeOralis(mensajeBienvenida);
             }
 
@@ -750,7 +769,7 @@
             chatBox.appendChild(msgOralis);
 
             const profesionSelect = document.getElementById('profesion').value;
-            const profesionCustom = document.getElementById('profesion_custom').value;
+            const profesionCustom = document.getElementById('profesion_custom').value.trim();
             const profesionFinal = (profesionSelect === 'Otro' && profesionCustom) ? profesionCustom : profesionSelect;
 
             const formConfig = new FormData();
