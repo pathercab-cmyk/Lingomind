@@ -203,7 +203,7 @@ def limpiar_historial(idioma):
     return jsonify({'status': 'ok'})
 
 
-# --- RUTA PRINCIPAL DEL CHAT (STREAMING CON MODELO IA) ---
+# --- RUTA PRINCIPAL DEL CHAT (STREAMING CON MODELO IA REAL) ---
 
 @app.route('/chat', methods=['POST'])
 @login_required
@@ -238,46 +238,40 @@ def chat():
     mensajes_for_api = [{"role": "system", "content": system_prompt}]
     
     for m in historial_previo[-10:]:
-        role = "user" if m['emisor'] == 'user' else "assistant"
-        mensajes_for_api.append({"role": role, "content": m['texto']})
+        role = "user" if m.get('emisor') == 'user' else "assistant"
+        mensajes_for_api.append({"role": role, "content": m.get('texto', '')})
 
     if mensaje_usuario:
         mensajes_for_api.append({"role": "user", "content": mensaje_usuario})
 
     def streamer():
         try:
-            dummy_response = ""
-            if "vocabulario" in mensaje_usuario.lower():
-                tema_req = mensaje_usuario.lower().replace("dame", "").replace("vocabulario", "").replace("de", "").strip()
-                dummy_response = (
-                    f"Hier ist das wichtige Vokabular für **{tema_req if tema_req else 'die Schule'}**:\n\n"
-                    f"1. **Das Buch** - El libro\n"
-                    f"2. **Der Lehrer** - El profesor\n"
-                    f"3. **Das Klassenzimmer** - El aula de clase\n"
-                    f"4. **Lernen** - Aprender\n"
-                    f"5. **Die Prüfung** - El examen\n\n"
-                    f"---TRADUCCION---\n"
-                    f"Aquí tienes el vocabulario importante para **{tema_req if tema_req else 'la escuela'}**:\n\n"
-                    f"1. **Das Buch** - El libro\n"
-                    f"2. **Der Lehrer** - El profesor\n"
-                    f"3. **Das Klassenzimmer** - El aula de clase\n"
-                    f"4. **Lernen** - Aprender\n"
-                    f"5. **Die Prüfung** - El examen\n\n"
-                    f"[VOCABULARIO: Sustantivos - Das Buch, Der Lehrer, Das Klassenzimmer, Die Prüfung]\n"
-                    f"[VOCABULARIO: Verbos - Lernen]"
-                )
-            else:
-                dummy_response = (
-                    f"¡Hola! **Soy Oralis AI**. Estoy listo para ayudarte con **{nombre_idioma}** en nivel **{nivel}**. ¿Cómo puedo ayudarte hoy?\n\n"
-                    f"---TRADUCCION---\n"
-                    f"¡Hola! **Soy Oralis AI**. Estoy listo para ayudarte con **{nombre_idioma}** en nivel **{nivel}**. ¿Cómo puedo ayudarte hoy?"
-                )
+            # Llamada en tiempo real a Groq (Llama 3.3 70B)
+            completion = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=mensajes_for_api,
+                temperature=0.7,
+                stream=True
+            )
 
-            for word in dummy_response.split(' '):
-                time.sleep(0.04)
-                yield f"data: {json.dumps({'content': word + ' '})}\n\n"
+            respuesta_completa = ""
+            for chunk in completion:
+                contenido = chunk.choices[0].delta.content or ""
+                if contenido:
+                    respuesta_completa += contenido
+                    yield f"data: {json.dumps({'content': contenido})}\n\n"
+
+            # Guardar la conversación real en el historial
+            if user_id not in historiales_chat:
+                historiales_chat[user_id] = {}
+            if idioma not in historiales_chat[user_id]:
+                historiales_chat[user_id][idioma] = []
+
+            historiales_chat[user_id][idioma].append({'emisor': 'user', 'texto': mensaje_usuario})
+            historiales_chat[user_id][idioma].append({'emisor': 'oralis', 'texto': respuesta_completa})
 
         except Exception as e:
+            print(f"Error API: {e}")
             yield f"data: {json.dumps({'content': 'Error al procesar la solicitud con la IA.'})}\n\n"
 
     return Response(streamer(), mimetype='text/event-stream')
