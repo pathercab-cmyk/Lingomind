@@ -616,6 +616,124 @@
                 });
             }
         });
+        function obtenerCuaderno() {
+    const datos = localStorage.getItem('oralis_cuaderno');
+    return datos ? JSON.parse(datos) : {};
+}
+
+// Guardar los datos en localStorage
+function guardarDatosCuaderno(cuaderno) {
+    localStorage.setItem('oralis_cuaderno', JSON.stringify(cuaderno));
+    renderizarCuaderno();
+}
+
+// Renderizar el cuaderno filtrado por el idioma actual
+function renderizarCuaderno() {
+    const idiomaActual = document.getElementById('idioma').value;
+    const cuaderno = obtenerCuaderno();
+    const datosIdioma = cuaderno[idiomaActual] || { vocabulario: {}, gramatica: [] };
+
+    // 1. RENDERIZAR VOCABULARIO
+    const contVocab = document.getElementById('contenedor-vocabulario-cuaderno');
+    contVocab.innerHTML = '';
+
+    const temas = Object.keys(datosIdioma.vocabulario || {});
+    if (temas.length === 0) {
+        contVocab.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay vocabulario guardado en este idioma.</div>';
+    } else {
+        temas.forEach(tema => {
+            const detailsTema = document.createElement('details');
+            detailsTema.style.marginBottom = '4px';
+            
+            let htmlTipos = '';
+            const tipos = datosIdioma.vocabulario[tema];
+            for (const tipo in tipos) {
+                if (tipos[tipo].length > 0) {
+                    htmlTipos += `<div class="tree-node"><strong>• ${tipo}:</strong> ${tipos[tipo].join(', ')}</div>`;
+                }
+            }
+
+            detailsTema.innerHTML = `
+                <summary style="font-size:0.8rem; color:#334155;">📌 ${tema}</summary>
+                <div class="details-content" style="padding-left:10px;">
+                    ${htmlTipos}
+                </div>
+            `;
+            contVocab.appendChild(detailsTema);
+        });
+    }
+
+    // 2. RENDERIZAR GRAMÁTICA
+    const contGram = document.getElementById('contenedor-gramatica-cuaderno');
+    contGram.innerHTML = '';
+
+    if (!datosIdioma.gramatica || datosIdioma.gramatica.length === 0) {
+        contGram.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay reglas gramaticales guardadas.</div>';
+    } else {
+        datosIdioma.gramatica.forEach(item => {
+            const divGram = document.createElement('div');
+            divGram.className = 'tree-node';
+            divGram.innerHTML = `• ${item}`;
+            contGram.appendChild(divGram);
+        });
+    }
+}
+
+// Funciones para la ventana Modal
+function abrirModalAgregar() {
+    document.getElementById('modal-cuaderno').style.display = 'flex';
+}
+
+function cerrarModalAgregar() {
+    document.getElementById('modal-cuaderno').style.display = 'none';
+}
+
+function toggleFormCuaderno() {
+    const tipo = document.getElementById('add-tipo-apunte').value;
+    document.getElementById('campos-vocabulario').style.display = (tipo === 'vocabulario') ? 'block' : 'none';
+    document.getElementById('campos-gramatica').style.display = (tipo === 'gramatica') ? 'block' : 'none';
+}
+
+// Guardar nueva palabra o regla gramatical
+function guardarEnCuaderno() {
+    const idiomaActual = document.getElementById('idioma').value;
+    const tipoApunte = document.getElementById('add-tipo-apunte').value;
+    const cuaderno = obtenerCuaderno();
+
+    if (!cuaderno[idiomaActual]) {
+        cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
+    }
+
+    if (tipoApunte === 'vocabulario') {
+        const tema = document.getElementById('add-tema').value.trim() || 'General';
+        const tipoPalabra = document.getElementById('add-tipo-palabra').value;
+        const palabra = document.getElementById('add-palabra').value.trim();
+
+        if (!palabra) return alert('Escribe una palabra o expresión.');
+
+        if (!cuaderno[idiomaActual].vocabulario[tema]) {
+            cuaderno[idiomaActual].vocabulario[tema] = { Sustantivos: [], Verbos: [], Adjetivos: [], "Frases / Expresiones": [] };
+        }
+
+        if (!cuaderno[idiomaActual].vocabulario[tema][tipoPalabra]) {
+            cuaderno[idiomaActual].vocabulario[tema][tipoPalabra] = [];
+        }
+
+        cuaderno[idiomaActual].vocabulario[tema][tipoPalabra].push(palabra);
+
+    } else {
+        const regla = document.getElementById('add-regla').value.trim();
+        if (!regla) return alert('Escribe la regla o apunte gramatical.');
+        cuaderno[idiomaActual].gramatica.push(regla);
+    }
+
+    guardarDatosCuaderno(cuaderno);
+    cerrarModalAgregar();
+    
+    // Limpiar campos
+    document.getElementById('add-palabra').value = '';
+    document.getElementById('add-regla').value = '';
+}
     </script>
 </body>
 </html>
