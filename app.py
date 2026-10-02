@@ -249,7 +249,7 @@ def chat():
     def streamer():
         try:
             # Reemplaza la línea del modelo aquí:
-           completion = client.chat.completions.create(
+            completion = client.chat.completions.create(
                 model="qwen/qwen3.8-27b",
                 messages=mensajes_for_api,
                 temperature=0.7,
