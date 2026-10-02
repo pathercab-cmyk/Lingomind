@@ -443,43 +443,53 @@
             }
         }
 
-        function extraerYGuardarEnCuaderno(textoCompleto) {
-            const idiomaActual = document.getElementById('idioma').value;
-            const temaActual = document.getElementById('tema').value.trim() || 'General';
-            const cuaderno = obtenerCuaderno();
+       function extraerYGuardarEnCuaderno(texto) {
+    if (!texto) return;
 
-            if (!cuaderno[idiomaActual]) {
-                cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
+    // 1. Expresión regular para detectar tags de VOCABULARIO
+    // Ejemplo: [VOCABULARIO: Sustantivos - Das Buch, Der Lehrer]
+    const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
+    let matchVocab;
+
+    while ((matchVocab = regexVocab.exec(texto)) !== null) {
+        const categoria = matchVocab[1].trim(); // ej: Sustantivos
+        const palabras = matchVocab[2].split(',').map(p => p.trim());
+
+        palabras.forEach(palabra => {
+            if (palabra) {
+                // Lógica de guardado (Ajusta la URL si tienes un endpoint específico de guardar cuaderno)
+                fetch('/api/cuaderno/guardar_vocabulario', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        categoria: categoria,
+                        palabra: palabra,
+                        idioma: document.getElementById('idioma').value
+                    })
+                }).catch(err => console.error("Error al auto-guardar vocabulario:", err));
             }
+        });
+    }
 
-            const regexVocab = /\[VOCABULARIO:\s*(Sustantivos\vert{}Verbos\vert{}Adjetivos\vert{}Frases)\s*-\s*([^\]]+)\]/gi;
-            let match;
-            while ((match = regexVocab.exec(textoCompleto)) !== null) {
-                const tipoMap = { 'Sustantivos': 'Sustantivos', 'Verbos': 'Verbos', 'Adjetivos': 'Adjetivos', 'Frases': 'Frases / Expresiones' };
-                const tipo = tipoMap[match[1]] || 'Sustantivos';
-                const palabras = match[2].split(',').map(p => p.trim());
+    // 2. Expresión regular para detectar tags de GRAMÁTICA
+    // Ejemplo: [GRAMATICA: Uso de conectores para expresar causa]
+    const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
+    let matchGram;
 
-                if (!cuaderno[idiomaActual].vocabulario[temaActual]) {
-                    cuaderno[idiomaActual].vocabulario[temaActual] = { Sustantivos: [], Verbos: [], Adjetivos: [], "Frases / Expresiones": [] };
-                }
-
-                palabras.forEach(palabra => {
-                    if (palabra && !cuaderno[idiomaActual].vocabulario[temaActual][tipo].includes(palabra)) {
-                        cuaderno[idiomaActual].vocabulario[temaActual][tipo].push(palabra);
-                    }
-                });
-            }
-
-            const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
-            while ((match = regexGram.exec(textoCompleto)) !== null) {
-                const regla = match[1].trim();
-                if (regla && !cuaderno[idiomaActual].gramatica.includes(regla)) {
-                    cuaderno[idiomaActual].gramatica.push(regla);
-                }
-            }
-
-            guardarDatosCuaderno(cuaderno);
+    while ((matchGram = regexGram.exec(texto)) !== null) {
+        const regla = matchGram[1].trim();
+        if (regla) {
+            fetch('/api/cuaderno/guardar_gramatica', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    regla: regla,
+                    idioma: document.getElementById('idioma').value
+                })
+            }).catch(err => console.error("Error al auto-guardar gramática:", err));
         }
+    }
+}
 
         function abrirModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'flex'; }
         function cerrarModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'none'; }
