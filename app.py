@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import json
 import os
+import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'tu_clave_secreta_aqui')
@@ -90,9 +91,9 @@ Al final de todo tu mensaje (después de la traducción), añade las etiquetas d
 [VOCABULARIO: Frases - expresion1]
 [GRAMATICA: Explicación breve de la regla aprendida]
 
-FORMATO Y ESTILO STRICTO:
+FORMATO Y ESTILO:
 1. Responde de forma pedagógica, clara y adaptada al nivel {nivel}.
-2. PROHIBIDO USAR MARKDOWN EN EL TEXTO: No uses asteriscos (*), almohadillas (#) ni guiones bajos (_). Escribe únicamente en texto plano.
+2. PUEDES USAR MARKDOWN para resaltar conceptos importantes en negrita (ejemplo: **palabra**).
 """
 
     if modo == "practicas_orales":
@@ -218,6 +219,7 @@ def chat():
     tema = request.form.get('tema', '')
 
     prof_final = profesion_custom if profesion == 'Otro' and profesion_custom else profesion
+    nombre_idioma = IDIOMAS_NOMBRES.get(idioma, 'Alemán')
 
     system_prompt = construir_prompt_base(
         idioma_code=idioma,
@@ -248,30 +250,29 @@ def chat():
             if "vocabulario" in mensaje_usuario.lower():
                 tema_req = mensaje_usuario.lower().replace("dame", "").replace("vocabulario", "").replace("de", "").strip()
                 dummy_response = (
-                    f"Hier ist das wichtige Vokabular für {tema_req if tema_req else 'die Schule'}:\n\n"
-                    f"1. Das Buch - El libro\n"
-                    f"2. Der Lehrer - El profesor\n"
-                    f"3. Das Klassenzimmer - El aula de clase\n"
-                    f"4. Lernen - Aprender\n"
-                    f"5. Die Prüfung - El examen\n\n"
+                    f"Hier ist das wichtige Vokabular für **{tema_req if tema_req else 'die Schule'}**:\n\n"
+                    f"1. **Das Buch** - El libro\n"
+                    f"2. **Der Lehrer** - El profesor\n"
+                    f"3. **Das Klassenzimmer** - El aula de clase\n"
+                    f"4. **Lernen** - Aprender\n"
+                    f"5. **Die Prüfung** - El examen\n\n"
                     f"---TRADUCCION---\n"
-                    f"Aquí tienes el vocabulario importante para {tema_req if tema_req else 'la escuela'}:\n\n"
-                    f"1. Das Buch - El libro\n"
-                    f"2. Der Lehrer - El profesor\n"
-                    f"3. Das Klassenzimmer - El aula de clase\n"
-                    f"4. Lernen - Aprender\n"
-                    f"5. Die Prüfung - El examen\n\n"
+                    f"Aquí tienes el vocabulario importante para **{tema_req if tema_req else 'la escuela'}**:\n\n"
+                    f"1. **Das Buch** - El libro\n"
+                    f"2. **Der Lehrer** - El profesor\n"
+                    f"3. **Das Klassenzimmer** - El aula de clase\n"
+                    f"4. **Lernen** - Aprender\n"
+                    f"5. **Die Prüfung** - El examen\n\n"
                     f"[VOCABULARIO: Sustantivos - Das Buch, Der Lehrer, Das Klassenzimmer, Die Prüfung]\n"
                     f"[VOCABULARIO: Verbos - Lernen]"
                 )
             else:
                 dummy_response = (
-                    f"Hallo! Ich habe deine Nachricht verstanden. Wie kann ich dir heute mit Deutsch helfen?\n\n"
+                    f"¡Hola! **Soy Oralis AI**. Estoy listo para ayudarte con **{nombre_idioma}** en nivel **{nivel}**. ¿Cómo puedo ayudarte hoy?\n\n"
                     f"---TRADUCCION---\n"
-                    f"¡Hola! He entendido tu mensaje. ¿Cómo puedo ayudarte hoy con el alemán?"
+                    f"¡Hola! **Soy Oralis AI**. Estoy listo para ayudarte con **{nombre_idioma}** en nivel **{nivel}**. ¿Cómo puedo ayudarte hoy?"
                 )
 
-            import time
             for word in dummy_response.split(' '):
                 time.sleep(0.04)
                 yield f"data: {json.dumps({'content': word + ' '})}\n\n"
