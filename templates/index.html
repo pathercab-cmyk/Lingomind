@@ -301,6 +301,32 @@
     </div>
 
     <script>
+        const examenesPorIdioma = {
+            'en': ['Cambridge (B2 First / C1 Advanced)', 'IELTS', 'TOEFL iBT', 'Linguaskill', 'Aptis'],
+            'de': ['Goethe-Zertifikat (A1-C2)', 'TestDaF', 'telc Deutsch', 'DSH'],
+            'fr': ['DELF (A1-B2)', 'DALF (C1-C2)', 'TCF', 'TEF'],
+            'it': ['CELI', 'CILS', 'PLIDA'],
+            'pt': ['CAPLE', 'CELPE-Bras'],
+            'es': ['DELE', 'SIELE'],
+            'nl': ['CNaVT', 'NT2'],
+            'ro': ['RLC (Rumano para extranjeros)'],
+            'ja': ['JLPT / Nôken (N5-N1)'],
+            'zh': ['HSK (HSK 1 - HSK 6)']
+        };
+
+        function poblarExamenes() {
+            const idioma = document.getElementById('idioma').value;
+            const selectExamen = document.getElementById('tipo_examen');
+            const listaExamenes = examenesPorIdioma[idioma] || ['Examen General / Oficial'];
+
+            selectExamen.innerHTML = '';
+            listaExamenes.forEach(ex => {
+                const opt = document.createElement('option');
+                opt.value = ex;
+                opt.textContent = ex;
+                selectExamen.appendChild(opt);
+            });
+        }
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
         }
