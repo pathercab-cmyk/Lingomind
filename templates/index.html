@@ -762,6 +762,34 @@
             actualizarTodo();
             cargarChatPorIdioma();
         };
+      function hablar(texto, idioma = 'es-ES') {
+    const utterance = new SpeechSynthesisUtterance(texto);
+    utterance.lang = idioma;
+    
+    // Obtener las voces disponibles
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Buscar una voz natural/premium instalada en el navegador
+    const vozMejorada = voices.find(v => 
+        v.lang.startsWith(idioma.slice(0, 2)) && 
+        (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Enhanced") || v.name.includes("Online"))
+    );
+
+    if (vozMejorada) {
+        utterance.voice = vozMejorada;
+    }
+
+    // Ajustar tono y velocidad para que suene más natural
+    utterance.rate = 0.95; // Ligeramente más lento para mejor entonación
+    utterance.pitch = 1.0;
+
+    window.speechSynthesis.speak(utterance);
+}
+
+// Cargar voces si el navegador las obtiene asíncronamente
+window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+};
     </script>
 </body>
 </html>
