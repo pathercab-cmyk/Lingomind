@@ -13,7 +13,6 @@ from sqlalchemy.exc import OperationalError
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_oralis_2026')
 
-# --- AQUÍ VA EL CÓDIGO DE POSTGRESQL ---
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///oralis.db')
 
 if db_url.startswith("postgres://"):
@@ -22,16 +21,12 @@ elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+ps
     db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- INICIALIZACIÓN DE LA BASE DE DATOS Y EXTENSIONES ---
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
-# --- MODELOS DE BASE DE DATOS ---
 
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -52,13 +47,10 @@ class Comentario(db.Model):
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
-# Configuración del cliente oficial de Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# MODELO ACTUALIZADO
 MODELO_GROQ = "qwen/qwen3.8-27b"
 
-# DICCIONARIO CON LOS 10 IDIOMAS SOLICITADOS
 EXAMENES_OFICIALES = {
     "en": ["Cambridge (PET, FCE, CAE, CPE)", "IELTS", "TOEFL iBT", "TOEIC", "Linguaskill"],
     "fr": ["DELF / DALF", "TCF", "TEF"],
@@ -105,11 +97,11 @@ REGLA DE CORRECCIÓN OBLIGATORIA EN CADA RESPUESTA:
 - Si detectas algún fallo de gramática, ortografía, vocabulario o sintaxis en {idioma}, debes indicarlo brevemente y mostrar la versión corregida al principio de tu respuesta.
 - Si el mensaje no contiene errores, continúa la conversación con naturalidad.
 
-FORMATO Y ESTILO:
+FORMATO Y ESTILO STRICTO:
 1. Responde de forma pedagógica, cercana y adaptada a su nivel ({nivel}).
 2. Tu respuesta principal debe realizarse en {idioma}.
 3. Si el usuario pide explicaciones gramaticales, usa el español.
-4. FORMATO: Usa texto limpio sin Markdown (no uses **, #, _).
+4. PROHIBIDO USAR MARKDOWN: No uses asteriscos (*), almohadillas (#), ni guiones bajos (_). Escribe solo texto plano.
 """
 
     if modo == "practicas_orales":
@@ -133,8 +125,6 @@ Modo ACTIVO: Evaluador de Writing - Método Socrático/Guiado.
 """
 
     return prompt_base
-
-# --- RUTAS DE AUTENTICACIÓN ---
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -174,8 +164,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-# --- RUTAS PRINCIPALES ---
 
 @app.route('/')
 @login_required
@@ -228,8 +216,8 @@ def chat():
                 if chunk.choices and len(chunk.choices) > 0:
                     content = chunk.choices[0].delta.content
                     if content:
-                        # 🧹 Filtrado directo para eliminar asteriscos y guiones bajos
-                        content_limpio = content.replace('*', '').replace('_', '')
+                        # Limpieza estricta de asteriscos, almohadillas y guiones bajos
+                        content_limpio = content.replace('*', '').replace('#', '').replace('_', '')
                         yield f"data: {json.dumps({'content': content_limpio})}\n\n"
 
         except Exception as e:
@@ -257,8 +245,18 @@ def obtener_examenes(idioma):
     lista = EXAMENES_OFICIALES.get(idioma.lower(), ["Examen Estándar"])
     return jsonify({"examenes": lista})
 
-with app.app_context():
-    db.create_all()
+@app.route('/api/actualizar_preferencias', methods=['POST'])
+@login_required
+def actualizar_preferencias():
+    data = request.get_json()
+    if data:
+        if 'idioma' in data:
+            current_user.idioma = data['idioma']
+        if 'nivel' in data:
+            current_user.nivel = data['nivel']
+        db.session.commit()
+        return jsonify({"status": "ok"})
+    return jsonify({"status": "error"}), 400
 
 def inicializar_base_datos():
     with app.app_context():
@@ -273,21 +271,6 @@ def inicializar_base_datos():
             except Exception as e:
                 print(f"❌ Error al inicializar la base de datos: {e}")
                 return
-
-# --- RUTA PARA ACTUALIZAR PREFERENCIAS AL CAMBIAR DROPDOWN ---
-
-@app.route('/api/actualizar_preferencias', methods=['POST'])
-@login_required
-def actualizar_preferencias():
-    data = request.get_json()
-    if data:
-        if 'idioma' in data:
-            current_user.idioma = data['idioma']
-        if 'nivel' in data:
-            current_user.nivel = data['nivel']
-        db.session.commit()
-        return jsonify({"status": "ok"})
-    return jsonify({"status": "error"}), 400
 
 inicializar_base_datos()
 
