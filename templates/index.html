@@ -8,7 +8,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; height: 100vh; background-color: #f4f6f9; color: #333; overflow: hidden; }
         
-        /* SIDEBAR / PANEL LATERAL */
         .sidebar { 
             width: 340px; 
             background-color: #ffffff; 
@@ -30,7 +29,6 @@
         .form-group label { font-size: 0.85rem; font-weight: 600; color: #475569; }
         .form-group select, .form-group input { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; width: 100%; }
         
-        /* BOTONES E INTERFAZ */
         .btn-action { background-color: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; width: 100%; text-align: center; }
         .btn-action:hover { background-color: #1d4ed8; }
         .btn-secondary { background-color: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; margin-top: 5px; }
@@ -48,7 +46,6 @@
         .user-info { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; }
         .btn-logout { color: #ef4444; text-decoration: none; font-weight: 600; }
 
-        /* MAIN CHAT AREA */
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; min-width: 0; position: relative; }
         .chat-header { background-color: #ffffff; padding: 15px 20px; border-bottom: 1px solid #e1e8ed; font-weight: 600; color: #1e293b; display: flex; justify-content: space-between; align-items: center; }
         
@@ -68,24 +65,12 @@
         #input-mensaje { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; outline: none; }
         .btn-send { background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
-        /* BOTÓN FLOTANTE PARA MÓVILES */
         .btn-toggle-sidebar { display: none; background-color: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 1rem; cursor: pointer; }
 
-        /* VISTA MÓVIL (MENOS DE 768px) */
         @media (max-width: 768px) {
             .btn-toggle-sidebar { display: inline-block; }
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                width: 280px;
-                transform: translateX(-100%);
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            }
-            .sidebar.active {
-                transform: translateX(0);
-            }
+            .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+            .sidebar.active { transform: translateX(0); }
             .mensaje { max-width: 90%; }
             .chat-header { padding: 10px 15px; font-size: 0.9rem; }
         }
@@ -100,22 +85,21 @@
             <button class="btn-toggle-sidebar" onclick="toggleSidebar()" style="background: none; color: #333; font-size: 1.2rem;">✖</button>
         </div>
 
-        <!-- CONFIGURACIÓN DE APRENDIZAJE -->
         <div class="section-box">
             <div class="section-title">Configuración</div>
             <div class="form-group">
                <label for="idioma">Idioma Objetivo:</label>
                     <select name="idioma" id="idioma" class="form-select">
-                        <option value="en" {% if usuario.idioma == 'en' %}selected{% endif %}>Inglés</option>
-                        <option value="fr" {% if usuario.idioma == 'fr' %}selected{% endif %}>Francés</option>
-                        <option value="de" {% if usuario.idioma == 'de' %}selected{% endif %}>Alemán</option>
-                        <option value="nl" {% if usuario.idioma == 'nl' %}selected{% endif %}>Neerlandés</option>
-                        <option value="pt" {% if usuario.idioma == 'pt' %}selected{% endif %}>Portugués</option>
-                        <option value="ro" {% if usuario.idioma == 'ro' %}selected{% endif %}>Rumano</option>
-                        <option value="ja" {% if usuario.idioma == 'ja' %}selected{% endif %}>Japonés</option>
-                        <option value="zh" {% if usuario.idioma == 'zh' %}selected{% endif %}>Chino Mandarín</option>
-                        <option value="it" {% if usuario.idioma == 'it' %}selected{% endif %}>Italiano</option>
-                        <option value="es" {% if usuario.idioma == 'es' %}selected{% endif %}>Español (ELE)</option>
+                        <option value="en" {% if usuario and usuario.idioma == 'en' %}selected{% endif %}>Inglés</option>
+                        <option value="de" {% if usuario and usuario.idioma == 'de' %}selected{% endif %}>Alemán</option>
+                        <option value="fr" {% if usuario and usuario.idioma == 'fr' %}selected{% endif %}>Francés</option>
+                        <option value="nl" {% if usuario and usuario.idioma == 'nl' %}selected{% endif %}>Neerlandés</option>
+                        <option value="pt" {% if usuario and usuario.idioma == 'pt' %}selected{% endif %}>Portugués</option>
+                        <option value="ro" {% if usuario and usuario.idioma == 'ro' %}selected{% endif %}>Rumano</option>
+                        <option value="ja" {% if usuario and usuario.idioma == 'ja' %}selected{% endif %}>Japonés</option>
+                        <option value="zh" {% if usuario and usuario.idioma == 'zh' %}selected{% endif %}>Chino Mandarín</option>
+                        <option value="it" {% if usuario and usuario.idioma == 'it' %}selected{% endif %}>Italiano</option>
+                        <option value="es" {% if usuario and usuario.idioma == 'es' %}selected{% endif %}>Español (ELE)</option>
                     </select>
             </div>
 
@@ -157,18 +141,7 @@
                     <option value="Médico / Salud">Consulta Médica</option>
                     <option value="Otro">Otro (Personalizado)</option>
                 </select>
-                <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;">
-          function toggleCustomProfesion() {
-    const profesion = document.getElementById('profesion').value;
-    const inputCustom = document.getElementById('profesion_custom');
-    if (profesion === 'Otro') {
-        inputCustom.style.display = 'block';
-        inputCustom.focus(); // Coloca el cursor directamente en el campo
-    } else {
-        inputCustom.style.display = 'none';
-        inputCustom.value = '';
-    }
-}
+                <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;" onkeydown="checkEnterSend(event)">
             </div>
 
             <div class="form-group" id="group-examen" style="display: none;">
@@ -178,74 +151,30 @@
 
             <div class="form-group">
                 <label for="tema">Tema / Contexto:</label>
-                <input type="text" id="tema" name="tema" placeholder="Ej. Vocabulario de viajes...">
-                function checkEnterSend(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault(); // Evita que recargue la página
-        enviarMensaje(event);
-    }
-}
+                <input type="text" id="tema" name="tema" placeholder="Ej. Vocabulario de viajes..." onkeydown="checkEnterSend(event)">
             </div>
         </div>
 
+        <!-- SECCIÓN MI CUADERNO DINÁMICO AUTOMÁTICO -->
         <div class="section-box">
-    <div class="section-title">
-        <span>📖 Mi Cuaderno</span>
-        <button type="button" class="btn-explain" onclick="abrirModalAgregar()" style="font-size:0.7rem; margin:0;">+ Añadir</button>
-    </div>
-    <div style="font-size: 0.8rem; margin-bottom: 8px; color: #475569;">
-        <strong>Filtro actual:</strong> <span id="lbl-idioma">Inglés</span> (<span id="lbl-nivel">B1</span>)
-    </div>
+            <div class="section-title">
+                <span>📖 Mi Cuaderno</span>
+                <button type="button" class="btn-explain" onclick="abrirModalAgregar()" style="font-size:0.7rem; margin:0;">+ Añadir</button>
+            </div>
+            <div style="font-size: 0.8rem; margin-bottom: 8px; color: #475569;">
+                <strong>Filtro actual:</strong> <span id="lbl-idioma">Inglés</span> (<span id="lbl-nivel">B1</span>)
+            </div>
 
-    <!-- Pestaña desplegable de Vocabulario -->
-    <details open style="margin-bottom: 8px;">
-        <summary>📚 Vocabulario Clasificado</summary>
-        <div id="contenedor-vocabulario-cuaderno" class="details-content" style="padding-left: 5px;">
-            <!-- Se genera dinámicamente -->
+            <details open style="margin-bottom: 8px;">
+                <summary>📚 Vocabulario Clasificado</summary>
+                <div id="contenedor-vocabulario-cuaderno" class="details-content" style="padding-left: 5px;"></div>
+            </details>
+
+            <details>
+                <summary>✍️ Gramática Registrada</summary>
+                <div id="contenedor-gramatica-cuaderno" class="details-content" style="padding-left: 5px;"></div>
+            </details>
         </div>
-    </details>
-
-    <!-- Pestaña desplegable de Gramática -->
-    <details>
-        <summary>✍️ Gramática Registrada</summary>
-        <div id="contenedor-gramatica-cuaderno" class="details-content" style="padding-left: 5px;">
-            <!-- Se genera dinámicamente -->
-        </div>
-    </details>
-</div>
-
-<!-- MODAL / FORMULARIO RÁPIDO PARA AGREGAR AL CUADERNO -->
-<div id="modal-cuaderno" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:20px; border-radius:8px; width:300px; display:flex; flex-direction:column; gap:10px;">
-        <h3 style="font-size:1rem; color:#1e40af;">Añadir a Mi Cuaderno</h3>
-        
-        <label style="font-size:0.8rem;">Tipo de apunte:</label>
-        <select id="add-tipo-apunte" onchange="toggleFormCuaderno()">
-            <option value="vocabulario">Vocabulario</option>
-            <option value="gramatica">Gramática</option>
-        </select>
-
-        <div id="campos-vocabulario">
-            <input type="text" id="add-tema" placeholder="Tema (Ej: Viajes, Comida)" style="width:100%; margin-bottom:5px; padding:6px; font-size:0.85rem;">
-            <select id="add-tipo-palabra" style="width:100%; margin-bottom:5px; padding:6px; font-size:0.85rem;">
-                <option value="Sustantivos">Sustantivo</option>
-                <option value="Verbos">Verbo</option>
-                <option value="Adjetivos">Adjetivo</option>
-                <option value="Frases / Expresiones">Frase / Expresión</option>
-            </select>
-            <input type="text" id="add-palabra" placeholder="Palabra o Expresión" style="width:100%; padding:6px; font-size:0.85rem;">
-        </div>
-
-        <div id="campos-gramatica" style="display:none;">
-            <input type="text" id="add-regla" placeholder="Regla o Estructura" style="width:100%; padding:6px; font-size:0.85rem;">
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-            <button type="button" class="btn-action btn-secondary" onclick="cerrarModalAgregar()">Cancelar</button>
-            <button type="button" class="btn-action" onclick="guardarEnCuaderno()">Guardar</button>
-        </div>
-    </div>
-</div>
 
         <div class="section-box">
             <div class="section-title">💡 Banco Recomendado</div>
@@ -300,11 +229,204 @@
         </div>
     </div>
 
+    <!-- MODAL MANUAL DE AGREGAR AL CUADERNO -->
+    <div id="modal-cuaderno" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:white; padding:20px; border-radius:8px; width:300px; display:flex; flex-direction:column; gap:10px;">
+            <h3 style="font-size:1rem; color:#1e40af;">Añadir a Mi Cuaderno</h3>
+            
+            <label style="font-size:0.8rem;">Tipo de apunte:</label>
+            <select id="add-tipo-apunte" onchange="toggleFormCuaderno()">
+                <option value="vocabulario">Vocabulario</option>
+                <option value="gramatica">Gramática</option>
+            </select>
+
+            <div id="campos-vocabulario">
+                <input type="text" id="add-tema" placeholder="Tema (Ej: Viajes, Comida)" style="width:100%; margin-bottom:5px; padding:6px; font-size:0.85rem;">
+                <select id="add-tipo-palabra" style="width:100%; margin-bottom:5px; padding:6px; font-size:0.85rem;">
+                    <option value="Sustantivos">Sustantivo</option>
+                    <option value="Verbos">Verbo</option>
+                    <option value="Adjetivos">Adjetivo</option>
+                    <option value="Frases / Expresiones">Frase / Expresión</option>
+                </select>
+                <input type="text" id="add-palabra" placeholder="Palabra o Expresión" style="width:100%; padding:6px; font-size:0.85rem;">
+            </div>
+
+            <div id="campos-gramatica" style="display:none;">
+                <input type="text" id="add-regla" placeholder="Regla o Estructura" style="width:100%; padding:6px; font-size:0.85rem;">
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                <button type="button" class="btn-action btn-secondary" onclick="cerrarModalAgregar()">Cancelar</button>
+                <button type="button" class="btn-action" onclick="guardarEnCuadernoManual()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
         }
 
+        function checkEnterSend(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                enviarMensaje(event);
+            }
+        }
+
+        function toggleCustomProfesion() {
+            const profesion = document.getElementById('profesion').value;
+            const inputCustom = document.getElementById('profesion_custom');
+            if (profesion === 'Otro') {
+                inputCustom.style.display = 'block';
+                inputCustom.focus();
+            } else {
+                inputCustom.style.display = 'none';
+                inputCustom.value = '';
+            }
+        }
+
+        /* --- SISTEMA AUTOMÁTICO DEL CUADERNO --- */
+        function obtenerCuaderno() {
+            const datos = localStorage.getItem('oralis_cuaderno');
+            return datos ? JSON.parse(datos) : {};
+        }
+
+        function guardarDatosCuaderno(cuaderno) {
+            localStorage.setItem('oralis_cuaderno', JSON.stringify(cuaderno));
+            renderizarCuaderno();
+        }
+
+        function renderizarCuaderno() {
+            const idiomaActual = document.getElementById('idioma').value;
+            const cuaderno = obtenerCuaderno();
+            const datosIdioma = cuaderno[idiomaActual] || { vocabulario: {}, gramatica: [] };
+
+            const contVocab = document.getElementById('contenedor-vocabulario-cuaderno');
+            contVocab.innerHTML = '';
+            const temas = Object.keys(datosIdioma.vocabulario || {});
+
+            if (temas.length === 0) {
+                contVocab.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay vocabulario guardado en este idioma.</div>';
+            } else {
+                temas.forEach(tema => {
+                    const detailsTema = document.createElement('details');
+                    detailsTema.style.marginBottom = '4px';
+                    
+                    let htmlTipos = '';
+                    const tipos = datosIdioma.vocabulario[tema];
+                    for (const tipo in tipos) {
+                        if (tipos[tipo].length > 0) {
+                            htmlTipos += `<div class="tree-node"><strong>• ${tipo}:</strong> ${tipos[tipo].join(', ')}</div>`;
+                        }
+                    }
+
+                    detailsTema.innerHTML = `
+                        <summary style="font-size:0.8rem; color:#334155;">📌 ${tema}</summary>
+                        <div class="details-content" style="padding-left:10px;">${htmlTipos}</div>
+                    `;
+                    contVocab.appendChild(detailsTema);
+                });
+            }
+
+            const contGram = document.getElementById('contenedor-gramatica-cuaderno');
+            contGram.innerHTML = '';
+            if (!datosIdioma.gramatica || datosIdioma.gramatica.length === 0) {
+                contGram.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay reglas gramaticales guardadas.</div>';
+            } else {
+                datosIdioma.gramatica.forEach(item => {
+                    const divGram = document.createElement('div');
+                    divGram.className = 'tree-node';
+                    divGram.innerHTML = `• ${item}`;
+                    contGram.appendChild(divGram);
+                });
+            }
+        }
+
+        function extraerYGuardarEnCuaderno(textoCompleto) {
+            const idiomaActual = document.getElementById('idioma').value;
+            const temaActual = document.getElementById('tema').value.trim() || 'General';
+            const cuaderno = obtenerCuaderno();
+
+            if (!cuaderno[idiomaActual]) {
+                cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
+            }
+
+            const regexVocab = /\[VOCABULARIO:\s*(Sustantivos\vert{}Verbos\vert{}Adjetivos\vert{}Frases)\s*-\s*([^\]]+)\]/gi;
+            let match;
+            while ((match = regexVocab.exec(textoCompleto)) !== null) {
+                const tipoMap = { 'Sustantivos': 'Sustantivos', 'Verbos': 'Verbos', 'Adjetivos': 'Adjetivos', 'Frases': 'Frases / Expresiones' };
+                const tipo = tipoMap[match[1]] || 'Sustantivos';
+                const palabras = match[2].split(',').map(p => p.trim());
+
+                if (!cuaderno[idiomaActual].vocabulario[temaActual]) {
+                    cuaderno[idiomaActual].vocabulario[temaActual] = { Sustantivos: [], Verbos: [], Adjetivos: [], "Frases / Expresiones": [] };
+                }
+
+                palabras.forEach(palabra => {
+                    if (palabra && !cuaderno[idiomaActual].vocabulario[temaActual][tipo].includes(palabra)) {
+                        cuaderno[idiomaActual].vocabulario[temaActual][tipo].push(palabra);
+                    }
+                });
+            }
+
+            const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
+            while ((match = regexGram.exec(textoCompleto)) !== null) {
+                const regla = match[1].trim();
+                if (regla && !cuaderno[idiomaActual].gramatica.includes(regla)) {
+                    cuaderno[idiomaActual].gramatica.push(regla);
+                }
+            }
+
+            guardarDatosCuaderno(cuaderno);
+        }
+
+        function abrirModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'flex'; }
+        function cerrarModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'none'; }
+        function toggleFormCuaderno() {
+            const tipo = document.getElementById('add-tipo-apunte').value;
+            document.getElementById('campos-vocabulario').style.display = (tipo === 'vocabulario') ? 'block' : 'none';
+            document.getElementById('campos-gramatica').style.display = (tipo === 'gramatica') ? 'block' : 'none';
+        }
+
+        function guardarEnCuadernoManual() {
+            const idiomaActual = document.getElementById('idioma').value;
+            const tipoApunte = document.getElementById('add-tipo-apunte').value;
+            const cuaderno = obtenerCuaderno();
+
+            if (!cuaderno[idiomaActual]) {
+                cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
+            }
+
+            if (tipoApunte === 'vocabulario') {
+                const tema = document.getElementById('add-tema').value.trim() || 'General';
+                const tipoPalabra = document.getElementById('add-tipo-palabra').value;
+                const palabra = document.getElementById('add-palabra').value.trim();
+
+                if (!palabra) return alert('Escribe una palabra o expresión.');
+
+                if (!cuaderno[idiomaActual].vocabulario[tema]) {
+                    cuaderno[idiomaActual].vocabulario[tema] = { Sustantivos: [], Verbos: [], Adjetivos: [], "Frases / Expresiones": [] };
+                }
+
+                if (!cuaderno[idiomaActual].vocabulario[tema][tipoPalabra]) {
+                    cuaderno[idiomaActual].vocabulario[tema][tipoPalabra] = [];
+                }
+
+                cuaderno[idiomaActual].vocabulario[tema][tipoPalabra].push(palabra);
+            } else {
+                const regla = document.getElementById('add-regla').value.trim();
+                if (!regla) return alert('Escribe la regla o apunte gramatical.');
+                cuaderno[idiomaActual].gramatica.push(regla);
+            }
+
+            guardarDatosCuaderno(cuaderno);
+            cerrarModalAgregar();
+            document.getElementById('add-palabra').value = '';
+            document.getElementById('add-regla').value = '';
+        }
+
+        /* --- AUDIO Y RECONOCIMIENTO DE VOZ --- */
         let rec;
         let escuchando = false;
 
@@ -350,33 +472,22 @@
         function reproducirTexto(texto) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(texto);
+                const utterance = new SpeechSynthesisUtterance(texto.replace(/\[VOCABULARIO:[^\]]+\]/gi, '').replace(/\[GRAMATICA:[^\]]+\]/gi, ''));
                 const idioma = document.getElementById('idioma').value;
                 utterance.lang = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        function toggleCustomProfesion() {
-    const profesion = document.getElementById('profesion').value;
-    const inputCustom = document.getElementById('profesion_custom');
-    if (profesion === 'Otro') {
-        inputCustom.style.display = 'block';
-    } else {
-        inputCustom.style.display = 'none';
-        inputCustom.value = '';
-    }
-    }
-    
-    function toggleModos() {
-        const modo = document.getElementById('modo').value;
-        document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
-        document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
-        document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
-    
-        document.getElementById('btn-attach').style.display = (modo === 'writing') ? 'inline-flex' : 'none';
-        document.getElementById('btn-mic').style.display = (modo === 'writing') ? 'none' : 'inline-flex';
-    }
+        function toggleModos() {
+            const modo = document.getElementById('modo').value;
+            document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
+            document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
+            document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
+
+            document.getElementById('btn-attach').style.display = (modo === 'writing') ? 'inline-flex' : 'none';
+            document.getElementById('btn-mic').style.display = (modo === 'writing') ? 'none' : 'inline-flex';
+        }
 
         const recomendacionNiveles = {
             'A1': { vocab: "Saludos, Familia, Rutina diaria, Números y Colores.", gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the)." },
@@ -419,18 +530,17 @@
                 </details>
             `;
             actualizarExamenes();
+            renderizarCuaderno();
         }
 
         function iniciarNuevoChat() {
             const chatBox = document.getElementById('chat-box');
-            if (chatBox) {
-                chatBox.innerHTML = '';
-            }
+            if (chatBox) chatBox.innerHTML = '';
+            
             const selectIdioma = document.getElementById('idioma');
             const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
             const nivel = document.getElementById('nivel').value;
             
-            // Texto completamente limpio sin asteriscos
             agregarMensaje('oralis', `¡Hola! He iniciado una nueva sesión para practicar en ${textoIdioma} (Nivel ${nivel}). ¡Escríbeme cuando quieras!`);
         }
 
@@ -489,77 +599,87 @@
             }
         }
 
-       async function enviarMensaje(e) {
-    if (e) e.preventDefault();
-    const input = document.getElementById('input-mensaje');
-    const mensaje = input.value.trim();
-    const archivoInput = document.getElementById('archivo');
+        async function enviarMensaje(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('input-mensaje');
+            const mensaje = input.value.trim();
+            const archivoInput = document.getElementById('archivo');
 
-    if (!mensaje && (!archivoInput.files || archivoInput.files.length === 0)) return;
+            if (!mensaje && (!archivoInput.files || archivoInput.files.length === 0)) return;
 
-    let textoUsuario = mensaje;
-    if (archivoInput.files && archivoInput.files[0]) {
-        textoUsuario += ` (📄 ${archivoInput.files[0].name})`;
-    }
-    agregarMensaje('user', textoUsuario);
-
-    const formData = new FormData(document.getElementById('form-chat'));
-    formData.append('mensaje', mensaje);
-    formData.append('idioma', document.getElementById('idioma').value);
-    formData.append('nivel', document.getElementById('nivel').value);
-    formData.append('modo', document.getElementById('modo').value);
-    
-    // CAPTURAMOS EXPLÍCITAMENTE LOS CAMPOS DE PROFESIÓN Y EXAMEN
-    formData.append('profesion', document.getElementById('profesion').value);
-    formData.append('profesion_custom', document.getElementById('profesion_custom').value);
-    formData.append('tipo_examen', document.getElementById('tipo_examen').value);
-    formData.append('tema', document.getElementById('tema').value);
-
-    input.value = '';
-    if (archivoInput) archivoInput.value = '';
-    document.getElementById('file-indicator').innerText = '';
-
-    const elemTextoOralis = agregarMensaje('oralis', '');
-
-    try {
-        const response = await fetch('/chat', { method: 'POST', body: formData });
-
-        if (!response.ok) {
-            elemTextoOralis.innerText = "Error de respuesta del servidor (" + response.status + ").";
-            return;
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
-
-            for (const line of lines) {
-                const trimmedLine = line.trim();
-                if (trimmedLine.startsWith('data: ')) {
-                    const rawData = trimmedLine.substring(6);
-                    try {
-                        const parsed = JSON.parse(rawData);
-                        if (parsed.content) elemTextoOralis.innerText += parsed.content;
-                    } catch (err) {
-                        elemTextoOralis.innerText += rawData;
-                    }
-                } else if (trimmedLine && !trimmedLine.startsWith(':')) {
-                    elemTextoOralis.innerText += line;
-                }
+            let textoUsuario = mensaje;
+            if (archivoInput.files && archivoInput.files[0]) {
+                textoUsuario += ` (📄 ${archivoInput.files[0].name})`;
             }
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+            agregarMensaje('user', textoUsuario);
+
+            const formData = new FormData(document.getElementById('form-chat'));
+            formData.append('mensaje', mensaje);
+            formData.append('idioma', document.getElementById('idioma').value);
+            formData.append('nivel', document.getElementById('nivel').value);
+            formData.append('modo', document.getElementById('modo').value);
+            formData.append('profesion', document.getElementById('profesion').value);
+            formData.append('profesion_custom', document.getElementById('profesion_custom').value);
+            formData.append('tipo_examen', document.getElementById('tipo_examen').value);
+            formData.append('tema', document.getElementById('tema').value);
+
+            input.value = '';
+            if (archivoInput) archivoInput.value = '';
+            document.getElementById('file-indicator').innerText = '';
+
+            const elemTextoOralis = agregarMensaje('oralis', '');
+            let respuestaCompleta = "";
+
+            try {
+                const response = await fetch('/chat', { method: 'POST', body: formData });
+
+                if (!response.ok) {
+                    elemTextoOralis.innerText = "Error de respuesta del servidor (" + response.status + ").";
+                    return;
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (trimmedLine.startsWith('data: ')) {
+                            const rawData = trimmedLine.substring(6);
+                            try {
+                                const parsed = JSON.parse(rawData);
+                                if (parsed.content) {
+                                    respuestaCompleta += parsed.content;
+                                }
+                            } catch (err) {
+                                respuestaCompleta += rawData;
+                            }
+                        } else if (trimmedLine && !trimmedLine.startsWith(':')) {
+                            respuestaCompleta += line;
+                        }
+                    }
+
+                    // Limpiamos los tags de datos antes de mostrar en pantalla
+                    const textoLimpio = respuestaCompleta.replace(/\[VOCABULARIO:[^\]]+\]/gi, '').replace(/\[GRAMATICA:[^\]]+\]/gi, '');
+                    elemTextoOralis.innerText = textoLimpio;
+
+                    document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+                }
+
+                // Al terminar de recibir toda la respuesta, extraemos automáticamente las palabras/reglas al cuaderno
+                extraerYGuardarEnCuaderno(respuestaCompleta);
+
+            } catch (err) {
+                console.error("Error en petición:", err);
+                elemTextoOralis.innerText = "Error de conexión. Inténtalo de nuevo.";
+            }
         }
-    } catch (err) {
-        console.error("Error en petición:", err);
-        elemTextoOralis.innerText = "Error de conexión. Inténtalo de nuevo.";
-    }
-}
 
         function guardarChat() {
             let textoGuardado = "--- HISTORIAL ORALIS AI ---\n\n";
@@ -586,157 +706,36 @@
             } catch (err) { console.error(err); }
         }
 
-       window.onload = function() {
-    actualizarTodo();
-    iniciarNuevoChat();
-    toggleModos();
-    renderizarCuaderno(); // <-- Carga el cuaderno correcto al iniciar la página
-};
-
-       // EVENTO DE CAMBIO DE IDIOMA
-document.addEventListener('DOMContentLoaded', function() {
-    const selectIdioma = document.getElementById('idioma');
-    if (selectIdioma) {
-        selectIdioma.addEventListener('change', function() {
-            const nuevoIdioma = this.value;
-            const selectNivel = document.getElementById('nivel');
-            const nivelActual = selectNivel ? selectNivel.value : 'B1';
-
+        window.onload = function() {
             actualizarTodo();
             iniciarNuevoChat();
-            renderizarCuaderno(); // <-- Muestra el vocabulario/gramática del idioma recién elegido
+            toggleModos();
+            renderizarCuaderno();
+        };
 
-            // Cerrar sidebar en móvil al cambiar idioma
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar) sidebar.classList.remove('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectIdioma = document.getElementById('idioma');
+            if (selectIdioma) {
+                selectIdioma.addEventListener('change', function() {
+                    const nuevoIdioma = this.value;
+                    const selectNivel = document.getElementById('nivel');
+                    const nivelActual = selectNivel ? selectNivel.value : 'B1';
 
-            // Notificar al servidor en segundo plano
-            fetch('/api/actualizar_preferencias', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idioma: nuevoIdioma, nivel: nivelActual })
-            }).catch(err => console.log('Preferencia sincronizada localmente'));
-        });
-    }
-});
-        function obtenerCuaderno() {
-    const datos = localStorage.getItem('oralis_cuaderno');
-    return datos ? JSON.parse(datos) : {};
-}
+                    actualizarTodo();
+                    iniciarNuevoChat();
+                    renderizarCuaderno();
 
-// Guardar los datos en localStorage
-function guardarDatosCuaderno(cuaderno) {
-    localStorage.setItem('oralis_cuaderno', JSON.stringify(cuaderno));
-    renderizarCuaderno();
-}
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar) sidebar.classList.remove('active');
 
-// Renderizar el cuaderno filtrado por el idioma actual
-function renderizarCuaderno() {
-    const idiomaActual = document.getElementById('idioma').value;
-    const cuaderno = obtenerCuaderno();
-    const datosIdioma = cuaderno[idiomaActual] || { vocabulario: {}, gramatica: [] };
-
-    // 1. RENDERIZAR VOCABULARIO
-    const contVocab = document.getElementById('contenedor-vocabulario-cuaderno');
-    contVocab.innerHTML = '';
-
-    const temas = Object.keys(datosIdioma.vocabulario || {});
-    if (temas.length === 0) {
-        contVocab.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay vocabulario guardado en este idioma.</div>';
-    } else {
-        temas.forEach(tema => {
-            const detailsTema = document.createElement('details');
-            detailsTema.style.marginBottom = '4px';
-            
-            let htmlTipos = '';
-            const tipos = datosIdioma.vocabulario[tema];
-            for (const tipo in tipos) {
-                if (tipos[tipo].length > 0) {
-                    htmlTipos += `<div class="tree-node"><strong>• ${tipo}:</strong> ${tipos[tipo].join(', ')}</div>`;
-                }
+                    fetch('/api/actualizar_preferencias', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idioma: nuevoIdioma, nivel: nivelActual })
+                    }).catch(err => console.log('Preferencia sincronizada localmente'));
+                });
             }
-
-            detailsTema.innerHTML = `
-                <summary style="font-size:0.8rem; color:#334155;">📌 ${tema}</summary>
-                <div class="details-content" style="padding-left:10px;">
-                    ${htmlTipos}
-                </div>
-            `;
-            contVocab.appendChild(detailsTema);
         });
-    }
-
-    // 2. RENDERIZAR GRAMÁTICA
-    const contGram = document.getElementById('contenedor-gramatica-cuaderno');
-    contGram.innerHTML = '';
-
-    if (!datosIdioma.gramatica || datosIdioma.gramatica.length === 0) {
-        contGram.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; font-style:italic;">No hay reglas gramaticales guardadas.</div>';
-    } else {
-        datosIdioma.gramatica.forEach(item => {
-            const divGram = document.createElement('div');
-            divGram.className = 'tree-node';
-            divGram.innerHTML = `• ${item}`;
-            contGram.appendChild(divGram);
-        });
-    }
-}
-
-// Funciones para la ventana Modal
-function abrirModalAgregar() {
-    document.getElementById('modal-cuaderno').style.display = 'flex';
-}
-
-function cerrarModalAgregar() {
-    document.getElementById('modal-cuaderno').style.display = 'none';
-}
-
-function toggleFormCuaderno() {
-    const tipo = document.getElementById('add-tipo-apunte').value;
-    document.getElementById('campos-vocabulario').style.display = (tipo === 'vocabulario') ? 'block' : 'none';
-    document.getElementById('campos-gramatica').style.display = (tipo === 'gramatica') ? 'block' : 'none';
-}
-
-// Guardar nueva palabra o regla gramatical
-function guardarEnCuaderno() {
-    const idiomaActual = document.getElementById('idioma').value;
-    const tipoApunte = document.getElementById('add-tipo-apunte').value;
-    const cuaderno = obtenerCuaderno();
-
-    if (!cuaderno[idiomaActual]) {
-        cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
-    }
-
-    if (tipoApunte === 'vocabulario') {
-        const tema = document.getElementById('add-tema').value.trim() || 'General';
-        const tipoPalabra = document.getElementById('add-tipo-palabra').value;
-        const palabra = document.getElementById('add-palabra').value.trim();
-
-        if (!palabra) return alert('Escribe una palabra o expresión.');
-
-        if (!cuaderno[idiomaActual].vocabulario[tema]) {
-            cuaderno[idiomaActual].vocabulario[tema] = { Sustantivos: [], Verbos: [], Adjetivos: [], "Frases / Expresiones": [] };
-        }
-
-        if (!cuaderno[idiomaActual].vocabulario[tema][tipoPalabra]) {
-            cuaderno[idiomaActual].vocabulario[tema][tipoPalabra] = [];
-        }
-
-        cuaderno[idiomaActual].vocabulario[tema][tipoPalabra].push(palabra);
-
-    } else {
-        const regla = document.getElementById('add-regla').value.trim();
-        if (!regla) return alert('Escribe la regla o apunte gramatical.');
-        cuaderno[idiomaActual].gramatica.push(regla);
-    }
-
-    guardarDatosCuaderno(cuaderno);
-    cerrarModalAgregar();
-    
-    // Limpiar campos
-    document.getElementById('add-palabra').value = '';
-    document.getElementById('add-regla').value = '';
-}
     </script>
 </body>
 </html>
