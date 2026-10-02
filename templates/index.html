@@ -244,7 +244,7 @@
     <div class="main-content">
         <div class="chat-header">
             <button class="btn-toggle-sidebar" onclick="toggleSidebar()">⚙️ Opciones</button>
-            <span>Oralis AI</span>
+            <span id="chat-header-title">Oralis AI</span>
             <div>
                 <button class="btn-action btn-secondary" onclick="iniciarNuevoChat()" style="width: auto; display: inline-block; margin-right: 5px;">➕ Nuevo Chat</button>
                 <button class="btn-action btn-secondary" onclick="guardarChat()" style="width: auto; display: inline-block;">💾</button>
@@ -570,7 +570,7 @@
 
         function cambiarConfiguracion() {
             actualizarTodo();
-            iniciarNuevoChat();
+            cargarChatPorIdioma();
         }
 
         function actualizarTodo() {
@@ -581,74 +581,79 @@
             
             document.getElementById('lbl-idioma').innerText = textoIdioma;
             document.getElementById('lbl-nivel').innerText = nivel;
-            
-            const recs = recomendacionNiveles[nivel] || recomendacionNiveles['B1'];
-            document.getElementById('banco-recomendado').innerHTML = `
-                <details open>
-                    <summary>📚 Vocabulario (${nivel})</summary>
-                    <div class="details-content">
-                        <div>${recs.vocab}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Dame el vocabulario sobre: ${recs.vocab}')">💡 Pedir Vocabulario</button>
-                    </div>
-                </details>
-                <details open>
-                    <summary>✍️ Gramática (${nivel})</summary>
-                    <div class="details-content">
-                        <div>${recs.gram}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame con reglas y ejemplos la gramática: ${recs.gram}')">💡 Explicar Gramática</button>
-                    </div>
-                </details>
-            `;
-            actualizarExamenes();
+            document.getElementById('chat-header-title').innerText = `Oralis AI - ${textoIdioma} (${nivel})`;
+
+            const banco = document.getElementById('banco-recomendado');
+            if (recomendacionNiveles[nivel]) {
+                banco.innerHTML = `
+                    <div style="margin-bottom:4px;"><strong>Vocabulario:</strong> ${recomendacionNiveles[nivel].vocab}</div>
+                    <div><strong>Gramática:</strong> ${recomendacionNiveles[nivel].gram}</div>
+                `;
+            }
+
             renderizarCuaderno();
         }
 
-        function iniciarNuevoChat() {
-            const chatBox = document.getElementById('chat-box');
-            if (chatBox) chatBox.innerHTML = '';
-            
-            const selectIdioma = document.getElementById('idioma');
-            const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
-            const nivel = document.getElementById('nivel').value;
-            
-            agregarMensaje('oralis', `¡Hola! He iniciado una nueva sesión para practicar en ${textoIdioma} (Nivel ${nivel}). ¿Sobre qué te gustaría hablar o qué vocabulario necesitas hoy?`);
+        /* --- MANEJO DE CHAT E HISTORIAL INDEPENDIENTE POR IDIOMA --- */
+        function obtenerHistorialChat(idioma) {
+            const key = `oralis_chat_historial_${idioma}`;
+            const datos = localStorage.getItem(key);
+            return datos ? JSON.parse(datos) : [];
         }
 
-        function pedirExplicacion(consulta) {
-            document.getElementById('input-mensaje').value = consulta;
-            enviarMensaje(new Event('submit'));
+        function guardarHistorialChat(idioma, historial) {
+            const key = `oralis_chat_historial_${idioma}`;
+            localStorage.setItem(key, JSON.stringify(historial));
         }
 
-        async function actualizarExamenes() {
+        function cargarChatPorIdioma() {
             const idioma = document.getElementById('idioma').value;
-            const selectExamen = document.getElementById('tipo_examen');
-            selectExamen.innerHTML = '';
-            try {
-                const res = await fetch('/api/examenes/' + idioma);
-                const data = await res.json();
-                data.examenes.forEach(ex => {
-                    const opt = document.createElement('option');
-                    opt.value = ex; opt.textContent = ex;
-                    selectExamen.appendChild(opt);
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '';
+
+            const historial = obtenerHistorialChat(idioma);
+            if (historial.length === 0) {
+                iniciarNuevoChat(false);
+            } else {
+                historial.forEach(msg => {
+                    agregarMensajeVisual(msg.emisor, msg.texto);
                 });
-            } catch (e) {
-                selectExamen.innerHTML = '<option value="General">Examen Estándar</option>';
             }
         }
 
-        function mostrarNombreArchivo() {
-            const input = document.getElementById('archivo');
-            document.getElementById('file-indicator').innerText = (input.files && input.files[0]) ? '📄 ' + input.files[0].name : '';
+        function iniciarNuevoChat(confirmar = true) {
+            if (confirmar && !confirm('¿Deseas reiniciar la conversación de este idioma?')) return;
+
+            const idioma = document.getElementById('idioma').value;
+            const selectIdioma = document.getElementById('idioma');
+            const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
+            const nivel = document.getElementById('nivel').value;
+
+            const historial = [];
+            guardarHistorialChat(idioma, historial);
+
+            document.getElementById('chat-box').innerHTML = '';
+            
+            const saludoInicial = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
+            agregarMensajeAHistorial('oralis', saludoInicial);
+            agregarMensajeVisual('oralis', saludoInicial);
         }
 
-        function agregarMensaje(emisor, texto) {
+        function agregarMensajeAHistorial(emisor, texto) {
+            const idioma = document.getElementById('idioma').value;
+            const historial = obtenerHistorialChat(idioma);
+            historial.push({ emisor, texto });
+            guardarHistorialChat(idioma, historial);
+        }
+
+        function agregarMensajeVisual(emisor, texto) {
             const chatBox = document.getElementById('chat-box');
             const msgDiv = document.createElement('div');
-            msgDiv.className = 'mensaje ' + (emisor === 'user' ? 'mensaje-usuario' : 'mensaje-oralis');
+            msgDiv.className = `mensaje ${emisor === 'user' ? 'mensaje-usuario' : 'mensaje-oralis'}`;
 
             const contenidoDiv = document.createElement('div');
             contenidoDiv.className = 'contenido-texto';
-            
+
             if (emisor === 'oralis') {
                 contenidoDiv.innerHTML = formatearRespuestaOralis(texto);
             } else {
@@ -659,6 +664,7 @@
 
             if (emisor === 'oralis') {
                 const btnAudio = document.createElement('button');
+                btnAudio.type = 'button';
                 btnAudio.className = 'btn-audio';
                 btnAudio.innerHTML = '🔊 Escuchar';
                 btnAudio.onclick = () => reproducirTexto(texto);
@@ -670,37 +676,30 @@
             return contenidoDiv;
         }
 
-        async function enviarMensaje(e) {
-            if (e) e.preventDefault();
-            const inputMsg = document.getElementById('input-mensaje');
-            const mensaje = inputMsg.value.trim();
-            const inputArchivo = document.getElementById('archivo');
+        async function enviarMensaje(event) {
+            if (event) event.preventDefault();
 
-            if (!mensaje && (!inputArchivo.files || inputArchivo.files.length === 0)) return;
+            const input = document.getElementById('input-mensaje');
+            const texto = input.value.trim();
+            if (!texto) return;
 
-            if (mensaje) {
-                agregarMensaje('user', mensaje);
-            } else if (inputArchivo.files.length > 0) {
-                agregarMensaje('user', `[Archivo adjunto]: ${inputArchivo.files[0].name}`);
-            }
+            input.value = '';
+            agregarMensajeVisual('user', texto);
+            agregarMensajeAHistorial('user', texto);
 
-            inputMsg.value = '';
-
-            const formData = new FormData(document.getElementById('form-chat'));
+            const form = document.getElementById('form-chat');
+            const formData = new FormData(form);
+            formData.set('mensaje', texto);
             formData.append('idioma', document.getElementById('idioma').value);
             formData.append('nivel', document.getElementById('nivel').value);
             formData.append('modo', document.getElementById('modo').value);
             formData.append('metodo_writing', document.getElementById('metodo_writing').value);
             formData.append('profesion', document.getElementById('profesion').value);
             formData.append('profesion_custom', document.getElementById('profesion_custom').value);
-            formData.append('tipo_examen', document.getElementById('tipo_examen').value);
             formData.append('tema', document.getElementById('tema').value);
 
-            inputArchivo.value = '';
-            document.getElementById('file-indicator').innerText = '';
-
-            const contenidoDiv = agregarMensaje('oralis', 'Pensando...');
-            contenidoDiv.innerText = '';
+            const contenidoDivOralis = agregarMensajeVisual('oralis', '');
+            let acumulado = '';
 
             try {
                 const response = await fetch('/chat', {
@@ -708,9 +707,10 @@
                     body: formData
                 });
 
+                if (!response.ok) throw new Error('Error en el servidor');
+
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let acumulado = '';
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -722,52 +722,76 @@
                     for (const linea of lineas) {
                         if (linea.startsWith('data: ')) {
                             try {
-                                const data = JSON.parse(linea.replace('data: ', ''));
-                                if (data.content) {
-                                    acumulado += data.content;
-                                    contenidoDiv.innerHTML = formatearRespuestaOralis(acumulado);
+                                const json = JSON.parse(linea.replace('data: ', ''));
+                                if (json.content) {
+                                    acumulado += json.content;
+                                    contenidoDivOralis.innerHTML = formatearRespuestaOralis(acumulado);
                                     document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
                                 }
-                            } catch (err) {}
+                            } catch (e) {}
                         }
                     }
                 }
 
-                extraerYGuardarEnCuaderno(acumulado);
+                if (acumulado) {
+                    agregarMensajeAHistorial('oralis', acumulado);
+                    extraerYGuardarEnCuaderno(acumulado);
+                }
 
-            } catch (error) {
-                contenidoDiv.innerText = 'Error en la conexión con Oralis.';
+            } catch (err) {
+                contenidoDivOralis.innerText = 'Error al obtener respuesta del servidor.';
             }
+
+            document.getElementById('archivo').value = '';
+            document.getElementById('file-indicator').innerText = '';
+        }
+
+        function mostrarNombreArchivo() {
+            const fileInput = document.getElementById('archivo');
+            const indicator = document.getElementById('file-indicator');
+            if (fileInput.files.length > 0) {
+                indicator.innerText = `📎 Archivo adjunto: ${fileInput.files[0].name}`;
+            } else {
+                indicator.innerText = '';
+            }
+        }
+
+        function guardarChat() {
+            const idioma = document.getElementById('idioma').value;
+            const historial = obtenerHistorialChat(idioma);
+            if (historial.length === 0) return alert('No hay mensajes para guardar.');
+
+            const blob = new Blob([JSON.stringify(historial, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chat_oralis_${idioma}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         async function enviarFeedback(e) {
             e.preventDefault();
             const form = document.getElementById('form-feedback');
-            const formData = new FormData(form);
+            const data = new FormData(form);
 
             try {
-                const res = await fetch('/api/feedback', { method: 'POST', body: formData });
-                const data = await res.json();
-                document.getElementById('msg-feedback').innerText = data.mensaje;
-                form.reset();
+                const res = await fetch('/feedback', { method: 'POST', body: data });
+                if (res.ok) {
+                    document.getElementById('msg-feedback').innerText = '¡Gracias por tu opinión!';
+                    form.reset();
+                } else {
+                    document.getElementById('msg-feedback').innerText = 'Error al enviar feedback.';
+                }
             } catch (err) {
-                document.getElementById('msg-feedback').innerText = 'Error al enviar feedback.';
+                document.getElementById('msg-feedback').innerText = 'Error de conexión.';
             }
         }
 
-        function guardarChat() {
-            const chatBox = document.getElementById('chat-box');
-            const mensajes = chatBox.innerText;
-            const blob = new Blob([mensajes], { type: 'text/plain;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `oralis_chat_${new Date().toISOString().slice(0,10)}.txt`;
-            link.click();
-        }
-
+        /* --- INICIALIZACIÓN DE LA APLICACIÓN --- */
         window.onload = function() {
             actualizarTodo();
-            iniciarNuevoChat();
+            cargarChatPorIdioma();
         };
     </script>
 </body>
