@@ -51,12 +51,50 @@
         
         .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background-color: #f8fafc; }
         
-        .mensaje { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; }
+        .mensaje { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; }
         .mensaje-usuario { align-self: flex-end; background-color: #2563eb; color: white; border-bottom-right-radius: 2px; }
-        .mensaje-oralis { align-self: flex-start; background-color: #ffffff !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; border-bottom-left-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .mensaje-oralis { align-self: flex-start; background-color: #ffffff !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; border-bottom-left-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; max-width: 800px; }
         
         .contenido-texto { min-height: 20px; font-size: 0.95rem; color: #1e293b; margin-bottom: 8px; white-space: pre-wrap; }
-        .btn-audio { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; }
+        
+        /* ESTILOS PARA RECUADROS DE DESTACADOS Y TRADUCCIÓN */
+        .box-traduccion {
+            background-color: #fff7ed;
+            border-left: 4px solid #f97316;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            color: #9a3412;
+            font-size: 0.9rem;
+        }
+        .box-traduccion-titulo {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            color: #c2410c;
+        }
+
+        .box-correccion {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            color: #991b1b;
+            font-size: 0.9rem;
+        }
+        .box-correccion-titulo {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            color: #b91c1c;
+        }
+
+        .btn-audio { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; margin-top: 5px; }
 
         .chat-input-area { background-color: #ffffff; padding: 15px 20px; border-top: 1px solid #e1e8ed; display: flex; flex-direction: column; gap: 5px; }
         .chat-form { display: flex; align-items: center; gap: 10px; }
@@ -287,6 +325,36 @@
             }
         }
 
+        /* --- FORMATO VISUAL DE TRADUCCIÓN Y ERRORES EN RECUADROS --- */
+        function formatearRespuestaOralis(texto) {
+            let textoLimpio = texto.replace(/\[VOCABULARIO:[^\]]+\]/gi, '').replace(/\[GRAMATICA:[^\]]+\]/gi, '').trim();
+
+            let partePrincipal = textoLimpio;
+            let htmlTraduccion = '';
+            let htmlCorreccion = '';
+
+            // Detectar bloque de correcciones / errores
+            if (textoLimpio.includes('---CORRECCION---') || textoLimpio.includes('---CORRECCIÓN---') || textoLimpio.includes('---ERRORES---')) {
+                const partesCorr = textoLimpio.split(/---(?:CORRECCION|CORRECCIÓN|ERRORES)---/i);
+                partePrincipal = partesCorr[0];
+                let resto = partesCorr[1] || '';
+
+                if (resto.includes('---TRADUCCION---') || resto.includes('---TRADUCCIÓN---')) {
+                    const subPartes = resto.split(/---TRADUCCI[ÓO]N---/i);
+                    htmlCorreccion = `<div class="box-correccion"><div class="box-correccion-titulo">⚠️ Corrección / Errores</div>${subPartes[0].trim()}</div>`;
+                    htmlTraduccion = `<div class="box-traduccion"><div class="box-traduccion-titulo">🌐 Traducción</div>${subPartes[1].trim()}</div>`;
+                } else {
+                    htmlCorreccion = `<div class="box-correccion"><div class="box-correccion-titulo">⚠️ Corrección / Errores</div>${resto.trim()}</div>`;
+                }
+            } else if (textoLimpio.includes('---TRADUCCION---') || textoLimpio.includes('---TRADUCCIÓN---')) {
+                const partesTrad = textoLimpio.split(/---TRADUCCI[ÓO]N---/i);
+                partePrincipal = partesTrad[0];
+                htmlTraduccion = `<div class="box-traduccion"><div class="box-traduccion-titulo">🌐 Traducción</div>${partesTrad[1].trim()}</div>`;
+            }
+
+            return `<div>${partePrincipal.trim()}</div>${htmlCorreccion}${htmlTraduccion}`;
+        }
+
         /* --- SISTEMA AUTOMÁTICO DEL CUADERNO --- */
         function obtenerCuaderno() {
             const datos = localStorage.getItem('oralis_cuaderno');
@@ -473,7 +541,7 @@
         function reproducirTexto(texto) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const textoLimpio = texto.replace(/\[VOCABULARIO:[^\]]+\]/gi, '').replace(/\[GRAMATICA:[^\]]+\]/gi, '');
+                const textoLimpio = texto.replace(/\[VOCABULARIO:[^\]]+\]/gi, '').replace(/\[GRAMATICA:[^\]]+\]/gi, '').split('---')[0];
                 const utterance = new SpeechSynthesisUtterance(textoLimpio);
                 const idioma = document.getElementById('idioma').value;
                 utterance.lang = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
@@ -520,14 +588,14 @@
                     <summary>📚 Vocabulario (${nivel})</summary>
                     <div class="details-content">
                         <div>${recs.vocab}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame y dame ejemplos de vocabulario nivel ${nivel} en ${textoIdioma} sobre: ${recs.vocab}')">💡 Explicar Vocabulario</button>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Dame el vocabulario sobre: ${recs.vocab}')">💡 Pedir Vocabulario</button>
                     </div>
                 </details>
                 <details open>
                     <summary>✍️ Gramática (${nivel})</summary>
                     <div class="details-content">
                         <div>${recs.gram}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame con reglas y ejemplos la gramática de nivel ${nivel} en ${textoIdioma}: ${recs.gram}')">💡 Explicar Gramática</button>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame con reglas y ejemplos la gramática: ${recs.gram}')">💡 Explicar Gramática</button>
                     </div>
                 </details>
             `;
@@ -543,7 +611,7 @@
             const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
             const nivel = document.getElementById('nivel').value;
             
-            agregarMensaje('oralis', `¡Hola! He iniciado una nueva sesión para practicar en ${textoIdioma} (Nivel ${nivel}). ¡Escríbeme cuando quieras!`);
+            agregarMensaje('oralis', `¡Hola! He iniciado una nueva sesión para practicar en ${textoIdioma} (Nivel ${nivel}). ¿Sobre qué te gustaría hablar o qué vocabulario necesitas hoy?`);
         }
 
         function pedirExplicacion(consulta) {
@@ -580,7 +648,12 @@
 
             const contenidoDiv = document.createElement('div');
             contenidoDiv.className = 'contenido-texto';
-            contenidoDiv.innerText = texto.replace(/\[VOCABULARIO:[^\]]+\]/gi, '').replace(/\[GRAMATICA:[^\]]+\]/gi, '').trim();
+            
+            if (emisor === 'oralis') {
+                contenidoDiv.innerHTML = formatearRespuestaOralis(texto);
+            } else {
+                contenidoDiv.innerText = texto;
+            }
 
             msgDiv.appendChild(contenidoDiv);
 
@@ -588,7 +661,7 @@
                 const btnAudio = document.createElement('button');
                 btnAudio.className = 'btn-audio';
                 btnAudio.innerHTML = '🔊 Escuchar';
-                btnAudio.onclick = () => reproducirTexto(contenidoDiv.innerText);
+                btnAudio.onclick = () => reproducirTexto(texto);
                 msgDiv.appendChild(btnAudio);
             }
 
@@ -623,7 +696,6 @@
             formData.append('tipo_examen', document.getElementById('tipo_examen').value);
             formData.append('tema', document.getElementById('tema').value);
 
-            // Limpiar archivo adjunto tras enviar
             inputArchivo.value = '';
             document.getElementById('file-indicator').innerText = '';
 
@@ -653,7 +725,7 @@
                                 const data = JSON.parse(linea.replace('data: ', ''));
                                 if (data.content) {
                                     acumulado += data.content;
-                                    contenidoDiv.innerText = acumulado.replace(/\[VOCABULARIO:[^\]]+\]/gi, '').replace(/\[GRAMATICA:[^\]]+\]/gi, '').trim();
+                                    contenidoDiv.innerHTML = formatearRespuestaOralis(acumulado);
                                     document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
                                 }
                             } catch (err) {}
@@ -693,7 +765,6 @@
             link.click();
         }
 
-        // Inicialización al cargar página
         window.onload = function() {
             actualizarTodo();
             iniciarNuevoChat();
