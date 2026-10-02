@@ -586,36 +586,39 @@
             } catch (err) { console.error(err); }
         }
 
-        window.onload = function() {
+       window.onload = function() {
+    actualizarTodo();
+    iniciarNuevoChat();
+    toggleModos();
+    renderizarCuaderno(); // <-- Carga el cuaderno correcto al iniciar la página
+};
+
+       // EVENTO DE CAMBIO DE IDIOMA
+document.addEventListener('DOMContentLoaded', function() {
+    const selectIdioma = document.getElementById('idioma');
+    if (selectIdioma) {
+        selectIdioma.addEventListener('change', function() {
+            const nuevoIdioma = this.value;
+            const selectNivel = document.getElementById('nivel');
+            const nivelActual = selectNivel ? selectNivel.value : 'B1';
+
             actualizarTodo();
             iniciarNuevoChat();
-            toggleModos();
-        };
+            renderizarCuaderno(); // <-- Muestra el vocabulario/gramática del idioma recién elegido
 
-        // EVENTO CORRECTO DE CAMBIO DE IDIOMA
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectIdioma = document.getElementById('idioma');
-            if (selectIdioma) {
-                selectIdioma.addEventListener('change', function() {
-                    const nuevoIdioma = this.value;
-                    const selectNivel = document.getElementById('nivel');
-                    const nivelActual = selectNivel ? selectNivel.value : 'B1';
+            // Cerrar sidebar en móvil al cambiar idioma
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.remove('active');
 
-                    actualizarTodo();
-                    iniciarNuevoChat();
-
-                    // Cerrar sidebar en móvil al cambiar idioma
-                    document.getElementById('sidebar').classList.remove('active');
-
-                    // Notificar al servidor en segundo plano
-                    fetch('/api/actualizar_preferencias', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ idioma: nuevoIdioma, nivel: nivelActual })
-                    }).catch(err => console.log('Preferencia sincronizada localmente'));
-                });
-            }
+            // Notificar al servidor en segundo plano
+            fetch('/api/actualizar_preferencias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idioma: nuevoIdioma, nivel: nivelActual })
+            }).catch(err => console.log('Preferencia sincronizada localmente'));
         });
+    }
+});
         function obtenerCuaderno() {
     const datos = localStorage.getItem('oralis_cuaderno');
     return datos ? JSON.parse(datos) : {};
