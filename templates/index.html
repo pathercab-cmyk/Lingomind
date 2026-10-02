@@ -242,7 +242,7 @@
     <!-- MAIN CONTENT -->
     <div class="main-content">
         <div class="chat-header">
-            <button class="btn-toggle-sidebar" onclick="toggleSidebar()">⚙️️ Opciones</button>
+            <button class="btn-toggle-sidebar" onclick="toggleSidebar()">⚙️ Opciones</button>
             <span id="chat-header-title">Oralis AI</span>
             <div>
                 <button class="btn-action btn-secondary" onclick="iniciarNuevoChat()" style="width: auto; display: inline-block; margin-right: 5px;">➕ Nuevo Chat</button>
@@ -327,6 +327,7 @@
                 selectExamen.appendChild(opt);
             });
         }
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
         }
@@ -674,6 +675,7 @@
         };
 
         function cambiarConfiguracion() {
+            poblarExamenes();
             actualizarTodo();
             cargarChatPorIdioma();
         }
@@ -870,6 +872,7 @@
         }
 
         window.onload = function() {
+            poblarExamenes();
             toggleModos();
             actualizarTodo();
             cargarChatPorIdioma();
