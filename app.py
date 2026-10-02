@@ -6,8 +6,12 @@ import json
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'tu_clave_secreta_aqui'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///oralis.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'tu_clave_secreta_aqui')
+
+# --- CONFIGURACIÓN DE BASE DE DATOS (Ruta Absoluta) ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or \
+    'sqlite:///' + os.path.join(basedir, 'oralis.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -26,8 +30,11 @@ class Usuario(UserMixin, db.Model):
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
+# --- INICIALIZACIÓN DE BASE DE DATOS ---
+with app.app_context():
+    db.create_all()
+
 # Almacenamiento temporal del historial por usuario e idioma en memoria
-# Estructura: historiales_chat[user_id][idioma] = [{emisor: 'user'/'oralis', texto: '...'}, ...]
 historiales_chat = {}
 
 # Mapeo de códigos de idioma a nombres descriptivos
@@ -173,7 +180,7 @@ def guardar_mensaje():
     data = request.json or {}
     user_id = str(current_user.id)
     idioma = data.get('idioma', 'de')
-    mensaje = data.get('mensaje') # Objeto: {'emisor': 'user'|'oralis', 'texto': '...'}
+    mensaje = data.get('mensaje')
 
     if not mensaje:
         return jsonify({'status': 'error', 'msg': 'Mensaje vacío'}), 400
@@ -212,7 +219,6 @@ def chat():
 
     prof_final = profesion_custom if profesion == 'Otro' and profesion_custom else profesion
 
-    # Construcción de las instrucciones con el prompt dinámico
     system_prompt = construir_prompt_base(
         idioma_code=idioma,
         nivel=nivel,
@@ -223,14 +229,12 @@ def chat():
         metodo_writing=metodo_writing
     )
 
-    # Recuperar historial previo del usuario para mantener la memoria dentro de la sesión
     user_id = str(current_user.id)
     user_chats = historiales_chat.get(user_id, {})
     historial_previo = user_chats.get(idioma, [])
 
     mensajes_for_api = [{"role": "system", "content": system_prompt}]
     
-    # Añadir los últimos mensajes para contexto sin saturar el prompt
     for m in historial_previo[-10:]:
         role = "user" if m['emisor'] == 'user' else "assistant"
         mensajes_for_api.append({"role": role, "content": m['texto']})
@@ -238,20 +242,8 @@ def chat():
     if mensaje_usuario:
         mensajes_for_api.append({"role": "user", "content": mensaje_usuario})
 
-    # IMPORTANTE: Sustituye esta sección con tu cliente de IA activo (OpenAI / Gemini / Anthropic / Groq)
     def streamer():
         try:
-            # Ejemplo conceptual con OpenAI / LiteLLM / Gemini:
-            # response = openai.chat.completions.create(
-            #     model="gpt-4o",
-            #     messages=mensajes_for_api,
-            #     stream=True
-            # )
-            # for chunk in response:
-            #     if chunk.choices[0].delta.content:
-            #         yield f"data: {json.dumps({'content': chunk.choices[0].delta.content})}\n\n"
-
-            # --- SIMULACIÓN DE RESPUESTA DIRECTA Y ADAPTABLE EN CASO DE NO TENER API KEY CONFIGURADA ---
             dummy_response = ""
             if "vocabulario" in mensaje_usuario.lower():
                 tema_req = mensaje_usuario.lower().replace("dame", "").replace("vocabulario", "").replace("de", "").strip()
@@ -279,7 +271,6 @@ def chat():
                     f"¡Hola! He entendido tu mensaje. ¿Cómo puedo ayudarte hoy con el alemán?"
                 )
 
-            # Transmitimos la respuesta palabra por palabra para simular streaming
             import time
             for word in dummy_response.split(' '):
                 time.sleep(0.04)
@@ -304,6 +295,4 @@ def obtener_examenes(idioma):
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, port=5000)
