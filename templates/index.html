@@ -658,7 +658,7 @@
             // Lógica para guardar el chat
         }
 
-       async function enviarMensaje(event) {
+      async function enviarMensaje(event) {
     if (event) event.preventDefault();
     const input = document.getElementById('input-mensaje');
     const mensaje = input.value.trim();
@@ -683,7 +683,7 @@
     msgOralis.appendChild(contenidoDiv);
     chatBox.appendChild(msgOralis);
 
-    // Prepare datos del formulario (incluye idioma, nivel, modo, etc.)
+    // Preparar datos del formulario
     const formConfig = new FormData();
     formConfig.append('mensaje', mensaje);
     formConfig.append('idioma', document.getElementById('idioma').value);
@@ -722,15 +722,26 @@
                             contenidoDiv.innerHTML = formatearRespuestaOralis(textoAcumulado);
                             chatBox.scrollTop = chatBox.scrollHeight;
                         }
-                   // =========================================================
-        // ¡AQUÍ ES DONDE DEBES AGREGAR LA LLAMADA AUTOMÁTICA!
-        // =========================================================
+                    } catch (e) {}
+                }
+            }
+        }
+
+        // 3. Al finalizar la respuesta de Oralis:
+        // A) Añadir el botón de audio
+        const btnEscuchar = document.createElement('button');
+        btnEscuchar.className = 'btn-audio';
+        btnEscuchar.innerHTML = '🔊 Escuchar';
+        btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
+        msgOralis.appendChild(btnEscuchar);
+
+        // B) Extraer y auto-guardar en cuaderno
         extraerYGuardarEnCuaderno(textoAcumulado);
 
     } catch (err) {
         contenidoDiv.innerText = "Error al conectar con el servidor.";
     }
-} // <--- PRIMER CIERRE
+}
         } // <--- SEGUNDO CIERRE ERROREO (Rrompe el código)
 
         // Al finalizar el stream, añadir botón de audio y guardar en cuaderno
