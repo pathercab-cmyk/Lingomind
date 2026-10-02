@@ -253,10 +253,9 @@ def chat():
                 model="qwen/qwen3.8-27b",
                 messages=mensajes_for_api,
                 temperature=0.7,
-                max_tokens=800,  # Restringe la respuesta para no superar el límite de OTPM
+                max_tokens=1200,  # Aumentado para evitar que la respuesta se corte
                 stream=True
             )
-
             respuesta_completa = ""
             for chunk in completion:
                 contenido = chunk.choices[0].delta.content or ""
