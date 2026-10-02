@@ -153,28 +153,26 @@
                 </select>
             </div>
 
-          <div class="form-group">
-    <label for="modo">Modo de Aprendizaje:</label>
-    <!-- Se agrega onchange para toggleModos -->
-    <select id="modo" name="modo" onchange="toggleModos()">
-        <option value="tutor_original">Tutor General (Corrección Siempre)</option>
-        <option value="practicas_orales">Simulación / Práctica Oral</option>
-        <option value="examen">Preparación Examen Oficial</option>
-        <option value="writing">Evaluador de Textos / Writing</option>
-    </select>
-</div>
+            <div class="form-group">
+                <label for="modo">Modo de Aprendizaje:</label>
+                <select id="modo" name="modo" onchange="toggleModos(); cambiarConfiguracion();">
+                    <option value="tutor_original">Tutor General (Corrección Siempre)</option>
+                    <option value="practicas_orales">Simulación / Práctica Oral</option>
+                    <option value="examen">Preparación Examen Oficial</option>
+                    <option value="writing">Evaluador de Textos / Writing</option>
+                </select>
+            </div>
 
-<!-- Asegúrate de que tenga display: none por defecto -->
-<div class="form-group" id="group-profesion" style="display: none;">
-    <label for="profesion">Perfil de Simulación:</label>
-    <select id="profesion" name="profesion" onchange="toggleCustomProfesion()">
-        <option value="Entrevista de Trabajo">Entrevista de Trabajo</option>
-        <option value="Atención al Cliente">Atención al Cliente</option>
-        <option value="Médico / Salud">Consulta Médica</option>
-        <option value="Otro">Otro (Personalizado)</option>
-    </select>
-    <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;" onkeydown="checkEnterSend(event)">
-</div>
+            <div class="form-group" id="group-profesion" style="display: none;">
+                <label for="profesion">Perfil de Simulación:</label>
+                <select id="profesion" name="profesion" onchange="toggleCustomProfesion(); cambiarConfiguracion();">
+                    <option value="Entrevista de Trabajo">Entrevista de Trabajo</option>
+                    <option value="Atención al Cliente">Atención al Cliente</option>
+                    <option value="Médico / Salud">Consulta Médica</option>
+                    <option value="Otro">Otro (Personalizado)</option>
+                </select>
+                <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;" onkeydown="checkEnterSend(event)">
+            </div>
 
             <div class="form-group" id="group-writing" style="display: none;">
                 <label for="metodo_writing">Método de Corrección:</label>
@@ -182,17 +180,6 @@
                     <option value="gramatica" selected>Corrección Gramatical Directa</option>
                     <option value="socratico">Método Socrático (Guiado)</option>
                 </select>
-            </div>
-
-            <div class="form-group" id="group-profesion" style="display: none;">
-                <label for="profesion">Perfil de Simulación:</label>
-                <select id="profesion" name="profesion" onchange="toggleCustomProfesion()">
-                    <option value="Entrevista de Trabajo">Entrevista de Trabajo</option>
-                    <option value="Atención al Cliente">Atención al Cliente</option>
-                    <option value="Médico / Salud">Consulta Médica</option>
-                    <option value="Otro">Otro (Personalizado)</option>
-                </select>
-                <input type="text" id="profesion_custom" name="profesion_custom" placeholder="Especifica el rol..." style="display: none; margin-top: 5px;" onkeydown="checkEnterSend(event)">
             </div>
 
             <div class="form-group" id="group-examen" style="display: none;">
@@ -313,7 +300,7 @@
         </div>
     </div>
 
-  <script>
+    <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
         }
@@ -334,6 +321,28 @@
             } else {
                 inputCustom.style.display = 'none';
                 inputCustom.value = '';
+            }
+        }
+
+        function toggleModos() {
+            const modo = document.getElementById('modo').value;
+            
+            const groupProfesion = document.getElementById('group-profesion');
+            const groupExamen = document.getElementById('group-examen');
+            const groupWriting = document.getElementById('group-writing');
+
+            const btnAttach = document.getElementById('btn-attach');
+            const btnMic = document.getElementById('btn-mic');
+
+            groupProfesion.style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
+            groupExamen.style.display = (modo === 'examen') ? 'flex' : 'none';
+            groupWriting.style.display = (modo === 'writing') ? 'flex' : 'none';
+
+            if (btnAttach) btnAttach.style.display = (modo === 'writing') ? 'inline-flex' : 'none';
+            if (btnMic) btnMic.style.display = (modo === 'writing') ? 'none' : 'inline-flex';
+
+            if (modo === 'practicas_orales') {
+                toggleCustomProfesion();
             }
         }
 
@@ -452,58 +461,55 @@
             }
         }
 
-      function extraerYGuardarEnCuaderno(texto) {
-    if (!texto) return;
+        function extraerYGuardarEnCuaderno(texto) {
+            if (!texto) return;
 
-    const idiomaActual = document.getElementById('idioma').value;
-    const cuaderno = obtenerCuaderno();
+            const idiomaActual = document.getElementById('idioma').value;
+            const cuaderno = obtenerCuaderno();
 
-    if (!cuaderno[idiomaActual]) {
-        cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
-    }
-
-    let huboCambios = false;
-
-    // 1. Extraer Vocabulario
-    const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
-    let matchVocab;
-
-    while ((matchVocab = regexVocab.exec(texto)) !== null) {
-        const categoria = matchVocab[1].trim();
-        const palabras = matchVocab[2].split(',').map(p => p.trim());
-
-        if (!cuaderno[idiomaActual].vocabulario['General']) {
-            cuaderno[idiomaActual].vocabulario['General'] = {};
-        }
-        if (!cuaderno[idiomaActual].vocabulario['General'][categoria]) {
-            cuaderno[idiomaActual].vocabulario['General'][categoria] = [];
-        }
-
-        palabras.forEach(palabra => {
-            if (palabra && !cuaderno[idiomaActual].vocabulario['General'][categoria].includes(palabra)) {
-                cuaderno[idiomaActual].vocabulario['General'][categoria].push(palabra);
-                huboCambios = true;
+            if (!cuaderno[idiomaActual]) {
+                cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
             }
-        });
-    }
 
-    // 2. Extraer Gramática
-    const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
-    let matchGram;
+            let huboCambios = false;
 
-    while ((matchGram = regexGram.exec(texto)) !== null) {
-        const regla = matchGram[1].trim();
-        if (regla && !cuaderno[idiomaActual].gramatica.includes(regla)) {
-            cuaderno[idiomaActual].gramatica.push(regla);
-            huboCambios = true;
+            const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
+            let matchVocab;
+
+            while ((matchVocab = regexVocab.exec(texto)) !== null) {
+                const categoria = matchVocab[1].trim();
+                const palabras = matchVocab[2].split(',').map(p => p.trim());
+
+                if (!cuaderno[idiomaActual].vocabulario['General']) {
+                    cuaderno[idiomaActual].vocabulario['General'] = {};
+                }
+                if (!cuaderno[idiomaActual].vocabulario['General'][categoria]) {
+                    cuaderno[idiomaActual].vocabulario['General'][categoria] = [];
+                }
+
+                palabras.forEach(palabra => {
+                    if (palabra && !cuaderno[idiomaActual].vocabulario['General'][categoria].includes(palabra)) {
+                        cuaderno[idiomaActual].vocabulario['General'][categoria].push(palabra);
+                        huboCambios = true;
+                    }
+                });
+            }
+
+            const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
+            let matchGram;
+
+            while ((matchGram = regexGram.exec(texto)) !== null) {
+                const regla = matchGram[1].trim();
+                if (regla && !cuaderno[idiomaActual].gramatica.includes(regla)) {
+                    cuaderno[idiomaActual].gramatica.push(regla);
+                    huboCambios = true;
+                }
+            }
+
+            if (huboCambios) {
+                guardarDatosCuaderno(cuaderno);
+            }
         }
-    }
-
-    // Guardar y refrescar la vista si se encontraron datos
-    if (huboCambios) {
-        guardarDatosCuaderno(cuaderno);
-    }
-}
 
         function abrirModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'flex'; }
         function cerrarModalAgregar() { document.getElementById('modal-cuaderno').style.display = 'none'; }
@@ -593,6 +599,30 @@
             }
         }
 
+        function hablar(texto, idioma = 'es-ES') {
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = idioma;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const vozMejorada = voices.find(v => 
+                v.lang.startsWith(idioma.slice(0, 2)) && 
+                (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Enhanced") || v.name.includes("Online"))
+            );
+
+            if (vozMejorada) {
+                utterance.voice = vozMejorada;
+            }
+
+            utterance.rate = 0.95;
+            utterance.pitch = 1.0;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        window.speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.getVoices();
+        };
+
         function reproducirTexto(texto) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -601,39 +631,12 @@
                                          .replace(/\[VOCABULARIO:[^\]]+\]/gi, '')
                                          .replace(/\[GRAMATICA:[^\]]+\]/gi, '')
                                          .split('---')[0];
-                const utterance = new SpeechSynthesisUtterance(textoLimpio);
                 const idioma = document.getElementById('idioma').value;
-                utterance.lang = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
-                window.speechSynthesis.speak(utterance);
+                const codigoIdioma = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
+                
+                hablar(textoLimpio, codigoIdioma);
             }
         }
-
-      function toggleModos() {
-    const modo = document.getElementById('modo').value;
-    
-    // Contenedores
-    const groupProfesion = document.getElementById('group-profesion');
-    const groupExamen = document.getElementById('group-examen');
-    const groupWriting = document.getElementById('group-writing');
-
-    // Botones de la entrada
-    const btnAttach = document.getElementById('btn-attach');
-    const btnMic = document.getElementById('btn-mic');
-
-    // Mostrar / Ocultar campos del menú según el modo
-    groupProfesion.style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
-    groupExamen.style.display = (modo === 'examen') ? 'flex' : 'none';
-    groupWriting.style.display = (modo === 'writing') ? 'flex' : 'none';
-
-    // Ajustes de botones
-    if (btnAttach) btnAttach.style.display = (modo === 'writing') ? 'inline-flex' : 'none';
-    if (btnMic) btnMic.style.display = (modo === 'writing') ? 'none' : 'inline-flex';
-
-    // Verificar si dentro de "Práctica Oral" se seleccionó "Otro"
-    if (modo === 'practicas_orales') {
-        toggleCustomProfesion();
-    }
-}
 
         const recomendacionNiveles = {
             'A1': { vocab: "Saludos, Familia, Rutina diaria, Números y Colores.", gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the)." },
@@ -669,67 +672,59 @@
         }
 
         async function cargarChatPorIdioma() {
-    const selectIdioma = document.getElementById('idioma');
-    const idioma = selectIdioma.value;
-    const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
-    const nivel = document.getElementById('nivel').value;
-    
-    const chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML = '';
+            const selectIdioma = document.getElementById('idioma');
+            const idioma = selectIdioma.value;
+            const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
+            const nivel = document.getElementById('nivel').value;
+            
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '';
 
-    try {
-        // Pedir el historial al backend
-        const res = await fetch(`/api/chat/historial/${idioma}`);
-        const data = await res.json();
-        
-        if (data.historial && data.historial.length > 0) {
-            // Reconstruir los mensajes guardados en el chat
-            data.historial.forEach(m => {
-                if (m.emisor === 'user') {
-                    const msgUser = document.createElement('div');
-                    msgUser.className = 'mensaje mensaje-usuario';
-                    msgUser.innerText = m.texto;
-                    chatBox.appendChild(msgUser);
+            try {
+                const res = await fetch(`/api/chat/historial/${idioma}`);
+                const data = await res.json();
+                
+                if (data.historial && data.historial.length > 0) {
+                    data.historial.forEach(m => {
+                        if (m.emisor === 'user') {
+                            const msgUser = document.createElement('div');
+                            msgUser.className = 'mensaje mensaje-usuario';
+                            msgUser.innerText = m.texto;
+                            chatBox.appendChild(msgUser);
+                        } else {
+                            agregarMensajeOralis(m.texto);
+                        }
+                    });
                 } else {
-                    agregarMensajeOralis(m.texto);
+                    const mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
+                    agregarMensajeOralis(mensajeBienvenida);
                 }
-            });
-        } else {
-            // Si no hay historial, mostrar bienvenida
-            const mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
-            agregarMensajeOralis(mensajeBienvenida);
+            } catch (err) {
+                console.error("Error al obtener historial:", err);
+                const mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
+                agregarMensajeOralis(mensajeBienvenida);
+            }
+
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
-    } catch (err) {
-        console.error("Error al obtener historial:", err);
-        const mensajeBienvenida = `¡Hola! Soy Oralis AI. Estoy listo para ayudarte a practicar **${textoIdioma}** en nivel **${nivel}**. ¿De qué te gustaría hablar hoy?`;
-        agregarMensajeOralis(mensajeBienvenida);
-    }
 
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// --- ACCIÓN DEL BOTÓN 💾 GUARDAR CHAT ---
-async function guardarChat() {
-    const chatBox = document.getElementById('chat-box');
-    if (!chatBox || chatBox.children.length === 0) return;
-
-    // Notificación visual de confirmación
-    alert("¡Chat e historial sincronizados correctamente con tu cuenta!");
-}
-
-// --- BOTÓN ➕ NUEVO CHAT (BORRA Y REINICIA) ---
-async function iniciarNuevoChat() {
-    const idioma = document.getElementById('idioma').value;
-    if (confirm("¿Estás seguro de que deseas limpiar esta conversación?")) {
-        try {
-            await fetch(`/api/chat/limpiar/${idioma}`, { method: 'POST' });
-        } catch (e) {
-            console.error(e);
+        async function guardarChat() {
+            const chatBox = document.getElementById('chat-box');
+            if (!chatBox || chatBox.children.length === 0) return;
+            alert("¡Chat e historial sincronizados correctamente con tu cuenta!");
         }
-        cargarChatPorIdioma();
-    }
-}
 
+        async function iniciarNuevoChat() {
+            const idioma = document.getElementById('idioma').value;
+            if (confirm("¿Estás seguro de que deseas limpiar esta conversación?")) {
+                try {
+                    await fetch(`/api/chat/limpiar/${idioma}`, { method: 'POST' });
+                } catch (e) {
+                    console.error(e);
+                }
+                cargarChatPorIdioma();
+            }
+        }
 
         async function enviarMensaje(event) {
             if (event) event.preventDefault();
@@ -739,7 +734,6 @@ async function iniciarNuevoChat() {
 
             const chatBox = document.getElementById('chat-box');
             
-            // 1. Mostrar mensaje del usuario
             const msgUser = document.createElement('div');
             msgUser.className = 'mensaje mensaje-usuario';
             msgUser.innerText = mensaje;
@@ -748,7 +742,6 @@ async function iniciarNuevoChat() {
             input.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 2. Crear contenedor para la respuesta progresiva de Oralis
             const msgOralis = document.createElement('div');
             msgOralis.className = 'mensaje mensaje-oralis';
             const contenidoDiv = document.createElement('div');
@@ -756,15 +749,18 @@ async function iniciarNuevoChat() {
             msgOralis.appendChild(contenidoDiv);
             chatBox.appendChild(msgOralis);
 
-            // Preparar datos del formulario
+            const profesionSelect = document.getElementById('profesion').value;
+            const profesionCustom = document.getElementById('profesion_custom').value;
+            const profesionFinal = (profesionSelect === 'Otro' && profesionCustom) ? profesionCustom : profesionSelect;
+
             const formConfig = new FormData();
             formConfig.append('mensaje', mensaje);
             formConfig.append('idioma', document.getElementById('idioma').value);
             formConfig.append('nivel', document.getElementById('nivel').value);
             formConfig.append('modo', document.getElementById('modo').value);
             formConfig.append('metodo_writing', document.getElementById('metodo_writing').value);
-            formConfig.append('profesion', document.getElementById('profesion').value);
-            formConfig.append('profesion_custom', document.getElementById('profesion_custom').value);
+            formConfig.append('profesion', profesionFinal);
+            formConfig.append('profesion_custom', profesionCustom);
             formConfig.append('tipo_examen', document.getElementById('tipo_examen').value);
             formConfig.append('tema', document.getElementById('tema').value);
 
@@ -800,15 +796,12 @@ async function iniciarNuevoChat() {
                     }
                 }
 
-                // 3. Al finalizar la respuesta de Oralis:
-                // A) Añadir el botón de audio
                 const btnEscuchar = document.createElement('button');
                 btnEscuchar.className = 'btn-audio';
                 btnEscuchar.innerHTML = '🔊 Escuchar';
                 btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
                 msgOralis.appendChild(btnEscuchar);
 
-                // B) Extraer y auto-guardar en cuaderno
                 extraerYGuardarEnCuaderno(textoAcumulado);
 
             } catch (err) {
@@ -831,55 +824,11 @@ async function iniciarNuevoChat() {
             }
         }
 
-        // Inicialización
         window.onload = function() {
+            toggleModos();
             actualizarTodo();
             cargarChatPorIdioma();
         };
-      function hablar(texto, idioma = 'es-ES') {
-    const utterance = new SpeechSynthesisUtterance(texto);
-    utterance.lang = idioma;
-    
-    // Obtener las voces disponibles
-    const voices = window.speechSynthesis.getVoices();
-    
-    // Buscar una voz natural/premium instalada en el navegador
-    const vozMejorada = voices.find(v => 
-        v.lang.startsWith(idioma.slice(0, 2)) && 
-        (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Enhanced") || v.name.includes("Online"))
-    );
-
-    if (vozMejorada) {
-        utterance.voice = vozMejorada;
-    }
-
-    // Ajustar tono y velocidad para que suene más natural
-    utterance.rate = 0.95; // Ligeramente más lento para mejor entonación
-    utterance.pitch = 1.0;
-
-    window.speechSynthesis.speak(utterance);
-}
-
-// Cargar voces si el navegador las obtiene asíncronamente
-window.speechSynthesis.onvoiceschanged = () => {
-    window.speechSynthesis.getVoices();
-};
-      function reproducirTexto(texto) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const textoLimpio = texto.replace(/<[^>]*>/g, '')
-                                 .replace(/\*\*/g, '')
-                                 .replace(/\[VOCABULARIO:[^\]]+\]/gi, '')
-                                 .replace(/\[GRAMATICA:[^\]]+\]/gi, '')
-                                 .split('---')[0];
-        const idioma = document.getElementById('idioma').value;
-        const codigoIdioma = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
-        
-        hablar(textoLimpio, codigoIdioma);
-    }
-}
     </script>
-</body>
-</html>
 </body>
 </html>
