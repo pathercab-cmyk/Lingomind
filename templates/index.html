@@ -67,6 +67,71 @@
         .btn-send:hover { background-color: #1d4ed8; }
         .file-indicator { font-size: 0.8rem; color: #64748b; margin-left: 50px; }
     </style>
+    <style>
+    /* Prevención global de desbordamiento horizontal */
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Contenedor principal adaptable */
+    .main-layout {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+
+    /* Barra lateral */
+    .sidebar {
+        width: 300px;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        padding: 15px;
+    }
+
+    /* Área principal del chat */
+    .chat-container {
+        flex-grow: 1;
+        min-width: 0; /* Evita que el flexbox se desborde al escribir líneas largas */
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    /* REGLAS PARA DISPOSITIVOS MÓVILES (Pantallas de menos de 768px) */
+    @media (max-width: 768px) {
+        .main-layout {
+            flex-direction: column; /* Pasa el sidebar arriba y el chat abajo */
+        }
+
+        .sidebar {
+            width: 100%; /* Ocupa el 100% en móviles */
+            max-width: 100%;
+        }
+
+        .chat-container {
+            width: 100%;
+            padding: 10px;
+        }
+
+        /* Ajuste del campo de entrada del chat */
+        .chat-input-box {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .chat-input-box input, 
+        .chat-input-box textarea {
+            width: 100%;
+            font-size: 16px; /* Evita el auto-zoom en Safari iOS */
+        }
+    }
+</style>
 </head>
 <body>
 
