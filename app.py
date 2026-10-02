@@ -85,7 +85,7 @@ def extraer_texto_archivo(file):
         print(f"Error procesando archivo: {e}")
     return texto.strip()
 
-ddef construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing="gramatica"):
+def construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing="gramatica"):
     # Determinar el nombre de la profesión o rol
     if profesion == "Otro" and profesion_custom.strip():
         prof_final = profesion_custom.strip()
