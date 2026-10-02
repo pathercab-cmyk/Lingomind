@@ -431,20 +431,36 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        /* --- SISTEMA AUTOMÁTICO DEL CUADERNO --- */
-        function obtenerCuaderno() {
-            const datos = localStorage.getItem('oralis_cuaderno');
-            return datos ? JSON.parse(datos) : {};
+        /* --- SISTEMA DEL CUADERNO (SINCRONIZADO EN BACKEND POR USUARIO/CORREO) --- */
+        async function obtenerCuaderno() {
+            try {
+                const response = await fetch('/api/cuaderno');
+                if (response.ok) {
+                    const datos = await response.json();
+                    return datos || {};
+                }
+            } catch (err) {
+                console.error("Error obteniendo el cuaderno desde el servidor:", err);
+            }
+            return {};
         }
 
-        function guardarDatosCuaderno(cuaderno) {
-            localStorage.setItem('oralis_cuaderno', JSON.stringify(cuaderno));
-            renderizarCuaderno();
+        async function guardarDatosCuaderno(cuaderno) {
+            try {
+                await fetch('/api/cuaderno', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cuaderno)
+                });
+                renderizarCuaderno();
+            } catch (err) {
+                console.error("Error guardando el cuaderno en el servidor:", err);
+            }
         }
 
-        function renderizarCuaderno() {
+        async function renderizarCuaderno() {
             const idiomaActual = document.getElementById('idioma').value;
-            const cuaderno = obtenerCuaderno();
+            const cuaderno = await obtenerCuaderno();
             const datosIdioma = cuaderno[idiomaActual] || { vocabulario: {}, gramatica: [] };
 
             const contVocab = document.getElementById('contenedor-vocabulario-cuaderno');
@@ -488,11 +504,11 @@
             }
         }
 
-        function extraerYGuardarEnCuaderno(texto) {
+        async function extraerYGuardarEnCuaderno(texto) {
             if (!texto) return;
 
             const idiomaActual = document.getElementById('idioma').value;
-            const cuaderno = obtenerCuaderno();
+            const cuaderno = await obtenerCuaderno();
 
             if (!cuaderno[idiomaActual]) {
                 cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
@@ -534,7 +550,7 @@
             }
 
             if (huboCambios) {
-                guardarDatosCuaderno(cuaderno);
+                await guardarDatosCuaderno(cuaderno);
             }
         }
 
@@ -546,10 +562,10 @@
             document.getElementById('campos-gramatica').style.display = (tipo === 'gramatica') ? 'block' : 'none';
         }
 
-        function guardarEnCuadernoManual() {
+        async function guardarEnCuadernoManual() {
             const idiomaActual = document.getElementById('idioma').value;
             const tipoApunte = document.getElementById('add-tipo-apunte').value;
-            const cuaderno = obtenerCuaderno();
+            const cuaderno = await obtenerCuaderno();
 
             if (!cuaderno[idiomaActual]) {
                 cuaderno[idiomaActual] = { vocabulario: {}, gramatica: [] };
@@ -577,7 +593,7 @@
                 cuaderno[idiomaActual].gramatica.push(regla);
             }
 
-            guardarDatosCuaderno(cuaderno);
+            await guardarDatosCuaderno(cuaderno);
             cerrarModalAgregar();
             document.getElementById('add-palabra').value = '';
             document.getElementById('add-regla').value = '';
@@ -706,7 +722,6 @@
             const nivel = document.getElementById('nivel').value;
             const modo = document.getElementById('modo').value;
 
-            // Obtener el perfil de profesión activo
             const profesionSelect = document.getElementById('profesion').value;
             const profesionCustom = document.getElementById('profesion_custom').value.trim();
             const profesionFinal = (profesionSelect === 'Otro' && profesionCustom) ? profesionCustom : profesionSelect;
@@ -849,7 +864,7 @@
                 btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
                 msgOralis.appendChild(btnEscuchar);
 
-                extraerYGuardarEnCuaderno(textoAcumulado);
+                await extraerYGuardarEnCuaderno(textoAcumulado);
 
             } catch (err) {
                 contenidoDiv.innerText = "Error al conectar con el servidor.";
