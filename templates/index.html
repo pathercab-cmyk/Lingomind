@@ -314,15 +314,26 @@
             }
         }
 
-        function toggleModos() {
-            const modo = document.getElementById('modo').value;
-            document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
-            document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
-            document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
-
-            document.getElementById('btn-attach').style.display = (modo === 'writing') ? 'inline-flex' : 'none';
-            document.getElementById('btn-mic').style.display = (modo === 'writing') ? 'none' : 'inline-flex';
-        }
+        function toggleCustomProfesion() {
+    const profesion = document.getElementById('profesion').value;
+    const inputCustom = document.getElementById('profesion_custom');
+    if (profesion === 'Otro') {
+        inputCustom.style.display = 'block';
+    } else {
+        inputCustom.style.display = 'none';
+        inputCustom.value = '';
+    }
+    }
+    
+    function toggleModos() {
+        const modo = document.getElementById('modo').value;
+        document.getElementById('group-profesion').style.display = (modo === 'practicas_orales') ? 'flex' : 'none';
+        document.getElementById('group-examen').style.display = (modo === 'examen') ? 'flex' : 'none';
+        document.getElementById('group-writing').style.display = (modo === 'writing') ? 'flex' : 'none';
+    
+        document.getElementById('btn-attach').style.display = (modo === 'writing') ? 'inline-flex' : 'none';
+        document.getElementById('btn-mic').style.display = (modo === 'writing') ? 'none' : 'inline-flex';
+    }
 
         const recomendacionNiveles = {
             'A1': { vocab: "Saludos, Familia, Rutina diaria, Números y Colores.", gram: "Presente simple, Verbo To Be / Estar, Artículos (a/an/the)." },
@@ -435,71 +446,77 @@
             }
         }
 
-        async function enviarMensaje(e) {
-            if (e) e.preventDefault();
-            const input = document.getElementById('input-mensaje');
-            const mensaje = input.value.trim();
-            const archivoInput = document.getElementById('archivo');
+       async function enviarMensaje(e) {
+    if (e) e.preventDefault();
+    const input = document.getElementById('input-mensaje');
+    const mensaje = input.value.trim();
+    const archivoInput = document.getElementById('archivo');
 
-            if (!mensaje && (!archivoInput.files || archivoInput.files.length === 0)) return;
+    if (!mensaje && (!archivoInput.files || archivoInput.files.length === 0)) return;
 
-            let textoUsuario = mensaje;
-            if (archivoInput.files && archivoInput.files[0]) {
-                textoUsuario += ` (📄 ${archivoInput.files[0].name})`;
-            }
-            agregarMensaje('user', textoUsuario);
+    let textoUsuario = mensaje;
+    if (archivoInput.files && archivoInput.files[0]) {
+        textoUsuario += ` (📄 ${archivoInput.files[0].name})`;
+    }
+    agregarMensaje('user', textoUsuario);
 
-            const formData = new FormData(document.getElementById('form-chat'));
-            formData.append('mensaje', mensaje);
-            formData.append('idioma', document.getElementById('idioma').value);
-            formData.append('nivel', document.getElementById('nivel').value);
-            formData.append('modo', document.getElementById('modo').value);
+    const formData = new FormData(document.getElementById('form-chat'));
+    formData.append('mensaje', mensaje);
+    formData.append('idioma', document.getElementById('idioma').value);
+    formData.append('nivel', document.getElementById('nivel').value);
+    formData.append('modo', document.getElementById('modo').value);
+    
+    // CAPTURAMOS EXPLÍCITAMENTE LOS CAMPOS DE PROFESIÓN Y EXAMEN
+    formData.append('profesion', document.getElementById('profesion').value);
+    formData.append('profesion_custom', document.getElementById('profesion_custom').value);
+    formData.append('tipo_examen', document.getElementById('tipo_examen').value);
+    formData.append('tema', document.getElementById('tema').value);
 
-            input.value = '';
-            if (archivoInput) archivoInput.value = '';
-            document.getElementById('file-indicator').innerText = '';
+    input.value = '';
+    if (archivoInput) archivoInput.value = '';
+    document.getElementById('file-indicator').innerText = '';
 
-            const elemTextoOralis = agregarMensaje('oralis', '');
+    const elemTextoOralis = agregarMensaje('oralis', '');
 
-            try {
-                const response = await fetch('/chat', { method: 'POST', body: formData });
+    try {
+        const response = await fetch('/chat', { method: 'POST', body: formData });
 
-                if (!response.ok) {
-                    elemTextoOralis.innerText = "Error de respuesta del servidor (" + response.status + ").";
-                    return;
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
-
-                    for (const line of lines) {
-                        const trimmedLine = line.trim();
-                        if (trimmedLine.startsWith('data: ')) {
-                            const rawData = trimmedLine.substring(6);
-                            try {
-                                const parsed = JSON.parse(rawData);
-                                if (parsed.content) elemTextoOralis.innerText += parsed.content;
-                            } catch (err) {
-                                elemTextoOralis.innerText += rawData;
-                            }
-                        } else if (trimmedLine && !trimmedLine.startsWith(':')) {
-                            elemTextoOralis.innerText += line;
-                        }
-                    }
-                    document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
-                }
-            } catch (err) {
-                console.error("Error en petición:", err);
-                elemTextoOralis.innerText = "Error de conexión. Inténtalo de nuevo.";
-            }
+        if (!response.ok) {
+            elemTextoOralis.innerText = "Error de respuesta del servidor (" + response.status + ").";
+            return;
         }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('data: ')) {
+                    const rawData = trimmedLine.substring(6);
+                    try {
+                        const parsed = JSON.parse(rawData);
+                        if (parsed.content) elemTextoOralis.innerText += parsed.content;
+                    } catch (err) {
+                        elemTextoOralis.innerText += rawData;
+                    }
+                } else if (trimmedLine && !trimmedLine.startsWith(':')) {
+                    elemTextoOralis.innerText += line;
+                }
+            }
+            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+        }
+    } catch (err) {
+        console.error("Error en petición:", err);
+        elemTextoOralis.innerText = "Error de conexión. Inténtalo de nuevo.";
+    }
+}
 
         function guardarChat() {
             let textoGuardado = "--- HISTORIAL ORALIS AI ---\n\n";
