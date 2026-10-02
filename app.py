@@ -290,6 +290,30 @@ def obtener_examenes(idioma):
     }
     return jsonify({'examenes': examenes.get(idioma, ['Examen Estándar'])})
 
+from flask import jsonify, request, session
+
+@app.route('/api/cuaderno/guardar_vocabulario', methods=['POST'])
+def guardar_vocabulario():
+    data = request.get_json()
+    categoria = data.get('categoria')
+    palabra = data.get('palabra')
+    idioma = data.get('idioma')
+    
+    # Aquí puedes guardar en la base de datos o en la sesión del usuario
+    # Ejemplo con session:
+    # ...
+    return jsonify({"status": "success", "message": "Vocabulario guardado"}), 200
+
+@app.route('/api/cuaderno/guardar_gramatica', methods=['POST'])
+def guardar_gramatica():
+    data = request.get_json()
+    regla = data.get('regla')
+    idioma = data.get('idioma')
+    
+    # Lógica para guardar la regla gramatical
+    # ...
+    return jsonify({"status": "success", "message": "Gramática guardada"}), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
