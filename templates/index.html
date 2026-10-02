@@ -722,12 +722,7 @@
                             contenidoDiv.innerHTML = formatearRespuestaOralis(textoAcumulado);
                             chatBox.scrollTop = chatBox.scrollHeight;
                         }
-                    } catch (e) {}
-                }
-            }
-        }
-
-        // =========================================================
+                   // =========================================================
         // ¡AQUÍ ES DONDE DEBES AGREGAR LA LLAMADA AUTOMÁTICA!
         // =========================================================
         extraerYGuardarEnCuaderno(textoAcumulado);
@@ -735,11 +730,11 @@
     } catch (err) {
         contenidoDiv.innerText = "Error al conectar con el servidor.";
     }
-}
-        }
+} // <--- PRIMER CIERRE
+        } // <--- SEGUNDO CIERRE ERROREO (Rrompe el código)
 
         // Al finalizar el stream, añadir botón de audio y guardar en cuaderno
-        const btnEscuchar = document.createElement('button');
+        const btnEscuchar = document.createElement('button'); // <--- CÓDIGO SUELTO QUE DA ERROR
         btnEscuchar.className = 'btn-audio';
         btnEscuchar.innerHTML = '🔊 Escuchar';
         btnEscuchar.onclick = function() { reproducirTexto(textoAcumulado); };
