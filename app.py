@@ -249,12 +249,13 @@ def chat():
     def streamer():
         try:
             # Reemplaza la línea del modelo aquí:
-            completion = client.chat.completions.create(
-                model="qwen/qwen3.8-27b",  # <-- AQUÍ PONES TU MODELO
-                messages=mensajes_for_api,
-                temperature=0.7,
-                stream=True
-            )
+           completion = client.chat.completions.create(
+    model="qwen/qwen3.8-27b",
+    messages=mensajes_for_api,
+    temperature=0.7,
+    max_tokens=800,  # Restringe la respuesta para no superar el límite de OTPM
+    stream=True
+)
 
             respuesta_completa = ""
             for chunk in completion:
