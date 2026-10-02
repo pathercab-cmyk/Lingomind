@@ -6,10 +6,21 @@
     <title>Oralis AI - Tutor en Tiempo Real</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f4f6f9; color: #333; }
+        body { display: flex; height: 100vh; background-color: #f4f6f9; color: #333; overflow: hidden; }
         
-        /* SIDEBAR */
-        .sidebar { width: 380px; background-color: #ffffff; border-right: 1px solid #e1e8ed; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        /* SIDEBAR / PANEL LATERAL */
+        .sidebar { 
+            width: 340px; 
+            background-color: #ffffff; 
+            border-right: 1px solid #e1e8ed; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            overflow-y: auto; 
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
         .sidebar h2 { color: #1e40af; font-size: 1.5rem; margin-bottom: 5px; }
         
         .section-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
@@ -28,7 +39,6 @@
         .btn-explain { background-color: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-top: 4px; display: inline-block; font-weight: 600; }
         .btn-explain:hover { background-color: #1d4ed8; }
 
-        /* PESTAÑAS Y DESPLEGABLES */
         details { margin-bottom: 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; }
         summary { font-weight: 600; font-size: 0.85rem; cursor: pointer; color: #1e293b; outline: none; }
         .details-content { padding-top: 6px; font-size: 0.8rem; color: #475569; display: flex; flex-direction: column; gap: 6px; }
@@ -39,105 +49,56 @@
         .btn-logout { color: #ef4444; text-decoration: none; font-weight: 600; }
 
         /* MAIN CHAT AREA */
-        .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; }
+        .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; min-width: 0; position: relative; }
         .chat-header { background-color: #ffffff; padding: 15px 20px; border-bottom: 1px solid #e1e8ed; font-weight: 600; color: #1e293b; display: flex; justify-content: space-between; align-items: center; }
         
         .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background-color: #f8fafc; }
         
-        /* ESTILOS DE LOS MENSAJES */
         .mensaje { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; }
         .mensaje-usuario { align-self: flex-end; background-color: #2563eb; color: white; border-bottom-right-radius: 2px; }
         .mensaje-oralis { align-self: flex-start; background-color: #ffffff !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; border-bottom-left-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
         .contenido-texto { min-height: 20px; font-size: 0.95rem; color: #1e293b; margin-bottom: 8px; white-space: pre-wrap; }
         .btn-audio { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #334155; }
-        .btn-audio:hover { background: #e2e8f0; }
 
-        /* INPUT AREA */
         .chat-input-area { background-color: #ffffff; padding: 15px 20px; border-top: 1px solid #e1e8ed; display: flex; flex-direction: column; gap: 5px; }
         .chat-form { display: flex; align-items: center; gap: 10px; }
         
         .btn-icon { background: none; border: 1px solid #cbd5e1; font-size: 1.2rem; cursor: pointer; padding: 8px 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
-        .btn-icon:hover { background-color: #f1f5f9; }
-        
         #input-mensaje { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; outline: none; }
-        #input-mensaje:focus { border-color: #2563eb; }
-        
         .btn-send { background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-        .btn-send:hover { background-color: #1d4ed8; }
-        .file-indicator { font-size: 0.8rem; color: #64748b; margin-left: 50px; }
+
+        /* BOTÓN FLOTANTE PARA MÓVILES */
+        .btn-toggle-sidebar { display: none; background-color: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+
+        /* VISTA MÓVIL (MENOS DE 768px) */
+        @media (max-width: 768px) {
+            .btn-toggle-sidebar { display: inline-block; }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                transform: translateX(-100%);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .mensaje { max-width: 90%; }
+            .chat-header { padding: 10px 15px; font-size: 0.9rem; }
+        }
     </style>
-    <style>
-    /* Prevención global de desbordamiento horizontal */
-    html, body {
-        max-width: 100%;
-        overflow-x: hidden;
-        margin: 0;
-        padding: 0;
-    }
-
-    /* Contenedor principal adaptable */
-    .main-layout {
-        display: flex;
-        flex-direction: row;
-        width: 100%;
-        min-height: 100vh;
-        box-sizing: border-box;
-    }
-
-    /* Barra lateral */
-    .sidebar {
-        width: 300px;
-        flex-shrink: 0;
-        box-sizing: border-box;
-        padding: 15px;
-    }
-
-    /* Área principal del chat */
-    .chat-container {
-        flex-grow: 1;
-        min-width: 0; /* Evita que el flexbox se desborde al escribir líneas largas */
-        display: flex;
-        flex-direction: column;
-        padding: 15px;
-        box-sizing: border-box;
-    }
-
-    /* REGLAS PARA DISPOSITIVOS MÓVILES (Pantallas de menos de 768px) */
-    @media (max-width: 768px) {
-        .main-layout {
-            flex-direction: column; /* Pasa el sidebar arriba y el chat abajo */
-        }
-
-        .sidebar {
-            width: 100%; /* Ocupa el 100% en móviles */
-            max-width: 100%;
-        }
-
-        .chat-container {
-            width: 100%;
-            padding: 10px;
-        }
-
-        /* Ajuste del campo de entrada del chat */
-        .chat-input-box {
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .chat-input-box input, 
-        .chat-input-box textarea {
-            width: 100%;
-            font-size: 16px; /* Evita el auto-zoom en Safari iOS */
-        }
-    }
-</style>
 </head>
 <body>
 
     <!-- SIDEBAR -->
-    <div class="sidebar">
-        <h2>Oralis AI</h2>
+    <div class="sidebar" id="sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Oralis AI</h2>
+            <button class="btn-toggle-sidebar" onclick="toggleSidebar()" style="background: none; color: #333; font-size: 1.2rem;">✖</button>
+        </div>
 
         <!-- CONFIGURACIÓN DE APRENDIZAJE -->
         <div class="section-box">
@@ -210,7 +171,6 @@
             </div>
         </div>
 
-        <!-- MI CUADERNO CON CLASIFICACIÓN -->
         <div class="section-box">
             <div class="section-title">📖 Mi Cuaderno</div>
             <div style="font-size: 0.8rem; margin-bottom: 8px; color: #475569;">
@@ -244,13 +204,11 @@
             </details>
         </div>
 
-        <!-- BANCO DE RECOMENDACIONES POR NIVEL -->
         <div class="section-box">
             <div class="section-title">💡 Banco Recomendado</div>
             <div id="banco-recomendado" style="font-size: 0.85rem;"></div>
         </div>
 
-        <!-- FEEDBACK -->
         <div class="feedback-section section-box">
             <div class="section-title">¿Qué te parece Oralis?</div>
             <form id="form-feedback" class="form-group" onsubmit="enviarFeedback(event)">
@@ -265,7 +223,6 @@
             <p id="msg-feedback" style="font-size: 0.75rem; color: #10b981; margin-top: 3px;"></p>
         </div>
 
-        <!-- USUARIO -->
         <div class="user-info">
             <span>👤 {{ usuario.email if usuario else 'Usuario' }}</span>
             <a href="/logout" class="btn-logout">Salir</a>
@@ -275,10 +232,11 @@
     <!-- MAIN CONTENT -->
     <div class="main-content">
         <div class="chat-header">
-            <span>Oralis AI - Tutor en Tiempo Real</span>
+            <button class="btn-toggle-sidebar" onclick="toggleSidebar()">⚙️ Opciones</button>
+            <span>Oralis AI</span>
             <div>
                 <button class="btn-action btn-secondary" onclick="iniciarNuevoChat()" style="width: auto; display: inline-block; margin-right: 5px;">➕ Nuevo Chat</button>
-                <button class="btn-action btn-secondary" onclick="guardarChat()" style="width: auto; display: inline-block;">💾 Guardar Chat</button>
+                <button class="btn-action btn-secondary" onclick="guardarChat()" style="width: auto; display: inline-block;">💾</button>
             </div>
         </div>
 
@@ -300,10 +258,13 @@
     </div>
 
     <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
         let rec;
         let escuchando = false;
 
-        // Reconocimiento de Voz
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             rec = new SpeechRecognition();
@@ -378,10 +339,12 @@
         }
 
         function actualizarTodo() {
-            const idioma = document.getElementById('idioma').value;
+            const selectIdioma = document.getElementById('idioma');
+            const idioma = selectIdioma.value;
+            const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
             const nivel = document.getElementById('nivel').value;
             
-            document.getElementById('lbl-idioma').innerText = idioma.toUpperCase();
+            document.getElementById('lbl-idioma').innerText = textoIdioma;
             document.getElementById('lbl-nivel').innerText = nivel;
             
             const recs = recomendacionNiveles[nivel] || recomendacionNiveles['B1'];
@@ -390,14 +353,14 @@
                     <summary>📚 Vocabulario (${nivel})</summary>
                     <div class="details-content">
                         <div>${recs.vocab}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame y dame ejemplos de vocabulario nivel ${nivel} en ${idioma.toUpperCase()} sobre: ${recs.vocab}')">💡 Explicar Vocabulario</button>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame y dame ejemplos de vocabulario nivel ${nivel} en ${textoIdioma} sobre: ${recs.vocab}')">💡 Explicar Vocabulario</button>
                     </div>
                 </details>
                 <details open>
                     <summary>✍️ Gramática (${nivel})</summary>
                     <div class="details-content">
                         <div>${recs.gram}</div>
-                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame con reglas y ejemplos la gramática de nivel ${nivel} en ${idioma.toUpperCase()}: ${recs.gram}')">💡 Explicar Gramática</button>
+                        <button type="button" class="btn-explain" onclick="pedirExplicacion('Explícame con reglas y ejemplos la gramática de nivel ${nivel} en ${textoIdioma}: ${recs.gram}')">💡 Explicar Gramática</button>
                     </div>
                 </details>
             `;
@@ -405,10 +368,16 @@
         }
 
         function iniciarNuevoChat() {
-            document.getElementById('chat-box').innerHTML = '';
-            const idioma = document.getElementById('idioma').value.toUpperCase();
+            const chatBox = document.getElementById('chat-box');
+            if (chatBox) {
+                chatBox.innerHTML = '';
+            }
+            const selectIdioma = document.getElementById('idioma');
+            const textoIdioma = selectIdioma.options[selectIdioma.selectedIndex].text;
             const nivel = document.getElementById('nivel').value;
-            agregarMensaje('oralis', `¡Hola! He iniciado una nueva sesión para practicar en **${idioma}** (Nivel **${nivel}**). ¡Escríbeme cuando quieras!`);
+            
+            // Texto completamente limpio sin asteriscos
+            agregarMensaje('oralis', `¡Hola! He iniciado una nueva sesión para practicar en ${textoIdioma} (Nivel ${nivel}). ¡Escríbeme cuando quieras!`);
         }
 
         function pedirExplicacion(consulta) {
@@ -466,7 +435,6 @@
             }
         }
 
-        // LÓGICA DE ENVÍO Y RECEPCIÓ N MEJORADA
         async function enviarMensaje(e) {
             if (e) e.preventDefault();
             const input = document.getElementById('input-mensaje');
@@ -564,41 +532,30 @@
             toggleModos();
         };
 
-      document.addEventListener('DOMContentLoaded', function() {
-    const selectIdioma = document.getElementById('idioma');
-    
-    if (selectIdioma) {
-        selectIdioma.addEventListener('change', function() {
-            const nuevoIdioma = this.value; // p. ej. 'de', 'en', 'fr'
-            const textoIdioma = this.options[this.selectedIndex].text; // p. ej. 'Alemán'
-            const selectNivel = document.getElementById('nivel');
-            const nivelActual = selectNivel ? selectNivel.value : 'B1';
+        // EVENTO CORRECTO DE CAMBIO DE IDIOMA
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectIdioma = document.getElementById('idioma');
+            if (selectIdioma) {
+                selectIdioma.addEventListener('change', function() {
+                    const nuevoIdioma = this.value;
+                    const selectNivel = document.getElementById('nivel');
+                    const nivelActual = selectNivel ? selectNivel.value : 'B1';
 
-            // 1. Limpiar el contenedor de mensajes
-            const chatMessages = document.getElementById('chat-messages'); // Ajusta con la ID de tu contenedor
-            if (chatMessages) {
-                chatMessages.innerHTML = '';
+                    actualizarTodo();
+                    iniciarNuevoChat();
 
-                // 2. Insertar mensaje de inicio del nuevo idioma
-                const mensajeBienvenida = document.createElement('div');
-                mensajeBienvenida.className = 'message bot-message';
-                mensajeBienvenida.innerHTML = `
-                    <div class="message-content">
-                        ¡Hola! He iniciado una nueva sesión para practicar en <strong>${textoIdioma}</strong> (Nivel <strong>${nivelActual}</strong>). ¡Escríbeme cuando quieras!
-                    </div>
-                `;
-                chatMessages.appendChild(mensajeBienvenida);
+                    // Cerrar sidebar en móvil al cambiar idioma
+                    document.getElementById('sidebar').classList.remove('active');
+
+                    // Notificar al servidor en segundo plano
+                    fetch('/api/actualizar_preferencias', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idioma: nuevoIdioma, nivel: nivelActual })
+                    }).catch(err => console.log('Preferencia sincronizada localmente'));
+                });
             }
-
-            // 3. Notificar al backend del nuevo idioma
-            fetch('/api/actualizar_preferencias', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idioma: nuevoIdioma, nivel: nivelActual })
-            }).catch(err => console.log('Preferencia sincronizada localmente'));
         });
-    }
-});
     </script>
 </body>
 </html>
