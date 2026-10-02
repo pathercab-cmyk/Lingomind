@@ -85,8 +85,16 @@ def extraer_texto_archivo(file):
         print(f"Error procesando archivo: {e}")
     return texto.strip()
 
-def construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing="gramatica"):
-    # Determinar el nombre de la profesión o rol
+def construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, idioma_nativo="es", metodo_writing="gramatica"):
+    idiomas_nombre = {
+        'en': 'Inglés', 'de': 'Alemán', 'fr': 'Francés', 'nl': 'Neerlandés',
+        'pt': 'Portugués', 'ro': 'Rumano', 'ja': 'Japonés', 'zh': 'Chino Mandarín',
+        'it': 'Italiano', 'es': 'Español'
+    }
+    
+    nombre_target = idiomas_nombre.get(idioma, idioma)
+    nombre_nativo = idiomas_nombre.get(idioma_nativo, 'Español')
+
     if profesion == "Otro" and profesion_custom.strip():
         prof_final = profesion_custom.strip()
     elif profesion:
@@ -95,12 +103,21 @@ def construir_prompt_sistema(idioma, nivel, modo, profesion, profesion_custom, t
         prof_final = "Entrevista de Trabajo"
 
     prompt_base = f"""Eres Oralis, un tutor de inteligencia artificial en conversación interactiva.
-Estás practicando con un estudiante del idioma '{idioma}' en nivel '{nivel}'.
+Estás practicando con un estudiante del idioma '{nombre_target}' en nivel '{nivel}'.
 Tema o contexto actual: {tema if tema else 'Conversación general'}.
+
+FORMATO DE RESPUESTA OBLIGATORIO:
+1. Escribe tu respuesta principal en {nombre_target.upper()}.
+2. Justo debajo, incluye la traducción de tu mensaje traducida al idioma nativo del usuario ({nombre_nativo.upper()}) usando exactamente la etiqueta `---TRADUCCION---`.
+
+Estructura requerida:
+[Tu mensaje completo en {nombre_target.upper()}]
+---TRADUCCION---
+[Traducción exacta de tu mensaje al {nombre_nativo.upper()}]
 
 REGLA DE CORRECCIÓN OBLIGATORIA EN CADA RESPUESTA:
 - Antes de responder al tema de conversación, analiza la intervención del usuario.
-- Si detectas algún fallo de gramática, ortografía, vocabulario o sintaxis en {idioma}, debes indicarlo brevemente y mostrar la versión corregida al principio de tu respuesta.
+- Si detectas algún fallo de gramática, ortografía, vocabulario o sintaxis en {nombre_target}, debes indicarlo brevemente y mostrar la versión corregida al principio de tu respuesta.
 - Si el mensaje no contiene errores, continúa la conversación con naturalidad.
 
 REGLA AUTOMÁTICA PARA "MI CUADERNO":
@@ -113,8 +130,8 @@ Al final de cada respuesta (si enseñaste palabras o corregiste reglas), añade 
 
 FORMATO Y ESTILO STRICTO:
 1. Responde de forma pedagógica, cercana y adaptada a su nivel ({nivel}).
-2. Tu respuesta principal debe realizarse en {idioma}.
-3. Si el usuario pide explicaciones gramaticales, usa el español.
+2. Tu respuesta principal debe realizarse en {nombre_target}.
+3. Si el usuario pide explicaciones gramaticales, usa el idioma nativo ({nombre_nativo}).
 4. PROHIBIDO USAR MARKDOWN: No uses asteriscos (*), almohadillas (#), ni guiones bajos (_). Escribe solo texto plano.
 """
 
@@ -127,8 +144,8 @@ FORMATO Y ESTILO STRICTO:
             prompt_base += f"""
 Modo ACTIVO: Evaluador de Writing - Corrección Directa.
 1. Analiza el texto enviado o adjuntado por el usuario.
-2. Muestra la versión reescrita y corregida en {idioma}.
-3. Explica en español los errores detallados encontrados.
+2. Muestra la versión reescrita y corregida en {nombre_target}.
+3. Explica los errores detallados encontrados.
 """
         elif metodo_writing == "socratico":
             prompt_base += f"""
@@ -189,6 +206,7 @@ def index():
 def chat():
     mensaje_usuario = request.form.get('mensaje', '')
     idioma = request.form.get('idioma', current_user.idioma)
+    idioma_nativo = request.form.get('idioma_nativo', 'es')
     nivel = request.form.get('nivel', current_user.nivel)
     modo = request.form.get('modo', 'tutor_original')
     profesion = request.form.get('profesion', '')
@@ -208,7 +226,7 @@ def chat():
         contenido_completo += f"\n\n[Archivo adjunto]:\n{texto_archivo}"
 
     system_prompt = construir_prompt_sistema(
-        idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, metodo_writing
+        idioma, nivel, modo, profesion, profesion_custom, tipo_examen, tema, idioma_nativo, metodo_writing
     )
 
     def generate():
@@ -230,7 +248,6 @@ def chat():
                 if chunk.choices and len(chunk.choices) > 0:
                     content = chunk.choices[0].delta.content
                     if content:
-                        # Limpieza estricta de asteriscos, almohadillas y guiones bajos
                         content_limpio = content.replace('*', '').replace('#', '').replace('_', '')
                         yield f"data: {json.dumps({'content': content_limpio})}\n\n"
 
@@ -298,3 +315,6 @@ def ver_feedback():
         html += f"<li><strong>{c.usuario.email}</strong> ({c.puntuacion}/5 estrellas) - {c.fecha.strftime('%d/%m/%Y %H:%M')}<br>'{c.texto}'</li><br>"
     html += "</ul><br><a href='/'>Volver al Chat</a>"
     return html
+
+if __name__ == '__main__':
+    app.run(debug=True)
