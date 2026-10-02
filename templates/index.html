@@ -377,8 +377,8 @@
         function formatearRespuestaOralis(texto) {
             let textoLimpio = texto.replace(/^¡Hola!\s*Soja\s+/i, '¡Hola! Soy ');
 
-            textoLimpio = textoLimpio.replace(/\[VOCABULARIO:[^\]]+\]/gi, '')
-                                     .replace(/\[GRAMATICA:[^\]]+\]/gi, '')
+            textoLimpio = textoLimpio.replace(/\[VOCABULARIO:[\s\S]*?\]/gi, '')
+                                     .replace(/\[GRAMATICA:[\s\S]*?\]/gi, '')
                                      .trim();
 
             textoLimpio = textoLimpio.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
@@ -452,7 +452,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(cuaderno)
                 });
-                renderizarCuaderno();
+                await renderizarCuaderno();
             } catch (err) {
                 console.error("Error guardando el cuaderno en el servidor:", err);
             }
@@ -477,7 +477,7 @@
                     let htmlTipos = '';
                     const tipos = datosIdioma.vocabulario[tema];
                     for (const tipo in tipos) {
-                        if (tipos[tipo] && tipos[tipo].length > 0) {
+                        if (Array.isArray(tipos[tipo]) && tipos[tipo].length > 0) {
                             htmlTipos += `<div class="tree-node"><strong>• ${tipo}:</strong> ${tipos[tipo].join(', ')}</div>`;
                         }
                     }
@@ -516,29 +516,43 @@
 
             let huboCambios = false;
 
-            const regexVocab = /\[VOCABULARIO:\s*([^-]+)-\s*([^\]]+)\]/gi;
+            // REGEX MEJORADA: Tolera saltos de línea y múltiples formatos de separador (- o :)
+            const regexVocab = /\[VOCABULARIO:\s*([\s\S]*?)\]/gi;
             let matchVocab;
 
             while ((matchVocab = regexVocab.exec(texto)) !== null) {
-                const categoria = matchVocab[1].trim();
-                const palabras = matchVocab[2].split(',').map(p => p.trim());
+                const contenido = matchVocab[1].trim();
+                let categoria = "General";
+                let palabrasTexto = contenido;
 
-                if (!cuaderno[idiomaActual].vocabulario['General']) {
-                    cuaderno[idiomaActual].vocabulario['General'] = {};
+                if (contenido.includes('-')) {
+                    const partes = contenido.split('-');
+                    categoria = partes[0].trim() || "General";
+                    palabrasTexto = partes.slice(1).join('-').trim();
+                } else if (contenido.includes(':')) {
+                    const partes = contenido.split(':');
+                    categoria = partes[0].trim() || "General";
+                    palabrasTexto = partes.slice(1).join(':').trim();
                 }
-                if (!cuaderno[idiomaActual].vocabulario['General'][categoria]) {
-                    cuaderno[idiomaActual].vocabulario['General'][categoria] = [];
+
+                const palabras = palabrasTexto.split(',').map(p => p.trim()).filter(p => p.length > 0);
+
+                if (!cuaderno[idiomaActual].vocabulario[categoria]) {
+                    cuaderno[idiomaActual].vocabulario[categoria] = { "Expresiones / Palabras": [] };
                 }
+                
+                const subCatKey = Object.keys(cuaderno[idiomaActual].vocabulario[categoria])[0] || "Expresiones / Palabras";
 
                 palabras.forEach(palabra => {
-                    if (palabra && !cuaderno[idiomaActual].vocabulario['General'][categoria].includes(palabra)) {
-                        cuaderno[idiomaActual].vocabulario['General'][categoria].push(palabra);
+                    if (!cuaderno[idiomaActual].vocabulario[categoria][subCatKey].includes(palabra)) {
+                        cuaderno[idiomaActual].vocabulario[categoria][subCatKey].push(palabra);
                         huboCambios = true;
                     }
                 });
             }
 
-            const regexGram = /\[GRAMATICA:\s*([^\]]+)\]/gi;
+            // REGEX MEJORADA PARA GRAMÁTICA
+            const regexGram = /\[GRAMATICA:\s*([\s\S]*?)\]/gi;
             let matchGram;
 
             while ((matchGram = regexGram.exec(texto)) !== null) {
@@ -671,8 +685,8 @@
                 window.speechSynthesis.cancel();
                 const textoLimpio = texto.replace(/<[^>]*>/g, '')
                                          .replace(/\*\*/g, '')
-                                         .replace(/\[VOCABULARIO:[^\]]+\]/gi, '')
-                                         .replace(/\[GRAMATICA:[^\]]+\]/gi, '')
+                                         .replace(/\[VOCABULARIO:[\s\S]*?\]/gi, '')
+                                         .replace(/\[GRAMATICA:[\s\S]*?\]/gi, '')
                                          .split('---')[0];
                 const idioma = document.getElementById('idioma').value;
                 const codigoIdioma = idioma === 'en' ? 'en-US' : idioma === 'fr' ? 'fr-FR' : idioma === 'de' ? 'de-DE' : idioma === 'it' ? 'it-IT' : idioma === 'pt' ? 'pt-PT' : 'es-ES';
